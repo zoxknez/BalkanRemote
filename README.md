@@ -85,4 +85,4 @@ npm start
 
 ---
 
-**Napravljen sa ❤️ za Balkan remote zajednicu**
+Balkan remote zajednica

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Menu, X, Home, Building2, BookOpen, Wrench, Zap, FileText, Briefcase, Heart } from 'lucide-react'
+import { Menu, X, Home, Building2, BookOpen, Wrench, Zap, FileText, Briefcase, Heart, MessageCircle } from 'lucide-react'
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -15,7 +15,8 @@ export function Header() {
   { name: 'Poreski vodič', href: '/poreski-vodic', icon: FileText },
     { name: 'Kompanije', href: '/kompanije', icon: Building2 },
     { name: 'Resursi', href: '/resursi', icon: BookOpen },
-    { name: 'Alati', href: '/alati', icon: Wrench }
+    { name: 'Alati', href: '/alati', icon: Wrench },
+    { name: 'Pitanja', href: '/pitanja', icon: MessageCircle }
   ]
 
   return (

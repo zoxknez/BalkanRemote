@@ -517,7 +517,7 @@ function ResursiContent() {
 
         {/* Curated Collections */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">🎯 Kurirane kolekcije</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">🎯 Odabrane kolekcije resursa</h2>
           <p className="text-gray-600 mb-6">Brzi izbor najkorisnijih resursa po scenarijima: traženje posla, produktivnost i učenje.</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">

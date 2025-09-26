@@ -45,14 +45,19 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
-                    active
-                      ? 'bg-white text-gray-900 ring-1 ring-gray-200 shadow-sm'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  className={`relative inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                    active ? 'text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute inset-0 rounded-md bg-white ring-1 ring-gray-200 shadow-sm"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+                    />
+                  )}
+                  <Icon className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">{item.name}</span>
                 </Link>
               )
             })}
@@ -62,7 +67,7 @@ export function Header() {
           <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
             <Link
               href="/poslovi"
-              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+              className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               Traži poslove
             </Link>
@@ -71,7 +76,7 @@ export function Header() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Doniraj autoru preko PayPal"
-              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
+              className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap gap-2 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
             >
               <Heart className="w-4 h-4" />
               <span>Doniraj</span>
@@ -113,13 +118,20 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex items-center gap-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                    active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  className={`relative flex items-center gap-2 py-2 px-3 rounded-md font-medium transition hover:scale-[1.01] ${
+                    active ? 'text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute inset-0 rounded-md bg-white ring-1 ring-gray-200 shadow-sm"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+                    />
+                  )}
+                  <Icon className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">{item.name}</span>
                 </Link>
               )
             })}

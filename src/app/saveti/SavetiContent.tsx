@@ -68,6 +68,86 @@ const difficultyLabels: Record<BalkanTip['difficulty'], string> = {
 
 const balkanTips: BalkanTip[] = [
   {
+    id: 'remote-osnove-balkan',
+    icon: Target,
+    title: 'Prvi koraci: kako funkcioniše remote posao',
+    description: 'Razumevanje modela rada sa stranim klijentima, osnovne obaveze i šta ti realno treba da počneš.',
+    category: 'career',
+    difficulty: 'beginner',
+    timeToRead: '5 min',
+    tips: [
+      'Definiši koje usluge nudiš (npr. frontend, QA, dizajn, marketing).',
+      'Odaberi naziv brenda ili rade pod sopstvenim imenom – važno za ugovore i fakture.',
+      'Napravi listu ciljanih industrija i tipova klijenata.',
+      'Proceni dostupno vreme nedeljno i idealnu radnu zonu (EU/US).',
+      'Postavi ciljani prihod i minimalnu cenu sata/dnevnice.',
+    ],
+    resources: [
+      { name: 'Remote OK prijave', url: 'https://remoteok.com' },
+      { name: 'We Work Remotely vodič', url: 'https://weworkremotely.com/how-to-remote-work' },
+    ],
+  },
+  {
+    id: 'izaberi-legalni-model',
+    icon: FileText,
+    title: 'Izbor pravnog modela – vodič po zemljama',
+    description: 'Kako da izabereš paušal, obrt, DOO ili rad preko platforme u zavisnosti od toga gde živiš.',
+    category: 'legal',
+    difficulty: 'beginner',
+    timeToRead: '6 min',
+    tips: [
+      'Srbija: paušal ili preduzetnik pausalac – brzo pokretanje, renta do ~8.5M RSD (2025).',
+      'Hrvatska: paušalni obrt (do 300k EUR) ili obrt s knjigama kada pređeš limit.',
+      'BiH: razlike FBiH / RS – konsultuj lokalnu poresku upravu pre registracije.',
+      'Crna Gora: preduzetnik ili DOO uz 9% poreza, hvataj državne podsticaje za IT.',
+      'Ako tek testiraš tržište – koristi platformski rad (Upwork, Deel) uz prijavu prihoda.',
+    ],
+    resources: [
+      { name: 'Deel Global Hiring', url: 'https://www.deel.com' },
+      { name: 'Freelance platforme – Remote Balkan', url: '/poslovi' },
+    ],
+  },
+  {
+    id: 'prvi-ugovor-i-naplata',
+    icon: CreditCard,
+    title: 'Prvi klijent: ugovor, avans i fakture',
+    description: 'Checklista za siguran početak – kako da naplatiš i zaštitiš se od nelikvidnih klijenata.',
+    category: 'banking',
+    difficulty: 'beginner',
+    timeToRead: '7 min',
+    tips: [
+      'Koristi jednostavan ugovor (NDA + Statement of Work) pre početka rada.',
+      'Traži 30–50% avansa ili milestone plaćanje pre isporuke.',
+      'Otvaraj devizni račun ili koristi Payoneer/Wise u skladu s lokalnim propisima.',
+      'Vodi Excel tabelu uplata i troškova od prvog dana.',
+      'Ugovori jasne rokove plaćanja (Net 7/14) i kasnjenje naplaćuj penalima.',
+    ],
+    resources: [
+      { name: 'HelloSign ugovori', url: 'https://www.hellosign.com/templates' },
+      { name: 'Payoneer vodič', url: 'https://www.payoneer.com/resources/' },
+    ],
+  },
+  {
+    id: 'cenovnik-i-ponude',
+    icon: Briefcase,
+    title: 'Kako da formiraš cene i ponudu paketa',
+    description: 'Modeli naplate koji rade za rane freelancere – satnice, paket ponude i value-based pricing.',
+    category: 'career',
+    difficulty: 'beginner',
+    timeToRead: '6 min',
+    tips: [
+      'Izračunaj minimalnu satnicu: (željeni mesečni prihod + troškovi) / broj billable sati.',
+      'Ponudi 2-3 paketa (Starter, Growth, Dedicated) umesto jedne cene.',
+      'Dodaj opciju retainer-a (npr. 10 sati mesečno) za stabilne prihode.',
+      'Value-based: naglasi rezultat (npr. +20% konverzije) i fiksiraj cenu na osnovu vrednosti.',
+      'Uvek prepusti finalnu ponudu kroz PDF/Notion i recap na pozivu.',
+    ],
+    resources: [
+      { name: 'Bonsai Pricing', url: 'https://www.hellobonsai.com/pricing-resources' },
+      { name: 'Notion template za ponude', url: 'https://www.notion.so/templates' },
+    ],
+  },
+  {
     id: 'pausal-registracija',
     icon: FileText,
     title: 'Registracija paušala u Srbiji – korak po korak',
@@ -412,6 +492,11 @@ const balkanTips: BalkanTip[] = [
 
 const phases = [
   {
+    phase: 'Faza 0',
+    title: 'Priprema i mindset',
+    items: ['Razumi remote modele', 'Izaberi nišu i ponudu', 'Postavi finansijski plan'],
+  },
+  {
     phase: 'Faza 1',
     title: 'Osnove i dokumenta',
     items: ['Odaberi pravni oblik', 'Pripremi lična/poslovna dokumenta', 'Otvori poslovni račun'],
@@ -430,6 +515,38 @@ const phases = [
     phase: 'Faza 4',
     title: 'Klijenti & rast',
     items: ['Outreach & OS doprinosi', 'Asinhrona komunikacija', 'Traži feedback redovno'],
+  },
+];
+
+interface LearningPath {
+  id: string;
+  title: string;
+  description: string;
+  level: BalkanTip['difficulty'];
+  tipIds: string[];
+}
+
+const learningPaths: LearningPath[] = [
+  {
+    id: 'path-starter',
+    title: 'Starter paket: od nule do prve fakture',
+    description: 'Idealno ako tek ulaziš u freelance – pokrivamo osnove, legalni setup i prvu naplatu.',
+    level: 'beginner' as const,
+    tipIds: ['remote-osnove-balkan', 'izaberi-legalni-model', 'prvi-ugovor-i-naplata', 'home-office-balkan'],
+  },
+  {
+    id: 'path-growth',
+    title: 'Rast: stabilni klijenti i portfolio',
+    description: 'Za one koji imaju par projekata i žele stabilnost i veće projekte.',
+    level: 'intermediate' as const,
+    tipIds: ['cenovnik-i-ponude', 'portfolio-case-studies', 'cv-za-remote', 'klijenti-eu-us'],
+  },
+  {
+    id: 'path-pro',
+    title: 'Pro nivo: skaliranje i optimizacija poreza',
+    description: 'Napredni saveti kada zarađuješ ozbiljnije sume i gradiš tim.',
+    level: 'advanced' as const,
+    tipIds: ['porezni-saveti', 'outreach-sabloni', 'sigurnost-radnog-okruzenja', 'devizni-racun'],
   },
 ];
 
@@ -452,6 +569,20 @@ function SavetiContent() {
   const filteredTips = useMemo(
     () => (selectedCategory === 'all' ? balkanTips : balkanTips.filter((t) => t.category === selectedCategory)),
     [selectedCategory]
+  );
+
+  const tipMap = useMemo(() => {
+    const map = new Map<string, BalkanTip>();
+    balkanTips.forEach((tip) => map.set(tip.id, tip));
+    return map;
+  }, []);
+
+  const pathCards = useMemo(
+    () => learningPaths.map((path) => ({
+      ...path,
+      tips: path.tipIds.map((id) => tipMap.get(id)).filter(Boolean) as BalkanTip[],
+    })),
+    [tipMap]
   );
 
   const metrics = useMemo(() => {
@@ -544,6 +675,9 @@ function SavetiContent() {
             </button>
             {tocOpen && (
               <nav id="saveti-toc" className="text-sm text-gray-700 space-y-1">
+                <a href="#learning-paths" className="block hover:text-blue-600">
+                  🛤️ Putanje po iskustvu
+                </a>
                 <a href="#quick-start" className="block hover:text-blue-600">
                   🚀 Quick Start
                 </a>

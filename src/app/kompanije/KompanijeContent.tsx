@@ -7,6 +7,86 @@ import { Search, Building2, Users, TrendingUp, Star, Link as LinkIcon, Check, Ar
 import { CompanyCard } from '@/components/company-card'
 import { BalkanItBanner } from '@/components/balkan-it-banner'
 import { mockCompanies } from '@/data/mock-data'
+import type { Company } from '@/types'
+
+const INDUSTRY_LABELS: Record<string, string> = {
+  Technology: 'Tehnologija & Software',
+  'Technology/Marketing': 'Tech Marketing',
+  Finance: 'Fintech & Banking',
+  Healthcare: 'HealthTech',
+  Education: 'EdTech & Online Learning',
+  Gaming: 'Gaming & Entertainment',
+  Outsourcing: 'Development Outsourcing',
+  'Automation & Integration': 'Automation & Integration',
+  'DevOps Platform': 'DevOps & Platform Engineering',
+  'Design & Collaboration Tools': 'Design & Collaboration',
+  'Freelance Marketplace': 'Freelance Platforms',
+  'Social Media Management': 'Marketing SaaS',
+  'Artificial Intelligence': 'AI & Machine Learning',
+  Cybersecurity: 'Cybersecurity & Trust'
+}
+
+const REGION_KEYWORDS = [
+  { key: 'serbia', label: 'Srbija', flag: '🇷🇸', keywords: ['serbia', 'serbian', 'belgrade', 'beograd', 'novi sad', 'nis'] },
+  { key: 'croatia', label: 'Hrvatska', flag: '🇭🇷', keywords: ['croatia', 'croatian', 'zagreb', 'split', 'rijeka', 'vodnjan'] },
+  { key: 'bosnia', label: 'Bosna i Hercegovina', flag: '🇧🇦', keywords: ['bosnia', 'bosnia and herzegovina', 'sarajevo', 'banja luka', 'bih'] },
+  { key: 'montenegro', label: 'Crna Gora', flag: '🇲🇪', keywords: ['montenegro', 'podgorica'] },
+  { key: 'north-macedonia', label: 'Severna Makedonija', flag: '🇲🇰', keywords: ['north macedonia', 'skopje'] },
+  { key: 'slovenia', label: 'Slovenija', flag: '🇸🇮', keywords: ['slovenia', 'ljubljana'] },
+  { key: 'remote', label: 'Remote-first', flag: '🌍', keywords: ['remote', 'distributed', 'global'] }
+] as const
+
+type RegionSummary = {
+  key: string
+  label: string
+  flag: string
+  count: number
+  hiring: number
+  topIndustries: string[]
+  averageRating: number | null
+}
+
+function buildRegionInsights(companies: Company[]): RegionSummary[] {
+  return REGION_KEYWORDS.map((region) => {
+    const matched = companies.filter((company) => {
+      const location = (company.location || '').toLowerCase()
+      return region.keywords.some((keyword) => location.includes(keyword))
+    })
+
+    if (!matched.length) return null
+
+    const hiring = matched.filter((company) => company.isHiring).length
+    const industryCounts = new Map<string, number>()
+    let ratingSum = 0
+    let ratingCount = 0
+
+    matched.forEach((company) => {
+      industryCounts.set(company.industry, (industryCounts.get(company.industry) || 0) + 1)
+      if (company.rating) {
+        ratingSum += company.rating
+        ratingCount += 1
+      }
+    })
+
+    const topIndustries = Array.from(industryCounts.entries())
+      .sort((a, b) => {
+        if (b[1] === a[1]) return a[0].localeCompare(b[0])
+        return b[1] - a[1]
+      })
+      .slice(0, 2)
+      .map(([value]) => INDUSTRY_LABELS[value] ?? value)
+
+    return {
+      key: region.key,
+      label: region.label,
+      flag: region.flag,
+      count: matched.length,
+      hiring,
+      topIndustries,
+      averageRating: ratingCount ? ratingSum / ratingCount : null
+    }
+  }).filter(Boolean) as RegionSummary[]
+}
 
 export default function KompanijeContent() {
   const params = useSearchParams()
@@ -74,16 +154,29 @@ export default function KompanijeContent() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const industries = [
-    { value: 'all', label: 'Sve industrije', count: mockCompanies.length },
-    { value: 'Technology', label: 'Tehnologija & Software', count: mockCompanies.filter(c => c.industry === 'Technology').length },
-    { value: 'Technology/Marketing', label: 'Tech Marketing', count: mockCompanies.filter(c => c.industry === 'Technology/Marketing').length },
-    { value: 'Finance', label: 'Fintech & Banking', count: mockCompanies.filter(c => c.industry === 'Finance').length },
-    { value: 'Healthcare', label: 'HealthTech', count: mockCompanies.filter(c => c.industry === 'Healthcare').length },
-    { value: 'Education', label: 'EdTech & Online Learning', count: mockCompanies.filter(c => c.industry === 'Education').length },
-    { value: 'Gaming', label: 'Gaming & Entertainment', count: mockCompanies.filter(c => c.industry === 'Gaming').length },
-    { value: 'Outsourcing', label: 'Development Outsourcing', count: mockCompanies.filter(c => c.industry === 'Outsourcing').length }
-  ]
+  const industries = useMemo(() => {
+    const counts = new Map<string, number>()
+
+    mockCompanies.forEach((company) => {
+      counts.set(company.industry, (counts.get(company.industry) || 0) + 1)
+    })
+
+    const entries = Array.from(counts.entries())
+      .sort((a, b) => {
+        if (b[1] === a[1]) return a[0].localeCompare(b[0])
+        return b[1] - a[1]
+      })
+      .map(([value, count]) => ({
+        value,
+        label: INDUSTRY_LABELS[value] ?? value,
+        count
+      }))
+
+    return [
+      { value: 'all', label: 'Sve industrije', count: mockCompanies.length },
+      ...entries
+    ]
+  }, [])
 
   const companySizes = [
     { value: 'all', label: 'Sve veličine' },
@@ -156,6 +249,77 @@ export default function KompanijeContent() {
     return sorted
   }, [searchTerm, selectedIndustry, selectedSize, hiringOnly, sortBy])
 
+  const statsSource = filteredCompanies.length > 0 ? filteredCompanies : mockCompanies
+  const quickIndustryTargets = industries.filter((industry) => industry.value !== 'all').slice(0, 3)
+
+  const quickFilterChips = [
+    { label: 'Hiring sada', action: () => setHiringOnly(true) },
+    { label: 'Top ocenjene', action: () => setSortBy('rating') },
+    ...quickIndustryTargets.map((industry) => ({
+      label: industry.label,
+      action: () => setSelectedIndustry(industry.value)
+    })),
+    { label: 'Startup (<100)', action: () => setSelectedSize('startup') },
+    { label: 'SMB (100–999)', action: () => setSelectedSize('medium') },
+    { label: 'Enterprise (1000+)', action: () => setSelectedSize('large') }
+  ]
+
+  const topHiringCompanies = useMemo(() => {
+    const source = filteredCompanies.length > 0 ? filteredCompanies : mockCompanies
+    return source
+      .filter((company) => company.isHiring)
+      .slice()
+      .sort((a, b) => (b.openPositions || 0) - (a.openPositions || 0))
+      .slice(0, 2)
+  }, [filteredCompanies])
+
+  const topTechStacks = useMemo(() => {
+    const source = filteredCompanies.length > 0 ? filteredCompanies : mockCompanies
+    const frequency = new Map<string, number>()
+
+    source.forEach((company) => {
+      company.techStack?.forEach((tech) => {
+        frequency.set(tech, (frequency.get(tech) || 0) + 1)
+      })
+    })
+
+    return Array.from(frequency.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+  }, [filteredCompanies])
+
+  const topBenefits = useMemo(() => {
+    const source = filteredCompanies.length > 0 ? filteredCompanies : mockCompanies
+    const frequency = new Map<string, number>()
+
+    source.forEach((company) => {
+      company.benefits?.forEach((benefit) => {
+        frequency.set(benefit, (frequency.get(benefit) || 0) + 1)
+      })
+    })
+
+    return Array.from(frequency.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+  }, [filteredCompanies])
+
+  const regionHighlights = useMemo(() => buildRegionInsights(filteredCompanies.length > 0 ? filteredCompanies : mockCompanies), [filteredCompanies])
+  const topRegionHighlights = regionHighlights.slice(0, 3)
+  const globalRegionHighlights = useMemo(() => buildRegionInsights(mockCompanies), [])
+
+  const topRatedCompanies = useMemo(() => {
+    const source = filteredCompanies.length > 0 ? filteredCompanies : mockCompanies
+    return source
+      .filter((company) => typeof company.rating === 'number')
+      .slice()
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, 6)
+  }, [filteredCompanies])
+
+  const totalHiringCompanies = statsSource.filter((company) => company.isHiring).length
+  const totalOpenPositions = statsSource.reduce((sum, company) => sum + (company.openPositions || 0), 0)
+  const insightContextLabel = filteredCompanies.length > 0 ? 'iz vaše pretrage' : 'iz cele baze'
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Unified Gradient Hero */}
@@ -216,15 +380,16 @@ export default function KompanijeContent() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
               <select
                 value={selectedIndustry}
                 onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full sm:w-auto sm:min-w-[200px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 {industries.map((industry) => (
                   <option key={industry.value} value={industry.value}>
                     {industry.label}
+                    {industry.value !== 'all' ? ` (${industry.count})` : ''}
                   </option>
                 ))}
               </select>
@@ -232,7 +397,7 @@ export default function KompanijeContent() {
               <select
                 value={selectedSize}
                 onChange={(e) => setSelectedSize(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full sm:w-auto sm:min-w-[180px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 {companySizes.map((size) => (
                   <option key={size.value} value={size.value}>
@@ -241,7 +406,7 @@ export default function KompanijeContent() {
                 ))}
               </select>
 
-              <label className="flex items-center space-x-2 px-4 py-3 bg-gray-50 rounded-lg">
+              <label className="flex items-center justify-between sm:justify-start space-x-2 px-4 py-3 bg-gray-50 rounded-lg w-full sm:w-auto">
                 <input
                   type="checkbox"
                   checked={hiringOnly}
@@ -254,7 +419,7 @@ export default function KompanijeContent() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'rating' | 'openPositions' | 'founded' | 'name')}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full sm:w-auto sm:min-w-[210px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="rating">Sortiraj: Najbolje ocenjene</option>
                 <option value="openPositions">Sortiraj: Najviše pozicija</option>
@@ -262,50 +427,43 @@ export default function KompanijeContent() {
                 <option value="name">Sortiraj: A–Z</option>
               </select>
 
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setSelectedIndustry('all')
-                  setSelectedSize('all')
-                  setHiringOnly(false)
-                  setSortBy('rating')
-                  router.replace(pathname, { scroll: false })
-                }}
-                className="px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Obriši filtere
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:basis-full justify-center sm:justify-start">
+                <button
+                  onClick={() => {
+                    setSearchTerm('')
+                    setSelectedIndustry('all')
+                    setSelectedSize('all')
+                    setHiringOnly(false)
+                    setSortBy('rating')
+                    router.replace(pathname, { scroll: false })
+                  }}
+                  className="w-full sm:w-auto px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
+                >
+                  Obriši filtere
+                </button>
 
-              <button
-                onClick={async () => {
-                  try {
-                    const url = window.location.href
-                    await navigator.clipboard.writeText(url)
-                    setCopied(true)
-                    setTimeout(() => setCopied(false), 1500)
-                  } catch {}
-                }}
-                className="px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 inline-flex items-center gap-2"
-                title="Kopiraj link sa filterima"
-              >
-                {copied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4 text-gray-600" />}
-                {copied ? 'Kopirano' : 'Kopiraj link'}
-              </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const url = window.location.href
+                      await navigator.clipboard.writeText(url)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 1500)
+                    } catch {}
+                  }}
+                  className="w-full sm:w-auto px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 inline-flex items-center justify-center gap-2"
+                  title="Kopiraj link sa filterima"
+                >
+                  {copied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4 text-gray-600" />}
+                  {copied ? 'Kopirano' : 'Kopiraj link'}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Quick chips */}
           <div className="mt-4 flex flex-wrap gap-2">
-            {[
-              { label: 'Hiring sada', action: () => setHiringOnly(true) },
-              { label: 'Top ocenjene', action: () => setSortBy('rating') },
-              { label: 'Fintech', action: () => setSelectedIndustry('Finance') },
-              { label: 'Outsourcing', action: () => setSelectedIndustry('Outsourcing') },
-              { label: 'HealthTech', action: () => setSelectedIndustry('Healthcare') },
-              { label: 'Startup (<100)', action: () => setSelectedSize('startup') },
-              { label: 'SMB (100–999)', action: () => setSelectedSize('medium') },
-              { label: 'Enterprise (1000+)', action: () => setSelectedSize('large') },
-            ].map((chip) => (
+            {quickFilterChips.map((chip) => (
               <button
                 key={chip.label}
                 onClick={chip.action}
@@ -370,7 +528,7 @@ export default function KompanijeContent() {
 
         {/* Insights from current search */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Insajti iz vaše pretrage</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Insajti {insightContextLabel}</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
             <div className="p-4 rounded-lg bg-gray-50 border">
               <div className="text-gray-600">Top industrije</div>
@@ -399,6 +557,125 @@ export default function KompanijeContent() {
                   return avg.toFixed(1)
                 })()}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Snapshot: Hiring & Trends */}
+        <div className="grid gap-5 lg:grid-cols-3 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Ko zapošljava sada</h3>
+                <p className="text-[11px] text-gray-500">Pregled {insightContextLabel}</p>
+              </div>
+              <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
+                {totalHiringCompanies} hiring
+              </span>
+            </div>
+            <div className="space-y-3">
+              {topHiringCompanies.length ? (
+                topHiringCompanies.map((company, index) => (
+                  <div key={company.id} className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900 leading-tight">
+                        {index + 1}. {company.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {INDUSTRY_LABELS[company.industry] ?? company.industry}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-purple-600">
+                        {company.openPositions} pozicija
+                      </div>
+                      <div className="text-[11px] text-gray-500 max-w-[130px] leading-tight">
+                        {company.location}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Trenutno nema aktivnih oglašenih pozicija za odabrane filtere.
+                </p>
+              )}
+            </div>
+            <div className="mt-4 text-[11px] text-gray-500">
+              Ukupno {totalOpenPositions} otvorenih pozicija {insightContextLabel}.
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h3 className="text-sm font-semibold text-gray-900">Šta se najviše traži</h3>
+            <p className="text-[11px] text-gray-500">Stack i benefiti {insightContextLabel}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {topTechStacks.length ? (
+                topTechStacks.map(([tech, count]) => (
+                  <span
+                    key={tech}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded-full"
+                  >
+                    {tech}
+                    <span className="text-[11px] text-blue-500">×{count}</span>
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-gray-500">Nema stack podataka za trenutne filtere.</span>
+              )}
+            </div>
+            <h4 className="mt-5 text-xs font-semibold text-gray-900 uppercase tracking-wide">Top benefiti</h4>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {topBenefits.length ? (
+                topBenefits.map(([benefit, count]) => (
+                  <span
+                    key={benefit}
+                    className="inline-flex items-center gap-1 px-3 py-1 text-xs bg-green-50 text-green-700 rounded-full"
+                  >
+                    {benefit}
+                    <span className="text-[11px] text-green-500">×{count}</span>
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-gray-500">Nema podataka o benefitima za ove filtere.</span>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h3 className="text-sm font-semibold text-gray-900">Regionalni fokus</h3>
+            <p className="text-[11px] text-gray-500">Gde su timovi {insightContextLabel}</p>
+            <div className="mt-3 space-y-3">
+              {topRegionHighlights.length ? (
+                topRegionHighlights.map((region) => (
+                  <div
+                    key={region.key}
+                    className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {region.flag} {region.label}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {region.topIndustries.length ? region.topIndustries.join(', ') : 'Različite industrije'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-gray-900">{region.count}</div>
+                      <div className="text-[11px] text-gray-500">{region.hiring} hiring</div>
+                      {region.averageRating ? (
+                        <div className="text-[11px] text-yellow-600 mt-1">
+                          ★ {region.averageRating.toFixed(1)}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Vaši filteri ne poklapaju nijedan regionalni centar – probajte šire kriterijume.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -486,20 +763,63 @@ export default function KompanijeContent() {
 
         {/* Popular Companies Section */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
             🌟 Izdvojene kompanije
           </h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Najbolje ocenjeni timovi {insightContextLabel} sa provjerenim remote procesima i aktivnim hiring signalima.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {['NCR Voyix', 'Clutch', 'Microsoft'].map((name) => (
-              <div key={name} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-900">{name}</span>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    Zapošljava
-                  </span>
+            {topRatedCompanies.length ? (
+              topRatedCompanies.map((company) => (
+                <div
+                  key={company.id}
+                  className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm sm:text-base">
+                        {company.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {INDUSTRY_LABELS[company.industry] ?? company.industry}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-yellow-600">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">{company.rating?.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    <span className="truncate max-w-[60%]">{company.location}</span>
+                    <span className={company.isHiring ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                      {company.isHiring ? `🟢 ${company.openPositions} pozicija` : '⭕ Pauza'}
+                    </span>
+                  </div>
+                  {company.techStack?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {company.techStack.slice(0, 4).map((tech) => (
+                        <span
+                          key={tech}
+                          className="px-2 py-0.5 text-[11px] bg-blue-50 text-blue-700 rounded-md"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                      {company.techStack.length > 4 && (
+                        <span className="px-2 py-0.5 text-[11px] bg-gray-100 text-gray-500 rounded-md">
+                          +{company.techStack.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 col-span-full text-center text-sm text-gray-500">
+                Nema dovoljno ocenjenih kompanija u izboru – uklonite neke filtere da vidite preporuke.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -509,53 +829,26 @@ export default function KompanijeContent() {
             📊 Balkanska IT scena - ključne informacije
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-              <div className="text-3xl mb-3">🇷🇸</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Srbija</h3>
-              <p className="text-sm text-gray-600 mb-3">Tech hub Balkana</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• 100+ IT kompanija</li>
-                <li>• Paušalno oporezivanje</li>
-                <li>• Engleski mandatory</li>
-                <li>• €25-75k prosek</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-              <div className="text-3xl mb-3">🇭🇷</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Hrvatska</h3>
-              <p className="text-sm text-gray-600 mb-3">EU prednosti</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• EU članstvo</li>
-                <li>• SEPA plaćanja</li>
-                <li>• Turizam + Tech</li>
-                <li>• €20-60k prosek</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-              <div className="text-3xl mb-3">🇧🇦</div>
-              <h3 className="font-semibold text-gray-900 mb-2">BiH</h3>
-              <p className="text-sm text-gray-600 mb-3">Najjeftiniji talenti</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Niži troškovi</li>
-                <li>• Kvalitetan kadar</li>
-                <li>• Outsourcing hub</li>
-                <li>• €15-45k prosek</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-              <div className="text-3xl mb-3">🇲🇪</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Crna Gora</h3>
-              <p className="text-sm text-gray-600 mb-3">9% poreza</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Najniži porez</li>
-                <li>• Digital nomads</li>
-                <li>• Startup incentive</li>
-                <li>• €20-50k prosek</li>
-              </ul>
-            </div>
+            {globalRegionHighlights.length ? (
+              globalRegionHighlights.map((region) => (
+                <div key={region.key} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
+                  <div className="text-3xl mb-3">{region.flag}</div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{region.label}</h3>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• {region.count} kompanija u bazi</li>
+                    <li>• {region.hiring} trenutno hiring</li>
+                    <li>• Najtraženije: {region.topIndustries[0] ?? 'Raznolike industrije'}</li>
+                    <li>• Prosečna ocena: {region.averageRating ? `${region.averageRating.toFixed(1)}★` : 'n/a'}</li>
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center col-span-full">
+                <p className="text-sm text-gray-600">
+                  Još uvek prikupljamo podatke o regionalnim hubovima. Predložite kompaniju i pomozite nam da upotpunimo mapu.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -571,10 +864,10 @@ export default function KompanijeContent() {
               <div className="text-2xl mb-3">🚀</div>
               <h4 className="font-semibold mb-2">Startup Scene</h4>
               <ul className="text-sm text-indigo-100 space-y-1">
-                <li>Vega IT (Novi Sad)</li>
-                <li>Nordeus (Belgrade)</li>
-                <li>Eipix Entertainment</li>
+                <li>Tenderly (Belgrade)</li>
                 <li>Seven Bridges Genomics</li>
+                <li>Symphony.is</li>
+                <li>Quantox Technology</li>
               </ul>
             </div>
             
@@ -582,10 +875,10 @@ export default function KompanijeContent() {
               <div className="text-2xl mb-3">🏢</div>
               <h4 className="font-semibold mb-2">Established</h4>
               <ul className="text-sm text-indigo-100 space-y-1">
-                <li>Asseco SEE</li>
-                <li>RT-RK (Novi Sad)</li>
-                <li>Levi9 Technology</li>
-                <li>Execom Technologies</li>
+                <li>HTEC Group</li>
+                <li>Vega IT</li>
+                <li>Infobip</li>
+                <li>Endava</li>
               </ul>
             </div>
             
@@ -593,10 +886,10 @@ export default function KompanijeContent() {
               <div className="text-2xl mb-3">🌍</div>
               <h4 className="font-semibold mb-4">Global with Balkan offices</h4>
               <ul className="text-sm text-indigo-100 space-y-1">
-                <li>Microsoft (Belgrade)</li>
+                <li>LinkedIn</li>
                 <li>NCR Voyix</li>
-                <li>Endava</li>
-                <li>EPAM Systems</li>
+                <li>GitLab</li>
+                <li>Zapier</li>
               </ul>
             </div>
           </div>
@@ -610,9 +903,12 @@ export default function KompanijeContent() {
           <p className="text-purple-100 mb-6">
             Predložite je nama i dodaćemo je u bazu podataka
           </p>
-          <button className="bg-white text-purple-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+          <a
+            href="mailto:info@remotebalkan.com?subject=Predlog%20kompanije%20za%20Remote%20Balkan"
+            className="inline-flex items-center justify-center bg-white text-purple-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+          >
             Predloži kompaniju
-          </button>
+          </a>
         </div>
       </div>
 

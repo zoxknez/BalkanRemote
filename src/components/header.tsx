@@ -77,7 +77,7 @@ export function Header() {
           </nav>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
+          <div className="hidden md:flex items-center gap-3 ml-4 pl-4">
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"

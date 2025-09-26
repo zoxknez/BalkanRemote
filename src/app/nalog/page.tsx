@@ -158,6 +158,7 @@ export default function NalogPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   className="w-full border rounded-lg pl-9 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -172,6 +173,7 @@ export default function NalogPage() {
                   placeholder="Unesite lozinku"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
                   className="w-full border rounded-lg pl-9 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
@@ -191,6 +193,7 @@ export default function NalogPage() {
                     placeholder="Potvrdite lozinku"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
+                    autoComplete="new-password"
                     className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   {confirm && confirm !== password && (
@@ -219,8 +222,10 @@ export default function NalogPage() {
                 disabled={loading || (!email && mode !== 'reset') || !password}
                 className="w-full px-4 py-2 rounded-lg bg-indigo-600 disabled:opacity-50 text-white"
               >{loading ? 'Obrada…' : (mode === 'signIn' ? 'Prijava' : mode === 'reset' ? 'Postavi novu lozinku' : 'Registracija')}</button>
-              {error && <div className="text-sm text-red-600">{error}</div>}
-              {message && <div className="text-sm text-green-700">{message}</div>}
+              <div aria-live="polite" className="min-h-5">
+                {error && <div className="text-sm text-red-600">{error}</div>}
+                {message && <div className="text-sm text-green-700">{message}</div>}
+              </div>
 
               {/* OAuth providers */}
               <div className="pt-2">

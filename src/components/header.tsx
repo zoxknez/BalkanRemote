@@ -22,7 +22,7 @@ export function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       {/* Skip to content */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-[60] bg-blue-600 text-white px-3 py-2 rounded">Preskoči na sadržaj</a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +39,7 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-2" role="navigation" aria-label="Glavna navigacija">
             {navigation.map((item) => {
               const Icon = item.icon
-              const active = pathname === item.href
+              const active = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
                   key={item.name}
@@ -52,7 +52,7 @@ export function Header() {
                   {active && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-md bg-white ring-1 ring-gray-200 shadow-sm"
+                      className="absolute inset-0 rounded-md bg-white"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                     />
                   )}
@@ -112,7 +112,7 @@ export function Header() {
           <div className="px-4 py-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
-              const active = pathname === item.href
+              const active = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
                   key={item.name}
@@ -126,7 +126,7 @@ export function Header() {
                   {active && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-md bg-white ring-1 ring-gray-200 shadow-sm"
+                      className="absolute inset-0 rounded-md bg-white"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                     />
                   )}

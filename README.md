@@ -1,88 +1,95 @@
-# 🚀 Remote Balkan - Comprehensive Remote Work Platform
+# 🚀 Remote Balkan – Career Hub
 
-**Napredna platforma za remote poslove na Balkanu sa AI-powered tools i multifunkcionalnim kalkulator sistemom.**
+Platforma za remote rad iz Balkana: poreski vodič, resursi i alati, poslovi, mini forum za pitanja, i prijava/registracija.
 
-## ⚠️ Važno za AI Asistente
-**НИКАД НЕ БРИСАТИ ПОСТОЈЕЋЕ ФАЈЛОВЕ** - увек питај пре већих измена и користи мале, тачне edit-ове.
+Live: https://balkan-remote.vercel.app
 
-## 🎯 Features
+## ✅ Trenutne funkcionalnosti
 
-### 🔥 **MVP Moduli (Implementirani)**
+- Početna sa ključnim modulima (Poreski vodič, Saveti, Poslovi)
+- Poreski vodič za RSD sa praktičnim presetima (Junior 120k, Medior 250k, Senior 500k)
+- Resursi: bogata kolekcija kvalitetnih linkova (učenje, AI, zajednice, portfolio, freelancing…)
+- Alati: filterabilna kolekcija alata + preporuke urednika (dev, remote stack, sigurnost, AI)
+- Pitanja: mini Q&A (Supabase) – prijavljeni korisnici mogu postavljati pitanja
+- Nalog: registracija/prijava preko Supabase Auth (email/password, spremno za OAuth)
+- SEO osnova: sitemap/robots sa automatskim base URL fallback‑om (NEXT_PUBLIC_SITE_URL → VERCEL_URL)
+- Web Analytics: Vercel Analytics uključen
 
-#### 🎯 **Smart Match System**
-- AI algoritam za personalizovane job preporuke
-- TF-IDF skills matching sa scoring sistemom  
-- Seniority, salary i location compatibility
-- Detaljno objašnjenje zašto je posao idealan
+Napomena: Postoji osnovni kod za job scraping engine, ali je trenutno isključen/by‑design mock i API rute nisu aktivno povezane sa realnim izvorima.
 
-#### 🧮 **Multifunkcionalni Kalkulator (40+ kalkulatora)**
-- **Plata/Porezi**: RS Net↔Gross (Paušal/Preduzetnik/DOO), HR/BG/RO/MK varijante
-- **Freelance**: Efektivna satnica, break-even rates, invoice builder
-- **COL & Budžet**: Cost-of-living normalizer, remote office costs
-- **Vreme**: Timezone overlap, PTO tracking, meeting costs
-- **Procene**: Remote readiness score, burnout risk, productivity metrics
+## 🛠 Tech stack
 
-#### � **Poreski Vodič za Srbiju**  
-- Kompletno poređenje: Paušal vs Preduzetnik vs DOO
-- Interaktivni kalkulatori sa 2024 stopama
-- FAQ sistema za remote radnike
-- Oficijalni linkovi (APR, Poreska uprava, eFaktura)
+- Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
+- UI: Radix primitives, Framer Motion, Lucide ikone
+- Auth + DB: Supabase (Auth + Postgres sa RLS)
+- Hosting: Vercel (Turbopack build; po potrebi klasični build)
 
-#### 🧰 **Remote Balkan Toolbox**
-- **140+ curated linkova** kategorisano u 27 grupa
-- Job boards, EOR servisi, Payment solutions, Security tools
-- Local badge sistem za Balkan-specific servise
-- Advanced search, filtering i rating sistem
+## 📦 Pokretanje lokalno
 
-### 🤖 **Job Scraper Engine (In Development)**
-- 40+ job board konfiguracija (HelloWorld, Poslovi.hr, RemoteOK...)
-- Smart duplicate detection sa content fingerprinting
-- Automatic daily scraping sa scheduling
-- Rate limiting i anti-bot protection
+Preduslovi: Node 20+
 
-## 🛠 **Tech Stack**
-
-- **Frontend**: Next.js 15, React 18, TypeScript, Tailwind CSS
-- **UI**: Framer Motion, Lucide Icons, Headless UI
-- **State Management**: React hooks, SWR za data fetching  
-- **Database**: PostgreSQL (Prisma ORM), Redis za caching
-- **Scraping**: Puppeteer/Playwright, Proxy rotation
-- **Deployment**: Vercel (frontend), Railway (backend)
-
-- **Framework:** Next.js 15 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **UI Components:** Radix UI primitives
-- **Animations:** Framer Motion
-- **Icons:** Lucide React
-- **Build Tool:** Turbopack
-
-## 📦 Instaliranje
-
+1) Instalacija
 ```bash
-# Instaliraj dependencies
 npm install
+```
 
-# Pokreni development server
+2) Okruženje (.env.local)
+- Pogledaj `.env.example` i postavi sledeće promenljive:
+  - `NEXT_PUBLIC_SITE_URL` (opciono lokalno)
+  - `NEXT_PUBLIC_SUPABASE_URL` (iz Supabase projekta)
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon/public key iz Supabase)
+  - `SCRAPER_SCHEDULE_ENABLED` (opciono; podrazumevano false)
+
+3) Supabase podešavanje (jednokratno)
+- U Supabase konzoli (Auth → URL Configuration):
+  - Site URL: https://balkan-remote.vercel.app (i/ili http://localhost:3000 za lokalni rad)
+  - Redirect URLs: dodaj https://balkan-remote.vercel.app i http://localhost:3000 (po želji i preview wildcard)
+- U Supabase bazi pokreni SQL iz `scripts/supabase-setup.sql` (kreira tabelu `public.questions` i RLS politike).
+
+4) Dev server
+```bash
 npm run dev
-
 # Otvori http://localhost:3000
 ```
 
-### 🔧 Konfiguracija okruženja
+## 🚀 Deploy (Vercel)
 
-- `SCRAPER_SCHEDULE_ENABLED` – podrazumevano `false` u lokalnom okruženju. Postavi na `true` samo ako želiš da se job scraper automatski pokreće na intervalu. Manualno pokretanje је i dalje dostupno preko `POST /api/scraper/stats` čak и када je scheduler isključen.
+1) Poveži repo i odaberi Next.js preset (Root: ./)
+2) Environment Variables (All Environments ili bar Production/Preview):
+   - `NEXT_PUBLIC_SITE_URL` = tvoj domen (npr. https://balkan-remote.vercel.app)
+   - `NEXT_PUBLIC_SUPABASE_URL` = https://<tvoj-projekat>.supabase.co
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase anon key
+3) Build: podrazumevano `next build --turbopack`. Ako zatreba, koristi klasični:
+   - skripta: `npm run build:classic` (Next klasični builder)
 
-## 🚀 Build i Deploy
+## 🔑 Environment promenljive
 
-```bash
-# Production build
-npm run build
+- `NEXT_PUBLIC_SITE_URL` – kanonski osnovni URL; ako nije postavljen, koristi se Vercel `VERCEL_URL`
+- `NEXT_PUBLIC_SUPABASE_URL` – Supabase Project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` – Supabase anon/public key (bezbedno za klijent uz RLS)
+- `SCRAPER_SCHEDULE_ENABLED` – opcioni feature flag (by default false)
 
-# Start production server
-npm start
-```
+## 📚 Korisne skripte (package.json)
+
+- `dev` – start dev server (Turbopack)
+- `build` – turbopack build
+- `build:classic` – klasični Next build
+- `start` – start production server
+- `test` – vitest
+- `lint` – eslint
+- `find:dupes` – skripta za pronalazak duplikata
+
+## 🧭 Roadmap
+
+- Pitanja: odgovori (answers), kategorije, tagovi, admin moderacija
+- OAuth (Google/GitHub) kroz Supabase
+- Job scraping: cron, deduplikacija, verifikacija izvora i UI povezivanje
+- Dodatni kalkulatori i proširenja poreskog vodiča
+
+## 🤝 Contributing
+
+Predlozi i prijave problema: https://github.com/zoxknez/BalkanRemote/issues
 
 ---
 
-Balkan remote zajednica
+Remote Balkan – zajednica i alati za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije.

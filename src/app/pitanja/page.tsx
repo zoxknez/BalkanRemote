@@ -11,14 +11,15 @@ type Question = {
 }
 
 export default function PitanjaPage() {
-  const supabase = useMemo(() => createSupabaseBrowser(), [])
+  const supabase = useMemo(() => (typeof window !== 'undefined' ? createSupabaseBrowser() : null), [])
   const [questions, setQuestions] = useState<Question[]>([])
   const [content, setContent] = useState("")
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<{ user?: { email?: string | null } } | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    if (!supabase) return
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
     const { data: authSub } = supabase.auth.onAuthStateChange((_evt, s) => setSession(s))
     return () => authSub.subscription.unsubscribe()
@@ -26,6 +27,7 @@ export default function PitanjaPage() {
 
   useEffect(() => {
     (async () => {
+      if (!supabase) return
       setLoading(true)
       const { data } = await supabase
         .from("questions")
@@ -38,7 +40,7 @@ export default function PitanjaPage() {
   }, [supabase])
 
   const submit = async () => {
-    if (!session) return
+  if (!session || !supabase) return
     if (!content.trim()) return
     setSubmitting(true)
     const { error, data } = await supabase

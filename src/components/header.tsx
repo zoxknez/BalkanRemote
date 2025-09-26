@@ -29,11 +29,20 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">RB</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">Remote Balkan</span>
+          <Link href="/" className="flex items-center gap-3 group md:mr-6">
+            <span className="relative inline-flex">
+              <span
+                aria-hidden
+                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm transition duration-300 group-hover:opacity-95"
+              />
+              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">
+                RB
+              </span>
+            </span>
+            <span className="flex items-baseline gap-1 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-700">
+              <span>Remote</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Balkan</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -47,18 +56,20 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
-                    active ? 'text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  className={`group relative inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                    active
+                      ? 'text-blue-700 border-blue-100'
+                      : 'text-gray-600 border-transparent hover:border-blue-100 hover:text-blue-600'
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-md bg-white"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/15 via-blue-600/10 to-purple-500/15 ring-1 ring-blue-500/20"
+                      transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
                     />
                   )}
-                  <Icon className="w-4 h-4 relative z-10" />
+                  <Icon className="w-4 h-4 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" />
                   <span className="relative z-10">{item.name}</span>
                 </Link>
               )
@@ -121,19 +132,21 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex items-center gap-2 py-2 px-3 rounded-md font-medium transition hover:scale-[1.01] ${
-                    active ? 'text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  className={`group relative flex items-center gap-3 py-2 px-3 rounded-xl border font-medium transition-all duration-200 ${
+                    active
+                      ? 'text-blue-700 border-blue-100 bg-blue-50'
+                      : 'text-gray-700 border-transparent hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50/40'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {active && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-md bg-white"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/15 via-blue-600/10 to-purple-500/15"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                     />
                   )}
-                  <Icon className="w-4 h-4 relative z-10" />
+                  <Icon className="w-4 h-4 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" />
                   <span className="relative z-10">{item.name}</span>
                 </Link>
               )

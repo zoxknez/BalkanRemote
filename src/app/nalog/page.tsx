@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Sparkles, Users, Shield, Clock } from 'lucide-react'
 
 import { NalogClient } from './Client'
 
@@ -86,27 +87,70 @@ const helpSteps = [
 ]
 
 export default function NalogPage() {
+  const heroMetrics = [
+    {
+      icon: Sparkles,
+      label: 'Podržani provajderi',
+      value: '3',
+      description: 'Email, Google i GitHub',
+    },
+    {
+      icon: Clock,
+      label: 'Vreme registracije',
+      value: '< 2 min',
+      description: 'Jednostavan onboarding',
+    },
+    {
+      icon: Users,
+      label: 'Community benefiti',
+      value: String(highlights.length),
+      description: 'Ekskluzivne funkcije za članove',
+    },
+    {
+      icon: Shield,
+      label: 'Sigurnosne opcije',
+      value: 'Reset + OAuth',
+      description: 'Obnova lozinke i sigurni provajderi',
+    },
+  ]
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      <div className="text-center">
-        <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-600">
-          Remote Balkan nalog
-        </span>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          Pristupite svojim alatima i zajednici
-        </h1>
-        <p className="mt-4 text-base text-gray-600 sm:text-lg">
-          Sve što vam treba za praćenje remote poslova, poreza i regionalnih benefita na jednom mestu.
-        </p>
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100">
+              Remote Balkan nalog
+            </span>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">Registrujte se i otključajte zajednicu</h1>
+            <p className="mt-4 text-base text-blue-100 sm:text-lg">
+              Upravljajte kalkulatorima, sačuvajte alate i pristupite zatvorenim diskusijama članova.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {heroMetrics.map(({ icon: Icon, label, value, description }) => (
+              <div key={label} className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-4">
+                <Icon className="h-6 w-6 text-white/90" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-blue-100">{label}</p>
+                  <p className="text-lg font-semibold text-white">{value}</p>
+                  <p className="text-xs text-blue-100/90">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8 -mt-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <NalogClient />
           <p className="mt-6 text-xs text-gray-500">
@@ -185,6 +229,7 @@ export default function NalogPage() {
             </p>
           </div>
         </aside>
+      </div>
       </div>
     </div>
   )

@@ -168,7 +168,7 @@ function AlatiContent() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-white">
       {/* Unified Gradient Hero */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -741,7 +741,7 @@ function AlatiContent() {
 
 export default function AlatiPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}> 
+    <Suspense fallback={<div className="min-h-screen bg-white" />}> 
       <AlatiContent />
     </Suspense>
   )

@@ -19,6 +19,8 @@ import {
   Shield,
   Briefcase,
   Target,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 
 interface BalkanTip {
@@ -56,6 +58,12 @@ const difficultyColors: Record<BalkanTip['difficulty'], string> = {
   beginner: 'bg-green-100 text-green-800',
   intermediate: 'bg-yellow-100 text-yellow-800',
   advanced: 'bg-red-100 text-red-800',
+};
+
+const difficultyLabels: Record<BalkanTip['difficulty'], string> = {
+  beginner: 'Početni',
+  intermediate: 'Srednji',
+  advanced: 'Napredni',
 };
 
 const balkanTips: BalkanTip[] = [
@@ -446,8 +454,49 @@ function SavetiContent() {
     [selectedCategory]
   );
 
+  const metrics = useMemo(() => {
+    const difficulty: Record<BalkanTip['difficulty'], number> = {
+      beginner: 0,
+      intermediate: 0,
+      advanced: 0,
+    };
+
+    let totalMinutes = 0;
+    let totalSteps = 0;
+    const countries = new Set<string>();
+
+    filteredTips.forEach((tip) => {
+      difficulty[tip.difficulty] += 1;
+      totalSteps += tip.tips.length;
+      const minutes = parseInt(tip.timeToRead, 10);
+      if (!Number.isNaN(minutes)) {
+        totalMinutes += minutes;
+      }
+      if (tip.country) {
+        countries.add(tip.country);
+      }
+    });
+
+    return {
+      total: filteredTips.length,
+      minutes: totalMinutes,
+      steps: totalSteps,
+      countries: countries.size,
+      difficulty,
+    };
+  }, [filteredTips]);
+
+  const displayMinutes = metrics.minutes || Math.max(metrics.total * 4, metrics.total ? 4 : 0);
+  const displaySteps = metrics.steps || Math.max(metrics.total * 3, metrics.total ? 3 : 0);
+  const activeCategoryName = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return 'Sve kategorije';
+    }
+    return categories.find((cat) => cat.id === selectedCategory)?.name ?? 'Sve kategorije';
+  }, [selectedCategory]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -483,12 +532,18 @@ function SavetiContent() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8 grid gap-4 md:grid-cols-[260px_1fr]">
-          <aside className="bg-white rounded-xl border border-gray-200 p-4 h-fit sticky top-4 self-start">
-            <button onClick={() => setTocOpen((v) => !v)} className="w-full text-left text-sm font-semibold text-gray-900 mb-3">
-              Sadržaj
+          <aside className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 h-fit sticky top-4 self-start">
+            <button
+              onClick={() => setTocOpen((v) => !v)}
+              className="w-full flex items-center justify-between text-sm font-semibold text-gray-900 mb-3"
+              aria-expanded={tocOpen}
+              aria-controls="saveti-toc"
+            >
+              <span>Sadržaj</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${tocOpen ? 'rotate-180' : ''}`} />
             </button>
             {tocOpen && (
-              <nav className="text-sm text-gray-700 space-y-1">
+              <nav id="saveti-toc" className="text-sm text-gray-700 space-y-1">
                 <a href="#quick-start" className="block hover:text-blue-600">
                   🚀 Quick Start
                 </a>
@@ -525,6 +580,60 @@ function SavetiContent() {
                     </button>
                   );
                 })}
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-600">
+                    {metrics.total} saveta • {activeCategoryName}
+                  </p>
+                  <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs text-gray-500">
+                    {(
+                      Object.keys(difficultyLabels) as Array<keyof typeof difficultyLabels>
+                    ).map((level) => (
+                      <span
+                        key={level}
+                        className={`inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 ${
+                          metrics.difficulty[level] ? 'text-gray-600' : 'text-gray-400'
+                        }`}
+                      >
+                        <span className="font-medium">{difficultyLabels[level]}</span>
+                        <span className="text-[11px]">{metrics.difficulty[level]}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <Sparkles className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ukupno saveta</p>
+                      <p className="text-lg font-semibold text-gray-900">{metrics.total}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Praktičnih koraka</p>
+                      <p className="text-lg font-semibold text-gray-900">{displaySteps}+</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <Clock className="h-5 w-5 text-indigo-600" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Minuta čitanja</p>
+                      <p className="text-lg font-semibold text-gray-900">{displayMinutes}+</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <Globe className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Zemalja pokriveno</p>
+                      <p className="text-lg font-semibold text-gray-900">{metrics.countries}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

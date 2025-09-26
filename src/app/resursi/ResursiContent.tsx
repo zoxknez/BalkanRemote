@@ -200,8 +200,15 @@ function ResursiContent() {
 
   const featuredResources = filteredResources.filter((resource: Resource) => resource.featured);
 
+  // Metrics for quick summary
+  const totalResources = filteredResources.length;
+  const totalCategories = categories.length - 1; // exclude 'all'
+  const estMinutes = Math.max(Math.round(totalResources * 0.7), 8);
+  const langSet = new Set(filteredResources.map(r => r.language));
+  const totalLangs = langSet.size;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Unified Gradient Hero */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -215,6 +222,38 @@ function ResursiContent() {
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Najbolji sajtovi, alati, kursevi i saveti za uspešnu remote karijeru
             </p>
+
+            {/* Metrics summary */}
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <span className="text-2xl">📚</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Resursa</p>
+                  <p className="text-lg font-semibold text-white">{totalResources}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <span className="text-2xl">🗂️</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Kategorija</p>
+                  <p className="text-lg font-semibold text-white">{totalCategories}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <span className="text-2xl">⏱️</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Minuta čitanja</p>
+                  <p className="text-lg font-semibold text-white">{estMinutes}+</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <span className="text-2xl">🌍</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Jezika</p>
+                  <p className="text-lg font-semibold text-white">{totalLangs}</p>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">
                 <span>⭐</span>

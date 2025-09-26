@@ -694,8 +694,8 @@ export default function TaxGuideClient() {
 		selectedTaxOption?.maxIncome &&
 		monthlyIncome * 12 > (selectedTaxOption.maxIncome as number);
 
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+		return (
+			<div className="min-h-screen bg-white">
 			<div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
 				<div className="max-w-7xl mx-auto px-4 py-12">
 					<motion.div

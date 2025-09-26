@@ -33,6 +33,8 @@ export function NalogClient() {
   const [message, setMessage] = useState<string | null>(null)
   const [sessionEmail, setSessionEmail] = useState<string | null>(null)
 
+  const supabaseAvailable = Boolean(supabase)
+
   useEffect(() => {
     if (!supabase) return
 
@@ -176,6 +178,16 @@ export function NalogClient() {
 
   return (
     <div className="space-y-6">
+      {!supabaseAvailable && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="font-semibold">Supabase konfiguracija nije pronađena.</p>
+          <p className="mt-1">
+            Dodajte promenljive <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code> i{' '}
+            <code className="font-mono">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> u <code className="font-mono">.env.local</code> kako bi registracija i prijava radile.
+          </p>
+          <p className="mt-2">Trenutno je forma onemogućena.</p>
+        </div>
+      )}
       {sessionEmail ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
           <p className="text-sm text-gray-700">
@@ -190,6 +202,11 @@ export function NalogClient() {
         </div>
       ) : (
         <>
+          {supabaseAvailable ? null : (
+            <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700">
+              Registracija nije moguća dok se ne podese Supabase kredencijali.
+            </div>
+          )}
           <div className="flex w-full flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Auth modes">
             {(['signIn', 'signUp', 'reset'] satisfies AuthMode[]).map((authMode) => (
               <button
@@ -199,6 +216,7 @@ export function NalogClient() {
                 role="tab"
                 aria-selected={mode === authMode}
                 className={`flex-1 min-w-[120px] rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 ${mode === authMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                disabled={!supabaseAvailable}
               >
                 <span className="flex items-center justify-center gap-2">
                   {MODE_LABELS[authMode]}
@@ -225,7 +243,7 @@ export function NalogClient() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4" aria-disabled={!supabaseAvailable}>
             <label className="block text-sm font-medium text-gray-700" htmlFor="auth-email">
               Email
             </label>
@@ -238,7 +256,8 @@ export function NalogClient() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
-                className="w-full rounded-lg border border-gray-300 p-3 pl-9 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 p-3 pl-9 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                disabled={!supabaseAvailable}
               />
             </div>
             {email && !EMAIL_REGEX.test(email) && <p className="text-xs text-red-600">Unesite ispravan email.</p>}
@@ -255,13 +274,15 @@ export function NalogClient() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-                className="w-full rounded-lg border border-gray-300 p-3 pl-9 pr-12 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 p-3 pl-9 pr-12 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                disabled={!supabaseAvailable}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((visible) => !visible)}
                 className="absolute inset-y-0 right-3 my-auto inline-flex h-8 items-center justify-center rounded-md px-2 text-sm text-gray-600 hover:text-gray-900"
                 aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+                disabled={!supabaseAvailable}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -280,7 +301,8 @@ export function NalogClient() {
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
                   autoComplete="new-password"
-                  className="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-gray-300 p-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                  disabled={!supabaseAvailable}
                 />
                 {confirm && confirm !== password && <p className="text-xs text-red-600">Lozinke se ne poklapaju.</p>}
               </div>
@@ -295,7 +317,7 @@ export function NalogClient() {
 
             {mode !== 'reset' && (
               <div className="flex items-center justify-between text-sm">
-                <button type="button" onClick={sendResetEmail} className="text-indigo-600 hover:text-indigo-700">
+                <button type="button" onClick={sendResetEmail} className="text-indigo-600 hover:text-indigo-700 disabled:text-gray-400" disabled={!supabaseAvailable}>
                   Zaboravljena lozinka?
                 </button>
                 <span className="text-gray-500">{mode === 'signUp' ? 'Bar 6 karaktera' : '\u00A0'}</span>
@@ -305,7 +327,7 @@ export function NalogClient() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={loading || (mode !== 'reset' && !email) || !password}
+              disabled={loading || (mode !== 'reset' && !email) || !password || !supabaseAvailable}
               className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Obrada…' : mode === 'signIn' ? 'Prijava' : mode === 'reset' ? 'Postavi novu lozinku' : 'Registracija'}
@@ -321,7 +343,8 @@ export function NalogClient() {
                 <button
                   type="button"
                   onClick={() => signInWithProvider('google')}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm transition hover:bg-gray-50"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!supabaseAvailable}
                 >
                   <span className="text-[#EA4335]">G</span>
                   <span>Nastavi sa Google</span>
@@ -329,7 +352,8 @@ export function NalogClient() {
                 <button
                   type="button"
                   onClick={() => signInWithProvider('github')}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm transition hover:bg-gray-50"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={!supabaseAvailable}
                 >
                   <Github className="h-4 w-4" />
                   <span>Nastavi sa GitHub</span>

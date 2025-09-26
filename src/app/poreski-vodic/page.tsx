@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function PoreskiVodicPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <TaxGuideClient />
     </Suspense>
   );

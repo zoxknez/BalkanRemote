@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Sparkles, Clock } from 'lucide-react';
 import {
   ExternalLink,
   Linkedin,
@@ -59,8 +60,66 @@ export default function PosloviContent() {
     [],
   );
 
+  // Metrics for quick summary
+  const allLinks = [
+    ...quickChips,
+    // LinkedIn
+    { label: 'NCR Voyix', href: 'https://linkedin.com/jobs/ncr-jobs/?currentJobId=4092876160' },
+    { label: 'LinkedIn Remote', href: 'https://linkedin.com/jobs/remote-jobs/?currentJobId=4089960638' },
+    // Video
+    { label: 'Dispečer za USA', href: 'https://youtube.com/watch?v=lfCfqEBwQ8M' },
+    // Global boards
+    { label: 'Remote OK', href: 'https://remoteok.com/' },
+    { label: 'We Work Remotely', href: 'https://weworkremotely.com/' },
+    { label: 'Remotive', href: 'https://remotive.com/remote-jobs' },
+    { label: 'Remote.co', href: 'https://remote.co/remote-jobs/' },
+    { label: 'DailyRemote', href: 'https://dailyremote.com/' },
+    { label: 'Jobspresso', href: 'https://jobspresso.co/' },
+    // IT kompanije
+    { label: 'Clutch', href: 'https://clutch.co/rs/it-services' },
+    { label: 'Joberty', href: 'https://joberty.com/IT-companies?page=1&sort=featured' },
+    // EU timezone
+    { label: 'EU Remote Jobs', href: 'https://euremotejobs.com/' },
+    { label: 'No Fluff Jobs', href: 'https://nofluffjobs.com/remote' },
+    { label: 'Wellfound', href: 'https://wellfound.com/jobs?remote=true' },
+    // Freelance
+    { label: 'Upwork', href: 'https://www.upwork.com/' },
+    { label: 'Fiverr', href: 'https://www.fiverr.com/' },
+    { label: 'Toptal', href: 'https://www.toptal.com/' },
+    { label: 'Braintrust', href: 'https://www.usebraintrust.com/' },
+    { label: 'Contra', href: 'https://contra.com/' },
+    { label: 'Arc.dev', href: 'https://arc.dev/remote-jobs' },
+    // Support
+    { label: 'Support Driven', href: 'https://jobs.supportdriven.com/' },
+    { label: 'WWR: CS', href: 'https://weworkremotely.com/categories/remote-customer-support-jobs' },
+    { label: 'Remotive: CS', href: 'https://remotive.com/remote-jobs/customer-support' },
+    // Teaching
+    { label: 'Preply', href: 'https://preply.com/en/online/teaching-jobs' },
+    { label: 'iTalki', href: 'https://www.italki.com/teachers' },
+    { label: 'Cambly', href: 'https://www.cambly.com/en/tutors' },
+    { label: 'EF Teach Online', href: 'https://www.ef.com/teachonline/' },
+    { label: 'Good Air Language', href: 'https://www.goodairlanguage.com/teaching-english-online-2/' },
+    // Blogovi
+    { label: 'Zapier', href: 'https://zapier.com/learn/remote-work/' },
+    { label: 'GitLab', href: 'https://about.gitlab.com/company/culture/all-remote/' },
+    { label: 'Buffer', href: 'https://buffer.com/state-of-remote-work' },
+    { label: 'WWR Blog', href: 'https://weworkremotely.com/blog' },
+    { label: 'Skillcrush', href: 'https://skillcrush.com/blog/sites-finding-remote-work/' },
+    // Generatori
+    { label: 'FlowCV', href: 'https://flowcv.com/' },
+    { label: 'Teal Resume', href: 'https://www.tealhq.com/resume-builder' },
+    { label: 'Resume.io', href: 'https://www.resume.io/' },
+    { label: 'Cover Letter Online', href: 'https://coverletter.online/' },
+    { label: 'Read.cv', href: 'https://www.read.cv/' },
+    { label: 'GitHub Pages', href: 'https://pages.github.com/' },
+  ];
+  const uniqueLinks = Array.from(new Set(allLinks.map((l) => l.href)));
+  const totalLinks = uniqueLinks.length;
+  const totalSections = 10; // hardcoded for now
+  const estMinutes = Math.max(Math.round(totalLinks * 0.7), 8);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Gradient hero aligned with Saveti */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -71,10 +130,36 @@ export default function PosloviContent() {
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Brzi prečaci do relevantnih oglasa i mreža</h1>
+
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Brze prečice do relevantnih oglasa i mreža</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Remote i EU-timezone liste, freelance platforme i praktični vodiči.
             </p>
+
+            {/* Metrics summary */}
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <Sparkles className="h-5 w-5 text-yellow-300" />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Izvora</p>
+                  <p className="text-lg font-semibold text-white">{totalLinks}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <List className="h-5 w-5 text-green-200" />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Sekcija</p>
+                  <p className="text-lg font-semibold text-white">{totalSections}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+                <Clock className="h-5 w-5 text-blue-200" />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Minuta čitanja</p>
+                  <p className="text-lg font-semibold text-white">{estMinutes}+</p>
+                </div>
+              </div>
+            </div>
 
             <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">

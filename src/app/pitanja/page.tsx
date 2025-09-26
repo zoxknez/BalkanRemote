@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { Users, MessageCircle, Clock, Sparkles } from "lucide-react"
 import { createSupabaseBrowser } from "@/lib/supabaseClient"
 
 type Question = {
@@ -55,8 +56,67 @@ export default function PitanjaPage() {
     setSubmitting(false)
   }
 
+  const stats = useMemo(() => {
+    const total = questions.length
+    const unique = new Set(questions.map((q) => q.user_email ?? 'anon')).size
+    const latestDate = total ? new Date(questions[0].created_at) : null
+    const latestLabel = latestDate
+      ? latestDate.toLocaleDateString('sr-RS', {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '—'
+
+    return {
+      total,
+      unique,
+      latestLabel,
+    }
+  }, [questions])
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/20">
+              <MessageCircle className="w-12 h-12" />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Pitanja i sugestije</h1>
+          <p className="text-center text-blue-100 text-lg max-w-2xl mx-auto">
+            Postavite pitanje timu Remote Balkan zajednice ili pročitajte iskustva drugih.
+          </p>
+
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3">
+              <Sparkles className="h-5 w-5 text-amber-200" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-blue-100">Ukupno pitanja</p>
+                <p className="text-lg font-semibold text-white">{stats.total}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3">
+              <Users className="h-5 w-5 text-green-200" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-blue-100">Aktivnih članova</p>
+                <p className="text-lg font-semibold text-white">{stats.unique}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3">
+              <Clock className="h-5 w-5 text-indigo-200" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-blue-100">Poslednje pitanje</p>
+                <p className="text-lg font-semibold text-white">{stats.latestLabel}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 -mt-10 relative z-10">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Pitanja i sugestije</h1>
         <p className="text-gray-600 mb-6">Postavite pitanje ili predlog. Potrebna je registracija/prijava.</p>
@@ -105,6 +165,7 @@ export default function PitanjaPage() {
             ))}
           </ul>
         )}
+      </div>
       </div>
     </div>
   )

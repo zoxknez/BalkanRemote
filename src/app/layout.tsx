@@ -10,8 +10,11 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const publicBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  || (typeof process !== 'undefined' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://remotebalkan.example');
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://remotebalkan.example'),
+  metadataBase: new URL(publicBaseUrl),
   title: {
     default: 'Remote Balkan – Career Hub',
     template: '%s | Remote Balkan',
@@ -82,7 +85,7 @@ export default function RootLayout({
             '@context': 'https://schema.org',
             '@type': 'Organization',
             name: 'Remote Balkan',
-            url: process.env.NEXT_PUBLIC_SITE_URL || 'https://remotebalkan.example',
+            url: publicBaseUrl,
             logo: '/favicon.svg'
           })}
         </Script>

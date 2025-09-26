@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Menu, X, Home, Building2, BookOpen, Wrench, Zap, FileText, Briefcase, Heart, MessageCircle } from 'lucide-react'
+import { Menu, X, Home, Building2, BookOpen, Wrench, Zap, FileText, Briefcase, Heart, MessageCircle, UserPlus } from 'lucide-react'
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -14,12 +14,13 @@ export function Header() {
     { name: 'Početna', href: '/', icon: Home },
     { name: 'Saveti', href: '/saveti', icon: Zap },
     { name: 'Poslovi', href: '/poslovi', icon: Briefcase },
-  { name: 'Poreski vodič', href: '/poreski-vodic', icon: FileText },
+    { name: 'Poreski vodič', href: '/poreski-vodic', icon: FileText },
     { name: 'Kompanije', href: '/kompanije', icon: Building2 },
     { name: 'Resursi', href: '/resursi', icon: BookOpen },
     { name: 'Alati', href: '/alati', icon: Wrench },
-    { name: 'Pitanja', href: '/pitanja', icon: MessageCircle }
-  ]
+    { name: 'Pitanja', href: '/pitanja', icon: MessageCircle },
+    { name: 'Registracija', href: '/nalog?view=register', match: '/nalog', icon: UserPlus },
+  ] as const
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -39,7 +40,8 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-2" role="navigation" aria-label="Glavna navigacija">
             {navigation.map((item) => {
               const Icon = item.icon
-              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+              const matchPath = 'match' in item && item.match ? item.match : item.href
+              const active = pathname === matchPath || pathname.startsWith(`${matchPath}/`)
               return (
                 <Link
                   key={item.name}
@@ -112,7 +114,8 @@ export function Header() {
           <div className="px-4 py-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
-              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+              const matchPath = 'match' in item && item.match ? item.match : item.href
+              const active = pathname === matchPath || pathname.startsWith(`${matchPath}/`)
               return (
                 <Link
                   key={item.name}

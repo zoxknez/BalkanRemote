@@ -17,6 +17,12 @@ const MODE_LABELS: Record<AuthMode, string> = {
 
 export function NalogClient() {
   const supabase = useMemo(() => (typeof window !== 'undefined' ? createSupabaseBrowser() : null), [])
+  const siteUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin
+    }
+    return process.env.NEXT_PUBLIC_SITE_URL ?? ''
+  }, [])
   const [mode, setMode] = useState<AuthMode>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -101,7 +107,7 @@ export function NalogClient() {
         email,
         password,
         options: {
-          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/nalog' : undefined,
+          emailRedirectTo: siteUrl ? `${siteUrl}/nalog` : undefined,
         },
       })
       if (error) throw error
@@ -112,7 +118,7 @@ export function NalogClient() {
     } finally {
       setLoading(false)
     }
-  }, [confirm, email, mode, password, supabase])
+  }, [confirm, email, mode, password, siteUrl, supabase])
 
   const handleSignOut = useCallback(async () => {
     if (!supabase) return
@@ -132,7 +138,7 @@ export function NalogClient() {
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/nalog` : undefined,
+        redirectTo: siteUrl ? `${siteUrl}/nalog` : undefined,
       })
       if (error) throw error
       setMessage('Ako nalog postoji, poslat je email za promenu lozinke.')
@@ -142,7 +148,7 @@ export function NalogClient() {
     } finally {
       setLoading(false)
     }
-  }, [email, supabase])
+  }, [email, siteUrl, supabase])
 
   const signInWithProvider = useCallback(
     async (provider: 'github' | 'google') => {
@@ -154,7 +160,7 @@ export function NalogClient() {
         const { error } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
-            redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/nalog` : undefined,
+            redirectTo: siteUrl ? `${siteUrl}/nalog` : undefined,
           },
         })
         if (error) throw error
@@ -165,7 +171,7 @@ export function NalogClient() {
         setLoading(false)
       }
     },
-    [supabase],
+    [siteUrl, supabase],
   )
 
   return (

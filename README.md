@@ -11,9 +11,9 @@ Live: https://balkan-remote.vercel.app
 - Resursi: bogata kolekcija kvalitetnih linkova (učenje, AI, zajednice, portfolio, freelancing…)
 - Alati: filterabilna kolekcija alata + preporuke urednika (dev, remote stack, sigurnost, AI)
 - Pitanja: mini Q&A (Supabase) – prijavljeni korisnici mogu postavljati pitanja
-- Nalog: registracija/prijava preko Supabase Auth (email/password, spremno za OAuth)
+- Nalog: kompletan Auth UX (email/password, potvrda lozinke, indikator jačine, reset lozinke, OAuth Google/GitHub)
 - SEO osnova: sitemap/robots sa automatskim base URL fallback‑om (NEXT_PUBLIC_SITE_URL → VERCEL_URL)
-- Web Analytics: Vercel Analytics uključen
+- Merenje: Vercel Analytics + Speed Insights
 
 Napomena: Postoji osnovni kod za job scraping engine, ali je trenutno isključen/by‑design mock i API rute nisu aktivno povezane sa realnim izvorima.
 
@@ -59,8 +59,22 @@ npm run dev
    - `NEXT_PUBLIC_SITE_URL` = tvoj domen (npr. https://balkan-remote.vercel.app)
    - `NEXT_PUBLIC_SUPABASE_URL` = https://<tvoj-projekat>.supabase.co
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase anon key
+  - (opciono) `NEXT_PUBLIC_SITE_URL` = kanonski URL (ako ne postoji, koristi se `VERCEL_URL`)
 3) Build: podrazumevano `next build --turbopack`. Ako zatreba, koristi klasični:
    - skripta: `npm run build:classic` (Next klasični builder)
+
+4) Speed Insights: paket je već dodat i komponenta uključena u `src/app/layout.tsx`.
+
+## 🔐 OAuth (Supabase)
+
+Za Google i GitHub prijavu:
+- U Supabase → Authentication → Providers: uključi Google i/ili GitHub i unesi Client ID/Secret.
+- Redirect URL-ovi (Sign in / Callback):
+  - Production: `https://<tvoj-domen>/nalog`
+  - Lokalno: `http://localhost:3000/nalog`
+- U Authentication → URL Configuration:
+  - Site URL: `https://<tvoj-domen>` (i/ili `http://localhost:3000` za lokalni rad)
+- Frontend već ima dugmad i pozive (`supabase.auth.signInWithOAuth`).
 
 ## 🔑 Environment promenljive
 
@@ -82,7 +96,7 @@ npm run dev
 ## 🧭 Roadmap
 
 - Pitanja: odgovori (answers), kategorije, tagovi, admin moderacija
-- OAuth (Google/GitHub) kroz Supabase
+- Napredne opcije za OAuth (scopes, linkovanje naloga)
 - Job scraping: cron, deduplikacija, verifikacija izvora i UI povezivanje
 - Dodatni kalkulatori i proširenja poreskog vodiča
 

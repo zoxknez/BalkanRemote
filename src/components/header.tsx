@@ -62,7 +62,7 @@ export function Header() {
           <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
             <Link
               href="/poslovi"
-              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg font-medium hover:shadow-lg transition-all duration-200"
+              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               Traži poslove
             </Link>
@@ -71,7 +71,7 @@ export function Header() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Doniraj autoru preko PayPal"
-              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all"
+              className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
             >
               <Heart className="w-4 h-4" />
               <span>Doniraj</span>

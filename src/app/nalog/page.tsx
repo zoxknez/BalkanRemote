@@ -151,7 +151,7 @@ export default function NalogPage() {
 
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">Email</label>
-              <div className="relative">
+              <div className="relative transition-shadow">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="email"
@@ -161,8 +161,11 @@ export default function NalogPage() {
                   className="w-full border rounded-lg pl-9 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+              {email && !/.+@.+\..+/.test(email) && (
+                <p className="text-xs text-red-600">Unesite ispravan email.</p>
+              )}
               <label className="block text-sm font-medium text-gray-700">{mode === 'reset' ? 'Nova lozinka' : 'Lozinka'}</label>
-              <div className="relative">
+              <div className="relative transition-shadow">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -178,14 +181,22 @@ export default function NalogPage() {
                   aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
                 >{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
+              {password && password.length < 6 && (
+                <p className="text-xs text-amber-600">Lozinka treba da ima bar 6 karaktera.</p>
+              )}
               {mode === 'signUp' && (
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Potvrdite lozinku"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Potvrdite lozinku"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {confirm && confirm !== password && (
+                    <p className="text-xs text-red-600">Lozinke se ne poklapaju.</p>
+                  )}
+                </>
               )}
               <div className="h-2 rounded bg-gray-100 overflow-hidden" aria-hidden>
                 <div

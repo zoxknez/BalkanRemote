@@ -29,10 +29,10 @@ export default function PitanjaPage() {
     script.async = true
     script.crossOrigin = "anonymous"
     script.setAttribute("data-utterances", "")
-    script.setAttribute("repo", "zoxknez/BalkanRemote")
-    script.setAttribute("issue-term", "pathname")
-    script.setAttribute("label", "pitanja")
-    script.setAttribute("theme", "github-dark")
+  script.setAttribute("repo", "zoxknez/BalkanRemote")
+  script.setAttribute("issue-term", "pathname")
+  // No label needed; avoids requiring a pre-created label in the repo
+  script.setAttribute("theme", "preferred-color-scheme")
 
     containerRef.current.appendChild(script)
   }, [])

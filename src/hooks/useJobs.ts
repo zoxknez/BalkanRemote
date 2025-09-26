@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { JobPosting, JobCategory } from '@/types/jobs';
 
 export interface JobFilters {
@@ -32,8 +32,17 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<JobFilters>(initialFilters);
+  const abortRef = useRef<AbortController | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchJobs = useCallback(async (newFilters?: JobFilters) => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
 
@@ -52,7 +61,10 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
         }
       });
 
-      const response = await fetch(`/api/jobs?${searchParams.toString()}`);
+      const query = searchParams.toString();
+      const url = query ? `/api/jobs?${query}` : '/api/jobs';
+
+      const response = await fetch(url, { signal: controller.signal });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -68,12 +80,18 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
       setTotal(data.data.total);
 
     } catch (err) {
+      if ((err as DOMException)?.name === 'AbortError') {
+        return;
+      }
       console.error('Error fetching jobs:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
       setJobs([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setLoading(false);
+      }
     }
   }, [filters]);
 
@@ -90,7 +108,13 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   }, [fetchJobs]);
 
   const search = useCallback((keywords: string) => {
-    updateFilters({ keywords, offset: 0 });
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      updateFilters({ keywords, offset: 0 });
+    }, 300);
   }, [updateFilters]);
 
   const loadMore = useCallback(() => {
@@ -106,6 +130,14 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   // Initial load
   useEffect(() => {
     fetchJobs();
+    return () => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, [fetchJobs]);
 
   return {

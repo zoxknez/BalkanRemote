@@ -1,254 +1,190 @@
-"use client"
+import type { Metadata } from 'next'
 
-import { useEffect, useMemo, useState } from "react"
-import { createSupabaseBrowser } from "@/lib/supabaseClient"
-import { Mail, Lock, Eye, EyeOff, Github } from "lucide-react"
+import { NalogClient } from './Client'
+
+const faqStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'QAPage',
+  name: 'Remote Balkan nalozi',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Da li je registracija besplatna?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Da, kreiranje naloga je potpuno besplatno. Planovi za napredne alatke biće najavljeni unapred.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Kako resetujem lozinku?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Kliknite na "Zaboravljena lozinka?" na prijavi i pratite uputstva u email poruci koja stiže.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Koje provajdere za prijavu podržavate?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Trenutno podržavamo prijavu putem email-a, GitHub-a i Google naloga.',
+      },
+    },
+  ],
+}
+
+export const metadata: Metadata = {
+  title: 'Nalog | Remote Balkan',
+  description:
+    'Registrujte se ili se prijavite na Remote Balkan da biste pratili napredne alate, personalizovane kalkulatore i poseban sadržaj zajednice.',
+  alternates: {
+    canonical: '/nalog',
+  },
+  openGraph: {
+    title: 'Remote Balkan nalog',
+    description: 'Jedinstveno mesto za vaše kalkulatore, alate i resurse iz Remote Balkan zajednice.',
+    url: 'https://remotebalkan.com/nalog',
+    siteName: 'Remote Balkan',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nalog | Remote Balkan',
+    description: 'Prijava i registracija za ekskluzivne Remote Balkan alatke i sadržaj.',
+  },
+}
+
+const highlights = [
+  {
+    title: 'Rani pristup alatima',
+    description: 'Prijavljeni korisnici prvi testiraju nove kalkulatore, scrape izvore i marketplace opcije.',
+  },
+  {
+    title: 'Personalizovani podsetnici',
+    description: 'Sačuvajte oglase, generišite prilagođene upozorenja i pratite izmene legislacije po državama.',
+  },
+  {
+    title: 'Community benefiti',
+    description: 'Pridružite se privatnim diskusijama, delite predloge i glasajte za sledeće funkcionalnosti.',
+  },
+]
+
+const helpSteps = [
+  {
+    title: '1. Kreirajte nalog',
+    description: 'Popunite email i lozinku ili nastavite preko Google/GitHub naloga.',
+  },
+  {
+    title: '2. Potvrdite email',
+    description: 'Ukoliko je potrebno, aktivacioni link stiže u roku od nekoliko minuta.',
+  },
+  {
+    title: '3. Istražite alatke',
+    description: 'Otključajte kalkulatore, scraping pipeline i personalizovane preglede poslova.',
+  },
+]
 
 export default function NalogPage() {
-  const supabase = useMemo(() => (typeof window !== 'undefined' ? createSupabaseBrowser() : null), [])
-  const [mode, setMode] = useState<"signIn" | "signUp" | "reset">("signIn")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [confirm, setConfirm] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!supabase) return
-    supabase.auth.getSession().then(({ data }) => setSessionEmail(data.session?.user?.email ?? null))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSessionEmail(s?.user?.email ?? null))
-    return () => sub.subscription.unsubscribe()
-  }, [supabase])
-
-  // Detect Supabase recovery link and show reset password UI
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (window.location.hash.includes('type=recovery')) {
-      setMode('reset')
-    }
-  }, [])
-
-  const submit = async () => {
-  if (!supabase) return
-  setLoading(true)
-    setError(null)
-    setMessage(null)
-    try {
-      // basic validation
-      const emailOk = /.+@.+\..+/.test(email)
-      if (!emailOk) throw new Error('Unesite ispravan email')
-  if (password.length < 6) throw new Error('Lozinka mora imati bar 6 karaktera')
-  if (mode === 'signUp' && password !== confirm) throw new Error('Lozinke se ne poklapaju')
-      if (mode === 'reset') {
-        const { error } = await supabase.auth.updateUser({ password })
-        if (error) throw error
-        setMessage('Lozinka je promenjena. Sada se možete prijaviti.')
-        setMode('signIn')
-        setPassword("")
-        setConfirm("")
-      } else if (mode === "signIn") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        setMessage("Uspešno prijavljeni.")
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined }
-        })
-        if (error) throw error
-        setMessage("Registracija uspešna. Proverite email za potvrdu (ako je potrebno).")
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      setError(msg || "Došlo je do greške")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signOut = async () => {
-  if (!supabase) return
-  await supabase.auth.signOut()
-  }
-
-  const resetPassword = async () => {
-    if (!supabase) return
-    setLoading(true)
-    setError(null)
-    setMessage(null)
-    try {
-      const emailOk = /.+@.+\..+/.test(email)
-      if (!emailOk) throw new Error('Unesite ispravan email')
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/nalog` : undefined,
-      })
-      if (error) throw error
-      setMessage('Ako nalog postoji, poslat je email za promenu lozinke.')
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      setError(msg || 'Došlo je do greške')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signInWithProvider = async (provider: 'github' | 'google') => {
-    if (!supabase) return
-    setLoading(true)
-    setError(null)
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: typeof window !== 'undefined' ? window.location.origin + '/nalog' : undefined,
-        },
-      })
-      if (error) throw error
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      setError(msg || 'Greška pri OAuth prijavi')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Nalog</h1>
-        <p className="text-gray-600 mb-6">Registracija i prijava</p>
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
 
-        {sessionEmail ? (
-          <div className="mb-6 rounded-lg border p-4 bg-gray-50">
-            <p className="text-sm text-gray-700">Prijavljeni kao: <span className="font-medium">{sessionEmail}</span></p>
-            <button onClick={signOut} className="mt-3 inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 text-white">
-              Odjava
-            </button>
+      <div className="text-center">
+        <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+          Remote Balkan nalog
+        </span>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          Pristupite svojim alatima i zajednici
+        </h1>
+        <p className="mt-4 text-base text-gray-600 sm:text-lg">
+          Sve što vam treba za praćenje remote poslova, poreza i regionalnih benefita na jednom mestu.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <NalogClient />
+          <p className="mt-6 text-xs text-gray-500">
+            Prijavom prihvatate osnovne{' '}
+            <a href="/pitanja" className="underline transition hover:text-indigo-600">
+              uslove korišćenja i pravila ponašanja zajednice
+            </a>
+            .
+          </p>
+        </div>
+
+        <aside className="space-y-6 rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/80 p-6 text-left">
+          <div>
+            <h2 className="text-lg font-semibold text-indigo-900">Zašto kreirati nalog?</h2>
+            <ul className="mt-3 space-y-3 text-sm text-indigo-900/80">
+              {highlights.map((item) => (
+                <li key={item.title} className="flex gap-3">
+                  <span className="mt-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-indigo-600">
+                    •
+                  </span>
+                  <div>
+                    <p className="font-medium text-indigo-900">{item.title}</p>
+                    <p>{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
-        ) : (
-          <>
-            <div className="inline-flex items-center gap-1 mb-5 rounded-lg p-1 bg-gray-100">
-              <button
-                onClick={() => setMode("signIn")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'signIn' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-                aria-pressed={mode === 'signIn'}
-              >Prijava</button>
-              <button
-                onClick={() => setMode("signUp")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'signUp' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-                aria-pressed={mode === 'signUp'}
-              >Registracija</button>
-              <button
-                onClick={() => setMode("reset")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'reset' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-                aria-pressed={mode === 'reset'}
-              >Reset lozinke</button>
-            </div>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <div className="relative transition-shadow">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="w-full border rounded-lg pl-9 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              {email && !/.+@.+\..+/.test(email) && (
-                <p className="text-xs text-red-600">Unesite ispravan email.</p>
-              )}
-              <label className="block text-sm font-medium text-gray-700">{mode === 'reset' ? 'Nova lozinka' : 'Lozinka'}</label>
-              <div className="relative transition-shadow">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Unesite lozinku"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-                  className="w-full border rounded-lg pl-9 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute inset-y-0 right-3 my-auto h-8 px-2 text-sm text-gray-600 hover:text-gray-900"
-                  aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
-                >{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
-              </div>
-              {password && password.length < 6 && (
-                <p className="text-xs text-amber-600">Lozinka treba da ima bar 6 karaktera.</p>
-              )}
-              {mode === 'signUp' && (
-                <>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Potvrdite lozinku"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    autoComplete="new-password"
-                    className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {confirm && confirm !== password && (
-                    <p className="text-xs text-red-600">Lozinke se ne poklapaju.</p>
-                  )}
-                </>
-              )}
-              <div className="h-2 rounded bg-gray-100 overflow-hidden" aria-hidden>
-                <div
-                  className={`${
-                    password.length >= 10 ? 'bg-green-500' : password.length >= 6 ? 'bg-amber-500' : 'bg-gray-300'
-                  } h-full transition-all`}
-                  style={{ width: `${Math.min(100, password.length * 10)}%` }}
-                />
-              </div>
-              {mode !== 'reset' && (
-                <div className="flex items-center justify-between text-sm">
-                  <button type="button" onClick={resetPassword} className="text-indigo-600 hover:text-indigo-700">
-                    Zaboravljena lozinka?
-                  </button>
-                  <span className="text-gray-500">{mode === 'signUp' ? 'Bar 6 karaktera' : ' '} </span>
-                </div>
-              )}
-              <button
-                onClick={submit}
-                disabled={loading || (!email && mode !== 'reset') || !password}
-                className="w-full px-4 py-2 rounded-lg bg-indigo-600 disabled:opacity-50 text-white"
-              >{loading ? 'Obrada…' : (mode === 'signIn' ? 'Prijava' : mode === 'reset' ? 'Postavi novu lozinku' : 'Registracija')}</button>
-              <div aria-live="polite" className="min-h-5">
-                {error && <div className="text-sm text-red-600">{error}</div>}
-                {message && <div className="text-sm text-green-700">{message}</div>}
-              </div>
+          <div className="border-t border-indigo-200 pt-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Kako funkcioniše</h3>
+            <ol className="mt-3 space-y-2 text-sm text-indigo-900/80">
+              {helpSteps.map((step) => (
+                <li key={step.title} className="flex gap-3">
+                  <span className="mt-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+                    {step.title.split('.')[0]}
+                  </span>
+                  <div>
+                    <p className="font-medium text-indigo-900">{step.title}</p>
+                    <p>{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
 
-              {/* OAuth providers */}
-              <div className="pt-2">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => signInWithProvider('google')}
-                    className="flex-1 inline-flex items-center justify-center gap-2 border rounded-lg py-2 text-sm hover:bg-gray-50"
-                  >
-                    <span className="text-[#EA4335]">G</span>
-                    <span>Nastavi sa Google</span>
-                  </button>
-                  <button
-                    onClick={() => signInWithProvider('github')}
-                    className="flex-1 inline-flex items-center justify-center gap-2 border rounded-lg py-2 text-sm hover:bg-gray-50"
-                  >
-                    <Github className="w-4 h-4" />
-                    <span>Nastavi sa GitHub</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+          <div className="rounded-xl border border-indigo-200 bg-white/70 p-4 text-sm text-indigo-900">
+            <h3 className="font-semibold text-indigo-900">Podrška</h3>
+            <p className="mt-2">
+              Treba vam pomoć oko naloga? Pišite na{' '}
+              <a href="mailto:zoxknez@hotmail.com" className="font-medium text-indigo-700 underline">
+                zoxknez@hotmail.com
+              </a>{' '}
+              ili otvorite{' '}
+              <a
+                href="https://github.com/zoxknez/BalkanRemote/issues/new"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-indigo-700 underline"
+              >
+                GitHub issue
+              </a>
+              .
+            </p>
+            <p className="mt-2">
+              Za hitne probleme najbrži kanal je{' '}
+              <a
+                href="https://x.com/KoronVirus"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-indigo-700 underline"
+              >
+                X DM
+              </a>
+              .
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   )

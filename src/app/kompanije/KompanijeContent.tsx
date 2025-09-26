@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, Building2, Users, TrendingUp, Star, Link as LinkIcon, Check, ArrowUp, CheckCircle } from 'lucide-react'
 import { CompanyCard } from '@/components/company-card'
+import { BalkanItBanner } from '@/components/balkan-it-banner'
 import { mockCompanies } from '@/data/mock-data'
 
 export default function KompanijeContent() {
@@ -191,38 +192,11 @@ export default function KompanijeContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Balkan IT Scene Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 text-white mb-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">
-              🇷🇸🇭🇷🇧🇦🇲🇪 Balkanska IT scena u ekspanziji
-            </h2>
-            <p className="text-blue-100 mb-6">
-              Naš region je novi hub za remote rad - evo ko sve zapošljava ovde
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl mb-2">🏗️</div>
-                <div className="font-semibold">Lokalne Firme</div>
-                <div className="text-sm text-blue-100">Domaće IT kompanije</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl mb-2">🌍</div>
-                <div className="font-semibold">Global Remote</div>
-                <div className="text-sm text-blue-100">Svetski giganti</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl mb-2">🚀</div>
-                <div className="font-semibold">Startup Scene</div>
-                <div className="text-sm text-blue-100">Inovativni startup-i</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl mb-2">💼</div>
-                <div className="font-semibold">Outsourcing</div>
-                <div className="text-sm text-blue-100">Development partneri</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <BalkanItBanner
+          className="mb-8"
+          title="🇷🇸🇭🇷🇧🇦🇲🇪 Balkanska IT scena u ekspanziji"
+          subtitle="Naš region je novi hub za remote rad - evo ko sve zapošljava ovde"
+        />
 
         {/* Search and Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">

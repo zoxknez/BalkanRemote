@@ -47,7 +47,7 @@ export function Header() {
                   aria-current={active ? 'page' : undefined}
                   className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
                     active
-                      ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200'
+                      ? 'bg-white text-gray-900 ring-1 ring-gray-200 shadow-sm'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
@@ -114,7 +114,7 @@ export function Header() {
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={`flex items-center gap-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >

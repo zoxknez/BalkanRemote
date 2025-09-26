@@ -9,6 +9,7 @@ export default function NalogPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -30,7 +31,8 @@ export default function NalogPage() {
       // basic validation
       const emailOk = /.+@.+\..+/.test(email)
       if (!emailOk) throw new Error('Unesite ispravan email')
-      if (password.length < 6) throw new Error('Lozinka mora imati bar 6 karaktera')
+  if (password.length < 6) throw new Error('Lozinka mora imati bar 6 karaktera')
+  if (mode === 'signUp' && password !== confirm) throw new Error('Lozinke se ne poklapaju')
       if (mode === "signIn") {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -80,7 +82,7 @@ export default function NalogPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Nalog</h1>
         <p className="text-gray-600 mb-6">Registracija i prijava</p>
 
@@ -128,6 +130,23 @@ export default function NalogPage() {
                   className="absolute inset-y-0 right-3 my-auto h-8 px-2 text-sm text-gray-600 hover:text-gray-900"
                   aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
                 >{showPassword ? 'Sakrij' : 'Prikaži'}</button>
+              </div>
+              {mode === 'signUp' && (
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Potvrdite lozinku"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              )}
+              <div className="h-2 rounded bg-gray-100 overflow-hidden" aria-hidden>
+                <div
+                  className={`${
+                    password.length >= 10 ? 'bg-green-500' : password.length >= 6 ? 'bg-amber-500' : 'bg-gray-300'
+                  } h-full transition-all`}
+                  style={{ width: `${Math.min(100, password.length * 10)}%` }}
+                />
               </div>
               <div className="flex items-center justify-between text-sm">
                 <button type="button" onClick={resetPassword} className="text-indigo-600 hover:text-indigo-700">

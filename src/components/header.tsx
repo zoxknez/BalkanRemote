@@ -1,12 +1,14 @@
-'use client'
+"use client"
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Menu, X, Home, Building2, BookOpen, Wrench, Zap, FileText, Briefcase, Heart, MessageCircle } from 'lucide-react'
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
 
   const navigation = [
     { name: 'Početna', href: '/', icon: Home },
@@ -34,14 +36,20 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Glavna navigacija">
+          <nav className="hidden md:flex items-center gap-2" role="navigation" aria-label="Glavna navigacija">
             {navigation.map((item) => {
               const Icon = item.icon
+              const active = pathname === item.href
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium whitespace-nowrap"
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                    active
+                      ? 'bg-gray-100 text-gray-900 ring-1 ring-gray-200'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.name}</span>
@@ -99,11 +107,15 @@ export function Header() {
           <div className="px-4 py-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
+              const active = pathname === item.href
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center gap-2 py-2 px-3 rounded-md font-medium transition-colors ${
+                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   <Icon className="w-4 h-4" />

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -93,6 +94,7 @@ export default function RootLayout({
         <main className="min-h-screen" id="main-content">
           {children}
         </main>
+        <Analytics />
         <Footer />
       </body>
     </html>

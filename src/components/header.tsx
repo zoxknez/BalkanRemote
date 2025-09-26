@@ -51,7 +51,7 @@ export function Header() {
           </nav>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-9 px-4 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg font-medium hover:shadow-lg transition-all duration-200"
@@ -111,7 +111,7 @@ export function Header() {
                 </Link>
               )
             })}
-            <div className="pt-4">
+            <div className="pt-4 mt-2 border-t border-gray-200">
               <Link
                 href="/poslovi"
                 className="block text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium"

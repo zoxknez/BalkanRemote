@@ -8,6 +8,7 @@ export default function NalogPage() {
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -26,6 +27,10 @@ export default function NalogPage() {
     setError(null)
     setMessage(null)
     try {
+      // basic validation
+      const emailOk = /.+@.+\..+/.test(email)
+      if (!emailOk) throw new Error('Unesite ispravan email')
+      if (password.length < 6) throw new Error('Lozinka mora imati bar 6 karaktera')
       if (mode === "signIn") {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -52,6 +57,27 @@ export default function NalogPage() {
   await supabase.auth.signOut()
   }
 
+  const resetPassword = async () => {
+    if (!supabase) return
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const emailOk = /.+@.+\..+/.test(email)
+      if (!emailOk) throw new Error('Unesite ispravan email')
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/nalog` : undefined,
+      })
+      if (error) throw error
+      setMessage('Ako nalog postoji, poslat je email za promenu lozinke.')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(msg || 'Došlo je do greške')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -67,14 +93,16 @@ export default function NalogPage() {
           </div>
         ) : (
           <>
-            <div className="flex gap-2 mb-4">
+            <div className="inline-flex items-center gap-1 mb-5 rounded-lg p-1 bg-gray-100">
               <button
                 onClick={() => setMode("signIn")}
-                className={`px-3 py-2 rounded-lg border ${mode === 'signIn' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700'}`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'signIn' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                aria-pressed={mode === 'signIn'}
               >Prijava</button>
               <button
                 onClick={() => setMode("signUp")}
-                className={`px-3 py-2 rounded-lg border ${mode === 'signUp' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700'}`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'signUp' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                aria-pressed={mode === 'signUp'}
               >Registracija</button>
             </div>
 
@@ -86,13 +114,27 @@ export default function NalogPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <input
-                type="password"
-                placeholder="Lozinka"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Lozinka"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border rounded-lg p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute inset-y-0 right-3 my-auto h-8 px-2 text-sm text-gray-600 hover:text-gray-900"
+                  aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+                >{showPassword ? 'Sakrij' : 'Prikaži'}</button>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <button type="button" onClick={resetPassword} className="text-indigo-600 hover:text-indigo-700">
+                  Zaboravljena lozinka?
+                </button>
+                <span className="text-gray-500">{mode === 'signUp' ? 'Bar 6 karaktera' : ' '} </span>
+              </div>
               <button
                 onClick={submit}
                 disabled={loading || !email || !password}

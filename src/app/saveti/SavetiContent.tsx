@@ -96,10 +96,10 @@ const balkanTips: BalkanTip[] = [
     difficulty: 'beginner',
     timeToRead: '6 min',
     tips: [
-      'Srbija: paušal ili preduzetnik pausalac – brzo pokretanje, renta do ~8.5M RSD (2025).',
-      'Hrvatska: paušalni obrt (do 300k EUR) ili obrt s knjigama kada pređeš limit.',
-      'BiH: razlike FBiH / RS – konsultuj lokalnu poresku upravu pre registracije.',
-      'Crna Gora: preduzetnik ili DOO uz 9% poreza, hvataj državne podsticaje za IT.',
+      'Srbija: paušalni preduzetnik – limit 9.000.000 RSD (2025), standardna šifra 62.01 za IT.',
+      'Hrvatska: paušalni obrt do 40.000 EUR prihoda godišnje (paušalni porez + paušalni doprinosi). Preko toga prelaziš na vođenje knjiga ili d.o.o.',
+      'BiH: razdvoj FBiH i RS pravila – različite stope i pragovi, proveri lokalne propise pre registracije.',
+      'Crna Gora: preduzetnik ili DOO uz 9% poreza na dobit, prati lokalne podsticaje za IT i startape.',
       'Ako tek testiraš tržište – koristi platformski rad (Upwork, Deel) uz prijavu prihoda.',
     ],
     resources: [
@@ -157,19 +157,21 @@ const balkanTips: BalkanTip[] = [
     country: 'Srbija',
     timeToRead: '8 min',
     tips: [
-      'Pripremi ličnu kartu i idi na eAPR (apr.gov.rs).',
-      'Odaberi šifru delatnosti 62.01 (Računarsko programiranje).',
-      'Popuni prijavu za paušalno oporezivanje (Grupa II).',
-      'Plati taksu online ili u banci.',
-      'Sačekaj rešenje (1–3 dana) i otvori poslovni račun.',
-      'Prijavi se u registre u propisanom roku.',
-      'Traži feedback redovno.',
+      'Obezbedi kvalifikovani elektronski potpis (npr. Halcom, eID.gov.rs) kako bi potpisao elektronske prijave.',
+      'Na eAPR portalu podnesi osnivačku prijavu preduzetnika (šifra delatnosti 62.01, naziv, adresa, kontakt).',
+      'Plati administrativnu taksu elektronski i sačekaj rešenje APR-a (obično 1–5 radnih dana).',
+      'U roku od 5 dana od osnivanja podnesi zahtev za paušalno oporezivanje (PPDG-1R) kroz ePorezi i označi da želiš paušalni režim.',
+      'Podnesi M obrasce za penziono, zdravstveno i nezaposlenost preko ePorezi/CROSO portala (može i knjigovođa).',
+      'Otvori poslovni dinarski i devizni račun – banci dostavi APR rešenje i LBO.',
+      'Aktiviraj ePorezi i eFaktura naloge i evidentiraj se za elektronsko dostavljanje akontacija.',
+      'Planiraj kvartalne akontacije poreza i doprinosa i vodi evidenciju prihoda radi praćenja limita.',
     ],
     resources: [
       { name: 'APR', url: 'https://www.apr.gov.rs' },
       { name: 'Poreska uprava – Paušal', url: 'https://www.purs.gov.rs/sr/preduzetnik/pausalno-oporezivanje.html' },
+      { name: 'ePorezi portal', url: 'https://eporezi.purs.gov.rs' },
     ],
-    warning: 'Limit (primer) ~8.5M RSD godišnje – proveri aktuelne pragove.',
+    warning: 'Godišnji limit za paušal trenutno je 9.000.000 RSD (2025) – proveri aktuelne pragove pre podnošenja.',
   },
   {
     id: 'rs-dokumenta-obrasci',
@@ -771,6 +773,54 @@ function SavetiContent() {
               </div>
             </div>
 
+            <section id="learning-paths" className="mb-12">
+              <div className="mb-6 text-center">
+                <h2 className="text-2xl font-bold text-gray-900">🛤️ Putanje po iskustvu</h2>
+                <p className="text-sm text-gray-600 max-w-2xl mx-auto">
+                  Tri jasna tracka koja te vode од првих корака до напредног skaliranja. Izaberi nivo i prati preporučene članke.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {pathCards.map((path, idx) => (
+                  <motion.div
+                    key={path.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: idx * 0.05 }}
+                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col"
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900">{path.title}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{path.description}</p>
+                      </div>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${difficultyColors[path.level]}`}>
+                        {difficultyLabels[path.level]}
+                      </span>
+                    </div>
+                    <ul className="space-y-2 text-sm text-gray-700 flex-1">
+                      {path.tips.map((tip) => (
+                        <li key={tip.id} className="flex items-start gap-2">
+                          <ArrowRight className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          <a href={`#tip-${tip.id}`} className="hover:text-blue-600 transition-colors">
+                            {tip.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      href={`#tip-${path.tipIds[0]}`}
+                      className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Kreni od prve lekcije
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
             <div id="quick-start" className="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-8 text-white mb-12">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold mb-2">🚀 Quick Start Guide za Remote Rad</h2>
@@ -808,6 +858,7 @@ function SavetiContent() {
                 return (
                   <motion.div
                     key={tip.id}
+                    id={`tip-${tip.id}`}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}

@@ -777,7 +777,7 @@ function SavetiContent() {
               <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-gray-900">🛤️ Putanje po iskustvu</h2>
                 <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-                  Tri jasna tracka koja te vode од првих корака до напредног skaliranja. Izaberi nivo i prati preporučene članke.
+                  Tri jasna tracka koja te vode od prvih koraka do naprednog skaliranja. Izaberi nivo i prati preporučene članke.
                 </p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

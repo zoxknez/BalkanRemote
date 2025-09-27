@@ -70,7 +70,7 @@ export function Footer() {
               <a 
                 href="https://github.com/zoxknez" 
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="me noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
                 title="GitHub profil"
               >

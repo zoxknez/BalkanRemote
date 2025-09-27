@@ -24,7 +24,7 @@ export function Header() {
   ] as const
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <header className="sticky top-0 inset-x-0 z-50 w-full bg-white border-b border-gray-200">
       {/* Skip to content */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-[60] bg-blue-600 text-white px-3 py-2 rounded">Preskoči na sadržaj</a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

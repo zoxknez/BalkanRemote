@@ -23,8 +23,13 @@ export async function fetchPortalJobs(params: {
   experienceLevel?: string[]
   search?: string | null
   orderBy?: 'posted_at' | 'created_at'
-}): Promise<{ rows: PortalJobRecord[]; total: number }> {
-  const { limit, offset, remote, contractType, category, experienceLevel, search, orderBy = 'posted_at' } = params
+  withGlobalFacets?: boolean
+}): Promise<{ rows: PortalJobRecord[]; total: number; globalFacets?: {
+  contractType: Record<string, number>
+  experienceLevel: Record<string, number>
+  category: Record<string, number>
+} }> {
+  const { limit, offset, remote, contractType, category, experienceLevel, search, orderBy = 'posted_at', withGlobalFacets } = params
   const supabase = createSupabaseServer()
 
   let query = supabase
@@ -66,8 +71,44 @@ export async function fetchPortalJobs(params: {
     throw new Error(`Failed to fetch job portal listings: ${error.message}`)
   }
 
-  return {
-    rows: data ?? [],
-    total: count ?? 0,
+  const baseResult = { rows: data ?? [], total: count ?? 0 }
+
+  if (!withGlobalFacets) return baseResult
+
+  // Build facet queries separately (ignoring pagination) but respecting filters except pagination/limit
+  // We perform three aggregate queries; if performance becomes an issue we can create a materialized view.
+  const facetFilters = (qb: any) => {
+    if (remote !== undefined) qb = qb.eq('is_remote', remote)
+    if (contractType && contractType.length > 0) qb = qb.in('type', contractType)
+    if (category) qb = qb.eq('category', category)
+    if (experienceLevel && experienceLevel.length > 0) qb = qb.in('experience_level', experienceLevel)
+    if (search) {
+      qb = qb.or([
+        `title.ilike.%${search}%`,
+        `company.ilike.%${search}%`,
+        `location.ilike.%${search}%`,
+        `tags.cs.{${search}}`,
+      ].join(','))
+    }
+    return qb
   }
+
+  const [typeAgg, expAgg, catAgg] = await Promise.all([
+    facetFilters(supabase.from('job_portal_listings').select('type')).then((r: any) => r.data as PortalJobRecord[] | null),
+    facetFilters(supabase.from('job_portal_listings').select('experience_level')).then((r: any) => r.data as PortalJobRecord[] | null),
+    facetFilters(supabase.from('job_portal_listings').select('category')).then((r: any) => r.data as PortalJobRecord[] | null),
+  ])
+
+  const contractTypeCounts: Record<string, number> = {}
+  ;(typeAgg || []).forEach((r: Partial<PortalJobRecord>) => { if (r.type) contractTypeCounts[r.type] = (contractTypeCounts[r.type] || 0) + 1 })
+  const experienceCounts: Record<string, number> = {}
+  ;(expAgg || []).forEach((r: Partial<PortalJobRecord>) => { if (r.experience_level) experienceCounts[r.experience_level] = (experienceCounts[r.experience_level] || 0) + 1 })
+  const categoryCounts: Record<string, number> = {}
+  ;(catAgg || []).forEach((r: Partial<PortalJobRecord>) => { if (r.category) categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1 })
+
+  return { ...baseResult, globalFacets: {
+    contractType: contractTypeCounts,
+    experienceLevel: experienceCounts,
+    category: categoryCounts,
+  }}
 }

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const experienceLevel = parseList(searchParams.getAll('experience'))
     const search = searchParams.get('search') || undefined
 
-    const { rows, total } = await fetchPortalJobs({
+    const { rows, total, globalFacets } = await fetchPortalJobs({
       limit,
       offset,
       remote,
@@ -42,27 +42,10 @@ export async function GET(request: NextRequest) {
       category: category ?? null,
       experienceLevel,
       search,
+      withGlobalFacets: true,
     })
 
-    const facets = rows.reduce(
-      (acc, job) => {
-        if (job.type) {
-          acc.contractType[job.type] = (acc.contractType[job.type] ?? 0) + 1
-        }
-        if (job.experience_level) {
-          acc.experienceLevel[job.experience_level] = (acc.experienceLevel[job.experience_level] ?? 0) + 1
-        }
-        if (job.category) {
-          acc.category[job.category] = (acc.category[job.category] ?? 0) + 1
-        }
-        return acc
-      },
-      {
-        contractType: {} as Record<string, number>,
-        experienceLevel: {} as Record<string, number>,
-        category: {} as Record<string, number>,
-      },
-    )
+    const facets = globalFacets ?? { contractType: {}, experienceLevel: {}, category: {} }
 
     return NextResponse.json({
       success: true,

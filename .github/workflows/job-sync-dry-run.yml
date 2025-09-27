@@ -1,0 +1,39 @@
+name: Job Feed Sync (Dry Run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_sync_log_format:
+        description: "LOG_FORMAT (text/json)"
+        required: false
+        default: json
+
+permissions:
+  contents: read
+
+jobs:
+  sync-dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install deps
+        run: npm ci
+      - name: Run job feed sync (dry-run)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          # SERVICE ROLE KEY is not required for dry run because we skip DB writes, but we include if present for parity
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JOB_SYNC_DRY_RUN: '1'
+          LOG_FORMAT: ${{ github.event.inputs.job_sync_log_format || 'json' }}
+        run: npm run sync:jobs
+      - name: Summary
+        if: always()
+        run: |
+          echo "Dry-run finished with status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

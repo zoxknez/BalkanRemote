@@ -151,44 +151,55 @@ async function collectFeed(sourceId: string): Promise<PortalJobInsert[]> {
 }
 
 async function main() {
-  logger.event('job_sync_start', { at: new Date().toISOString() })
+  const dryRun = process.env.JOB_SYNC_DRY_RUN === '1' || process.env.JOB_SYNC_DRY_RUN === 'true'
+  logger.event('job_sync_start', { at: new Date().toISOString(), dryRun })
   const allListings: PortalJobInsert[] = []
+  const perSource: Record<string, { ok: boolean; count: number; error?: string }> = {}
 
   for (const source of jobFeedSources) {
     try {
       const listings = await collectFeed(source.id)
       allListings.push(...listings)
-      logger.event('job_source_collected', { source: source.id, count: listings.length })
-      await markFeedSuccess(source.id, listings.length)
+      perSource[source.id] = { ok: true, count: listings.length }
+      logger.event('job_source_collected', { source: source.id, count: listings.length, dryRun })
+      if (!dryRun) {
+        await markFeedSuccess(source.id, listings.length)
+      }
     } catch (error) {
       const message = (error as Error).message
-      logger.event('job_source_error', { source: source.id, error: message })
-      try { await markFeedError(source.id, message) } catch (err) { logger.event('job_source_error_mark_failed', { source: source.id, error: (err as Error).message }) }
+      perSource[source.id] = { ok: false, count: 0, error: message }
+      logger.event('job_source_error', { source: source.id, error: message, dryRun })
+      if (!dryRun) {
+        try { await markFeedError(source.id, message) } catch (err) { logger.event('job_source_error_mark_failed', { source: source.id, error: (err as Error).message }) }
+      }
     }
   }
 
   if (allListings.length === 0) {
-    logger.warn('No listings collected. Aborting upsert.')
+    logger.warn('No listings collected. ' + (dryRun ? 'Dry run finished.' : 'Aborting upsert.'))
+    logger.event('job_sync_summary', { dryRun, sources: perSource })
     return
   }
 
-  // Sort newest first and limit total volume
+  // Sort newest first and dedupe
   const sorted = allListings.sort((a, b) => new Date(b.posted_at).getTime() - new Date(a.posted_at).getTime())
   const dedupedMap = new Map<string, PortalJobInsert>()
-
   for (const listing of sorted) {
     const key = `${listing.source_id}:${listing.external_id}`
     if (!dedupedMap.has(key)) {
       dedupedMap.set(key, listing)
     }
   }
-
   const deduped = Array.from(dedupedMap.values())
+
+  if (dryRun) {
+    logger.event('job_sync_dry_run_complete', { totalCollected: allListings.length, totalAfterDedupe: deduped.length, sources: perSource })
+    return
+  }
+
   logger.event('job_upsert_begin', { count: deduped.length })
-
   await upsertPortalJobs(deduped)
-
-  logger.event('job_sync_complete', { total: deduped.length })
+  logger.event('job_sync_complete', { total: deduped.length, sources: perSource })
 }
 
 main().catch((error) => {

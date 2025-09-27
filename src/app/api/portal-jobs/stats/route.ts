@@ -14,6 +14,15 @@ export const runtime = 'nodejs'
 export const revalidate = 60 // cache hint
 
 export async function GET(request: Request) {
+  // Graceful fallback for build environments without Supabase credentials
+  const hasSupabaseCreds = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+  if (!hasSupabaseCreds) {
+    const res = NextResponse.json({ success: true, data: [] })
+    // Short cache to avoid bursts while staying fresh
+    res.headers.set('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60')
+    res.headers.set('X-Notice', 'Supabase credentials missing; returning empty stats')
+    return res
+  }
   try {
     if (!isAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })

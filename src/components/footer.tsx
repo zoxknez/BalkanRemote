@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Github, Twitter, Mail, Heart } from 'lucide-react'
+import { Github, Twitter, Mail, Heart, User } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -68,10 +68,20 @@ export function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
+                href="https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+                title="GitHub profil"
+              >
+                <User className="w-5 h-5" />
+              </a>
+              <a 
                 href="https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"
+                title="Repo na GitHub-u"
               >
                 <Github className="w-5 h-5" />
               </a>

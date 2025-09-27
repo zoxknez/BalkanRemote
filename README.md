@@ -1,5 +1,7 @@
 # 🚀 Remote Balkan – Career Hub
 
+[![CI](https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/actions/workflows/ci.yml/badge.svg)](https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/actions/workflows/ci.yml)
+
 Platforma za remote rad iz Balkana: poreski vodič, resursi i alati, poslovi, mini forum za pitanja, i prijava/registracija.
 
 Live: https://balkan-remote.vercel.app
@@ -66,6 +68,17 @@ npm run dev
    - skripta: `npm run build:classic` (Next klasični builder)
 
 4) Speed Insights: paket je već dodat i komponenta uključena u `src/app/layout.tsx`.
+
+### Brzi checklist posle migracije repoa
+
+- [ ] Vercel Project → Settings → Git → Connected Git Repository = novi repo
+- [ ] Environment Variables postavljene (Production/Preview):
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - (opciono) `NEXT_PUBLIC_SITE_URL`
+- [ ] GitHub Actions Secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] Pokrenuti “Jobs Sync” workflow ručno prvi put (Actions → Jobs Sync → Run)
 
 ## 🔐 OAuth (Supabase)
 

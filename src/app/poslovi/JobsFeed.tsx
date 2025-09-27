@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
+import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp, Search } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { usePortalJobs } from '@/hooks/usePortalJobs'
@@ -158,6 +158,8 @@ export function JobsFeed() {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const detailsRef = useRef<HTMLDivElement | null>(null)
   const [detailsHeight, setDetailsHeight] = useState(0)
+  const [searchText, setSearchText] = useState('')
+  const [copied, setCopied] = useState(false)
 
   // Build initial filters from URL (one-time for this component mount)
   const initialLimit = (() => {
@@ -253,6 +255,23 @@ export function JobsFeed() {
       setLastUpdated(new Date())
     }
   }, [loading, hasRealData, portalJobs])
+
+  // Keep local search input in sync with filters
+  useEffect(() => {
+    setSearchText((filters.search ?? '').toString())
+  }, [filters.search])
+
+  // Debounce search input to filters
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const q = searchText.trim()
+      // Avoid redundant updates
+      if ((filters.search ?? '') !== q) {
+        updateFilters({ search: q || undefined, offset: 0 }, { append: false })
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [searchText, filters.search, updateFilters])
 
   const goToPage = useCallback((page: number) => {
     const limit = filters.limit ?? 12
@@ -389,6 +408,26 @@ export function JobsFeed() {
     window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
+  const handleCopyLink = async () => {
+    try {
+      const url = window.location.href
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = url
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    } catch {
+      // noop
+    }
+  }
+
   // Reflect filters to URL (page, limit, q, category, contractType[], experience[], remote)
   useEffect(() => {
     const p = new URLSearchParams(params.toString())
@@ -502,6 +541,14 @@ export function JobsFeed() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={handleCopyLink}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
+            aria-label="Kopiraj link sa filterima"
+          >
+            {copied ? 'Link kopiran' : 'Kopiraj link'}
+          </button>
+          <button
+            type="button"
             onClick={() => resetFilters()}
             disabled={loading}
             className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -542,6 +589,19 @@ export function JobsFeed() {
           <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
             <Filter className="h-3.5 w-3.5" /> Filteri
           </span>
+          {/* Search */}
+          <div className="relative w-full sm:w-auto sm:min-w-[260px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              inputMode="search"
+              placeholder="Pretraga oglasa (naziv, kompanija, tagovi)"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-3 py-1 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              aria-label="Pretraga poslova"
+            />
+          </div>
           <button
             type="button"
             onClick={toggleRemote}

@@ -28,18 +28,22 @@ export function JobCard({ job, className }: JobCardProps) {
     'internship': 'Praksa'
   }
 
+  const titleId = `job-title-${job.id}`
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden",
+        "group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden focus-within:outline focus-within:outline-2 focus-within:outline-blue-500/40",
         job.featured && "ring-2 ring-blue-500/20 border-blue-200",
         className
       )}
+      role="article"
+      aria-labelledby={titleId}
     >
       {job.featured && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 text-xs font-medium">
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 text-xs font-medium" aria-label="Izdvojeni oglas">
           ⭐ Izdvojeno
         </div>
       )}
@@ -58,7 +62,7 @@ export function JobCard({ job, className }: JobCardProps) {
               />
             )}
             <div>
-              <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
+              <h3 id={titleId} className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                 {job.title}
               </h3>
               <p className="text-gray-600 flex items-center">
@@ -68,10 +72,10 @@ export function JobCard({ job, className }: JobCardProps) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500 flex items-center">
+            <time dateTime={job.postedAt.toISOString()} className="text-sm text-gray-500 flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
               {formatDate(job.postedAt)}
-            </div>
+            </time>
           </div>
         </div>
 
@@ -118,7 +122,8 @@ export function JobCard({ job, className }: JobCardProps) {
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            aria-label={`Otvori oglas: ${job.title} — ${job.company}`}
           >
             Prijavi se
             <ExternalLink className="w-4 h-4 ml-1" />

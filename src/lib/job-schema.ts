@@ -1,5 +1,32 @@
 import type { PortalJobRecord } from '@/types/jobs'
 
+interface StructuredJobSalaryValue {
+  '@type': 'QuantitativeValue'
+  minValue: number
+  maxValue?: number
+  unitText: 'YEAR'
+}
+
+interface StructuredJobSalary {
+  '@type': 'MonetaryAmount'
+  currency: string
+  value: StructuredJobSalaryValue
+}
+
+interface StructuredJobPostingBase {
+  '@context': 'https://schema.org/'
+  '@type': 'JobPosting'
+  title: string
+  datePosted: string
+  hiringOrganization: { '@type': 'Organization'; name: string }
+  employmentType: string
+  applicantLocationRequirements: { '@type': 'Country'; name: string }
+  jobLocationType: 'TELECOMMUTE'
+  directApply: true
+  url: string
+  baseSalary?: StructuredJobSalary
+}
+
 export function mapEmploymentType(raw: string | null | undefined): string {
   if (!raw) return 'FULL_TIME'
   switch (raw) {
@@ -11,9 +38,9 @@ export function mapEmploymentType(raw: string | null | undefined): string {
   }
 }
 
-export function buildStructuredJobPostings(rows: Array<Pick<PortalJobRecord, 'id' | 'title' | 'company' | 'url' | 'posted_at' | 'type' | 'salary_min' | 'salary_max' | 'currency'>>): any[] {
+export function buildStructuredJobPostings(rows: Array<Pick<PortalJobRecord, 'id' | 'title' | 'company' | 'url' | 'posted_at' | 'type' | 'salary_min' | 'salary_max' | 'currency'>>): StructuredJobPostingBase[] {
   return rows.map(j => {
-    const base: Record<string, any> = {
+    const base: StructuredJobPostingBase = {
       '@context': 'https://schema.org/',
       '@type': 'JobPosting',
       title: j.title,

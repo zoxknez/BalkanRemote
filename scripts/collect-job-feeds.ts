@@ -191,15 +191,16 @@ async function main() {
     }
   }
   const deduped = Array.from(dedupedMap.values())
+  const ratio = allListings.length === 0 ? 0 : Number((deduped.length / allListings.length).toFixed(4))
 
   if (dryRun) {
-    logger.event('job_sync_dry_run_complete', { totalCollected: allListings.length, totalAfterDedupe: deduped.length, sources: perSource })
+    logger.event('job_sync_dry_run_complete', { totalCollected: allListings.length, totalAfterDedupe: deduped.length, ratio, sources: perSource })
     return
   }
 
-  logger.event('job_upsert_begin', { count: deduped.length })
+  logger.event('job_upsert_begin', { count: deduped.length, ratio })
   await upsertPortalJobs(deduped)
-  logger.event('job_sync_complete', { total: deduped.length, sources: perSource })
+  logger.event('job_sync_complete', { total: deduped.length, ratio, sources: perSource })
 }
 
 main().catch((error) => {

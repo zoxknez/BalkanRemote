@@ -12,7 +12,8 @@ describe('GET /api/portal-jobs', () => {
         {
           id: '1', title: 'Backend Engineer', company: 'Acme', url: 'https://example.com', posted_at: '2025-09-01T00:00:00.000Z',
           type: 'full-time', location: null, salary_min: null, salary_max: null, currency: null, source_id: 'src', external_id: 'ext',
-          category: 'engineering', company_logo: null, description: null, requirements: null, benefits: null, is_remote: true, remote_type: 'fully-remote', experience_level: 'senior', deadline: null, source_url: 'https://example.com', featured: false, tags: [], metadata: {}
+          category: 'software-engineering', company_logo: null, description: null, requirements: null, benefits: null, is_remote: true, remote_type: 'fully-remote', experience_level: 'senior', deadline: null, source_url: 'https://example.com', featured: false, tags: [], metadata: {}
+          , created_at: '2025-09-01T00:00:00.000Z', updated_at: '2025-09-01T00:00:00.000Z'
         }
       ],
       total: 1,
@@ -21,7 +22,7 @@ describe('GET /api/portal-jobs', () => {
         experienceLevel: { senior: 1 },
         category: { engineering: 1 }
       }
-    } as any)
+  })
 
     const url = new URL('http://localhost/api/portal-jobs?limit=10')
     const req = new NextRequest(url.toString(), { method: 'GET', headers: { 'x-forwarded-for': '1.2.3.4' } })
@@ -36,7 +37,7 @@ describe('GET /api/portal-jobs', () => {
 
   it('applies rate limit (simulated)', async () => {
     // We invoke 61 times with same IP to exceed default 60 / 60s.
-    vi.spyOn(repo, 'fetchPortalJobs').mockResolvedValue({ rows: [], total: 0, globalFacets: { contractType: {}, experienceLevel: {}, category: {} } } as any)
+  vi.spyOn(repo, 'fetchPortalJobs').mockResolvedValue({ rows: [], total: 0, globalFacets: { contractType: {}, experienceLevel: {}, category: {} } })
     const url = new URL('http://localhost/api/portal-jobs?limit=1')
     let lastStatus = 200
     for (let i = 0; i < 61; i++) {

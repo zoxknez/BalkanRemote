@@ -95,6 +95,7 @@ Specifično za agregator oglasa (`Oglasi`):
  - (opciono) `NEXT_PUBLIC_ENABLE_JOB_SCHEMA` = `1` za SSR JSON-LD JobPosting (limitirano na prvih 5)
  - Manual dry-run: `.github/workflows/job-sync-dry-run.yml` (workflow_dispatch) – koristi `JOB_SYNC_DRY_RUN=1` i NE piše u bazu
  - (opciono) `NEXT_PUBLIC_ENABLE_FEED_STATS` = `1` javni prikaz health tabele na `/oglasi/stats`
+ - (opciono) `FEED_STATS_TOKEN` – ako je postavljen, `/api/portal-jobs/stats` zahteva header `Authorization: Bearer <token>` i UI strana prosleđuje token server-side; bez ovoga endpoint je public.
 
 ## 📚 Korisne skripte (package.json)
 
@@ -113,6 +114,16 @@ Specifično za agregator oglasa (`Oglasi`):
   - `NEXT_PUBLIC_ENABLE_JOB_SCHEMA` – uključi SSR JSON-LD JobPosting (SEO eksperimentalno)
   - `JOB_SYNC_DRY_RUN=1` – u sync skripti preskače DB upsert i feed stats updejte (samo prikuplja i loguje)
   - `NEXT_PUBLIC_ENABLE_FEED_STATS` – prikazuje javnu stats stranicu `/oglasi/stats`
+  - `FEED_STATS_TOKEN` – štiti stats API (vidi gore); koristi Bearer auth
+  
+### Dedupe ratio logging
+
+Sync skripta sada loguje dedupe ratio: `ratio = unique/collected` sa 4 decimale (npr. 0.8421). Event polja:
+- `job_sync_dry_run_complete`: `{ totalCollected, totalAfterDedupe, ratio, sources }`
+- `job_upsert_begin`: `{ count, ratio }`
+- `job_sync_complete`: `{ total, ratio, sources }`
+
+Koristi se za praćenje kvaliteta izvora i procenta duplikata kroz vreme.
 
 ## 🧭 Roadmap
 

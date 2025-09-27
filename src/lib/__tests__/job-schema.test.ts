@@ -22,7 +22,7 @@ describe('job-schema utilities', () => {
       salary_min: 60000,
       salary_max: 90000,
       currency: 'EUR'
-    } as any])
+    }])
     expect(items).toHaveLength(1)
     expect(items[0].employmentType).toBe('CONTRACTOR')
     expect(items[0].baseSalary.value.minValue).toBe(60000)

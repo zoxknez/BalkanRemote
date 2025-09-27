@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabaseClient'
 import { logger } from '@/lib/logger'
 
+function isAuthorized(request: Request): boolean {
+  const token = process.env.FEED_STATS_TOKEN
+  if (!token) return true // public if no token configured
+  const header = request.headers.get('authorization') || ''
+  const [scheme, value] = header.split(' ')
+  return scheme === 'Bearer' && value === token
+}
+
 export const runtime = 'nodejs'
 export const revalidate = 60 // cache hint
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
     const supabase = createSupabaseServer()
     const { data, error } = await supabase
       .from('job_feed_stats')
@@ -15,7 +26,9 @@ export async function GET() {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, data })
+  const res = NextResponse.json({ success: true, data })
+  res.headers.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=120')
+  return res
   } catch (err) {
     logger.error('Failed to load job feed stats', err)
     return NextResponse.json({ success: false, error: 'Failed to load stats' }, { status: 500 })

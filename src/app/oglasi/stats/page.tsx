@@ -1,9 +1,13 @@
 import React, { Suspense } from 'react'
-import { AlertCircle, CheckCircle2, RefreshCcw } from 'lucide-react'
+import { AlertCircle, CheckCircle2, RefreshCcw, Clock } from 'lucide-react'
 
 async function fetchStats() {
   // Relative fetch radi u server komponenti i koristi internu Next fetch logiku + revalidate.
-  const res = await fetch('/api/portal-jobs/stats', { next: { revalidate: 60 } })
+  const headers: Record<string,string> = {}
+  if (process.env.FEED_STATS_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.FEED_STATS_TOKEN}`
+  }
+  const res = await fetch('/api/portal-jobs/stats', { next: { revalidate: 60 }, headers })
   if (!res.ok) {
     throw new Error('Failed to load stats')
   }
@@ -15,7 +19,7 @@ async function fetchStats() {
     success_count: number
     failure_count: number
     updated_at: string
-    metadata?: any
+    metadata?: { lastErrorMessage?: string }
   }>
 }
 
@@ -38,12 +42,17 @@ async function StatsTable() {
             <th className="px-4 py-3 text-right">Success</th>
             <th className="px-4 py-3 text-right">Fail</th>
             <th className="px-4 py-3 text-left">Status</th>
+            <th className="px-4 py-3 text-right">Rate</th>
             <th className="px-4 py-3 text-left">Message</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(r => {
             const hasRecentError = !!r.last_error_at && (!r.last_success_at || new Date(r.last_error_at) > new Date(r.last_success_at))
+            const lastSuccessAgeMs = r.last_success_at ? Date.now() - new Date(r.last_success_at).getTime() : Infinity
+            const isStale = !hasRecentError && lastSuccessAgeMs > 1000 * 60 * 60 * 48 // > 48h
+            const totalRuns = r.success_count + r.failure_count
+            const successRate = totalRuns === 0 ? 0 : (r.success_count / totalRuns)
             return (
               <tr key={r.source_id} className="border-t last:border-b hover:bg-gray-50/60">
                 <td className="px-4 py-2 font-mono text-xs">{r.source_id}</td>
@@ -53,11 +62,14 @@ async function StatsTable() {
                 <td className="px-4 py-2 text-right text-red-600 font-medium">{r.failure_count}</td>
                 <td className="px-4 py-2">
                   {hasRecentError ? (
-                    <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold"><AlertCircle className="w-3 h-3"/> ERR</span>
+                    <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold" title={r.metadata?.lastErrorMessage || 'Error'}><AlertCircle className="w-3 h-3"/> ERR</span>
+                  ) : isStale ? (
+                    <span className="inline-flex items-center gap-1 text-amber-600 text-xs font-semibold" title="No recent successful run in >48h"><Clock className="w-3 h-3"/> STALE</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold"><CheckCircle2 className="w-3 h-3"/> OK</span>
+                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold" title="Healthy"><CheckCircle2 className="w-3 h-3"/> OK</span>
                   )}
                 </td>
+                <td className="px-4 py-2 text-right text-xs tabular-nums" title={`${(successRate * 100).toFixed(2)}%`}>{(successRate * 100).toFixed(1)}%</td>
                 <td className="px-4 py-2 text-xs text-gray-600 max-w-[240px] truncate" title={r.metadata?.lastErrorMessage || ''}> {r.metadata?.lastErrorMessage || ''}</td>
               </tr>
             )

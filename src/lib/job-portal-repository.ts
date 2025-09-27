@@ -126,6 +126,8 @@ export async function fetchPortalJobs(params: {
 
   // Build facet queries separately (ignoring pagination) but respecting filters except pagination/limit
   // We perform three aggregate queries; if performance becomes an issue we can create a materialized view.
+  // Facet filter helper – Supabase client chaining types are complex; we allow any here with a lint escape.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const facetFilters = (qb: any) => {
     if (remote !== undefined) qb = qb.eq('is_remote', remote)
     if (contractType && contractType.length > 0) qb = qb.in('type', contractType)
@@ -143,8 +145,11 @@ export async function fetchPortalJobs(params: {
   }
 
   const [typeAgg, expAgg, catAgg] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     facetFilters(supabase.from('job_portal_listings').select('type')).then((r: any) => r.data as PortalJobRecord[] | null),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     facetFilters(supabase.from('job_portal_listings').select('experience_level')).then((r: any) => r.data as PortalJobRecord[] | null),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     facetFilters(supabase.from('job_portal_listings').select('category')).then((r: any) => r.data as PortalJobRecord[] | null),
   ])
 

@@ -151,6 +151,7 @@ function buildPagination(currentPage: number, totalPages: number): Array<number 
 export function JobsFeed() {
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   const {
     jobs: portalJobs,
@@ -287,6 +288,29 @@ export function JobsFeed() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Keyboard navigation for pagination (Left/Right arrows)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'ArrowRight') {
+        if (!loading && currentPage < totalPages) {
+          e.preventDefault()
+          goToPage(currentPage + 1)
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (!loading && currentPage > 1) {
+          e.preventDefault()
+          goToPage(currentPage - 1)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [currentPage, totalPages, loading, goToPage])
+
   const handleBackToTop = () => {
     const top = sectionRef.current?.getBoundingClientRect().top ?? 0
     const absoluteTop = window.scrollY + top - 80
@@ -295,6 +319,47 @@ export function JobsFeed() {
 
   return (
     <section ref={sectionRef} className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm relative">
+      {/* Mobile sticky quick filters bar */}
+      <div className="md:hidden sticky top-16 z-30 -mx-6 mb-4 border-b border-gray-100 bg-white/90 px-6 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
+            aria-expanded={showMobileFilters}
+            aria-controls="jobs-filters-detailed"
+          >
+            <Filter className="h-4 w-4" />
+            Filteri
+            <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1 text-xs font-semibold text-gray-700">
+              {activeFilterCount}
+            </span>
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleRemote}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                isRemoteOnly
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:text-blue-700'
+              }`}
+              aria-pressed={isRemoteOnly}
+              aria-label="Uključi/isključi Remote only filter"
+            >
+              Remote only
+            </button>
+            <button
+              type="button"
+              onClick={() => resetFilters()}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-rose-200 hover:text-rose-700"
+              aria-label="Resetuj sve filtere"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Sveže remote pozicije</h2>
@@ -344,7 +409,7 @@ export function JobsFeed() {
         </div>
       )}
 
-  <div className="mt-6 space-y-4">
+  <div id="jobs-filters-detailed" className={`mt-6 space-y-4 ${showMobileFilters ? 'block' : 'hidden'} md:block`}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
             <Filter className="h-3.5 w-3.5" /> Filteri
@@ -358,6 +423,7 @@ export function JobsFeed() {
                 : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:text-blue-700'
             }`}
             data-testid="jobs-filter-remote"
+            aria-pressed={isRemoteOnly}
           >
             Remote only
           </button>

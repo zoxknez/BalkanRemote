@@ -243,7 +243,7 @@ export function NalogClient() {
             </div>
           )}
 
-          <div className="space-y-4" aria-disabled={!supabaseAvailable}>
+          <div className="mt-4 space-y-4" aria-disabled={!supabaseAvailable}>
             <label className="block text-sm font-medium text-gray-700" htmlFor="auth-email">
               Email
             </label>
@@ -338,7 +338,7 @@ export function NalogClient() {
               {message && <div className="text-green-700">{message}</div>}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-4">
               <div className="flex items-center gap-3">
                 <button
                   type="button"

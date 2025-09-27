@@ -19,9 +19,46 @@ const FEED_TIMEOUT_MS = parseInt(process.env.FEED_TIMEOUT_MS || '15000', 10)
 const FEED_MAX_RETRIES = parseInt(process.env.FEED_MAX_RETRIES || '2', 10)
 
 const MAX_ITEMS_PER_FEED = 50
+const JOB_MAX_AGE_DAYS = parseInt(process.env.JOB_MAX_AGE_DAYS || '45', 10)
+const JOB_MAX_AGE_MS = JOB_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
 
 function toHash(input: string): string {
   return crypto.createHash('sha256').update(input).digest('hex')
+}
+
+function filterStaleListings(listings: PortalJobInsert[]): PortalJobInsert[] {
+  const cutoffTs = Date.now() - JOB_MAX_AGE_MS
+  return listings.filter((listing) => {
+    const postedTs = new Date(listing.posted_at).getTime()
+    if (Number.isNaN(postedTs)) return false
+    return postedTs >= cutoffTs
+  })
+}
+
+type DedupeKeyFn = (listing: PortalJobInsert) => string
+
+function dedupeListings(listings: PortalJobInsert[], makeKey?: DedupeKeyFn): PortalJobInsert[] {
+  const dedupedMap = new Map<string, PortalJobInsert>()
+  for (const listing of listings) {
+    const key = makeKey ? makeKey(listing) : `${listing.source_id}:${listing.external_id}`
+    if (!dedupedMap.has(key)) {
+      dedupedMap.set(key, listing)
+    }
+  }
+  return Array.from(dedupedMap.values())
+}
+
+function buildGlobalKey(listing: PortalJobInsert): string {
+  const primaryUrl = listing.url || listing.source_url || ''
+  if (primaryUrl) {
+    const withoutHash = primaryUrl.split('#')[0] ?? primaryUrl
+    const normalized = withoutHash.replace(/\/$/, '').toLowerCase()
+    if (normalized) {
+      return normalized
+    }
+  }
+  const fallback = `${listing.title}|${listing.company}|${listing.experience_level ?? ''}|${listing.remote_type ?? ''}`
+  return fallback.toLowerCase()
 }
 
 // (detectContractType, detectExperienceLevel, coerceDate) moved to '@/lib/job-feed-classifiers'
@@ -150,24 +187,60 @@ async function collectFeed(sourceId: string): Promise<PortalJobInsert[]> {
   throw new Error(`Unsupported feed type: ${source.type}`)
 }
 
+type SourceSummary = {
+  ok: boolean
+  fetched: number
+  fresh: number
+  unique: number
+  dedupeRatio: number
+  staleFiltered: number
+  error?: string
+}
+
 async function main() {
   const dryRun = process.env.JOB_SYNC_DRY_RUN === '1' || process.env.JOB_SYNC_DRY_RUN === 'true'
   logger.event('job_sync_start', { at: new Date().toISOString(), dryRun })
   const allListings: PortalJobInsert[] = []
-  const perSource: Record<string, { ok: boolean; count: number; error?: string }> = {}
+  const perSource: Record<string, SourceSummary> = {}
 
   for (const source of jobFeedSources) {
     try {
       const listings = await collectFeed(source.id)
-      allListings.push(...listings)
-      perSource[source.id] = { ok: true, count: listings.length }
-      logger.event('job_source_collected', { source: source.id, count: listings.length, dryRun })
+      const freshListings = filterStaleListings(listings)
+  const uniqueListings = dedupeListings(freshListings)
+      const dedupeRatio = listings.length === 0 ? 0 : Number((uniqueListings.length / listings.length).toFixed(4))
+      const staleFiltered = listings.length - freshListings.length
+      allListings.push(...uniqueListings)
+      perSource[source.id] = {
+        ok: true,
+        fetched: listings.length,
+        fresh: freshListings.length,
+        unique: uniqueListings.length,
+        dedupeRatio,
+        staleFiltered,
+      }
+      logger.event('job_source_collected', {
+        source: source.id,
+        fetched: listings.length,
+        staleFiltered,
+        unique: uniqueListings.length,
+        dedupe_ratio: dedupeRatio,
+        dryRun,
+      })
       if (!dryRun) {
-  await markFeedSuccess(source.id)
+        await markFeedSuccess(source.id)
       }
     } catch (error) {
       const message = (error as Error).message
-      perSource[source.id] = { ok: false, count: 0, error: message }
+      perSource[source.id] = {
+        ok: false,
+        fetched: 0,
+        fresh: 0,
+        unique: 0,
+        dedupeRatio: 0,
+        staleFiltered: 0,
+        error: message,
+      }
       logger.event('job_source_error', { source: source.id, error: message, dryRun })
       if (!dryRun) {
         try { await markFeedError(source.id, message) } catch (err) { logger.event('job_source_error_mark_failed', { source: source.id, error: (err as Error).message }) }
@@ -175,32 +248,63 @@ async function main() {
     }
   }
 
-  if (allListings.length === 0) {
-    logger.warn('No listings collected. ' + (dryRun ? 'Dry run finished.' : 'Aborting upsert.'))
-    logger.event('job_sync_summary', { dryRun, sources: perSource })
+  const sourceSummaries = Object.values(perSource)
+  const totalFetched = sourceSummaries.reduce((sum, entry) => sum + entry.fetched, 0)
+  const totalFresh = sourceSummaries.reduce((sum, entry) => sum + entry.fresh, 0)
+  const totalUniqueBeforeGlobal = allListings.length
+  const staleFilteredTotal = totalFetched - totalFresh
+
+  if (totalUniqueBeforeGlobal === 0) {
+    logger.warn('No listings remaining after filtering/dedupe. ' + (dryRun ? 'Dry run finished.' : 'Aborting upsert.'))
+    logger.event('job_sync_summary', {
+      dryRun,
+      totalFetched,
+      totalFresh,
+      totalAfterSourceDedupe: totalUniqueBeforeGlobal,
+      crossSourceRemoved: 0,
+      ratio: 0,
+      staleFilteredTotal,
+      sources: perSource,
+    })
     return
   }
 
-  // Sort newest first and dedupe
+  // Sort newest first and dedupe globally
   const sorted = allListings.sort((a, b) => new Date(b.posted_at).getTime() - new Date(a.posted_at).getTime())
-  const dedupedMap = new Map<string, PortalJobInsert>()
-  for (const listing of sorted) {
-    const key = `${listing.source_id}:${listing.external_id}`
-    if (!dedupedMap.has(key)) {
-      dedupedMap.set(key, listing)
-    }
-  }
-  const deduped = Array.from(dedupedMap.values())
-  const ratio = allListings.length === 0 ? 0 : Number((deduped.length / allListings.length).toFixed(4))
+  const deduped = dedupeListings(sorted, buildGlobalKey)
+  const crossSourceRemoved = totalUniqueBeforeGlobal - deduped.length
+  const ratio = totalUniqueBeforeGlobal === 0 ? 0 : Number((deduped.length / totalUniqueBeforeGlobal).toFixed(4))
 
   if (dryRun) {
-    logger.event('job_sync_dry_run_complete', { totalCollected: allListings.length, totalAfterDedupe: deduped.length, ratio, sources: perSource })
+    logger.event('job_sync_dry_run_complete', {
+      totalFetched,
+      totalFresh,
+      totalAfterSourceDedupe: totalUniqueBeforeGlobal,
+      totalAfterGlobalDedupe: deduped.length,
+      ratio,
+      crossSourceRemoved,
+      staleFilteredTotal,
+      sources: perSource,
+    })
     return
   }
 
-  logger.event('job_upsert_begin', { count: deduped.length, ratio })
+  logger.event('job_upsert_begin', {
+    count: deduped.length,
+    ratio,
+    totalFetched,
+    staleFilteredTotal,
+    crossSourceRemoved,
+  })
   await upsertPortalJobs(deduped)
-  logger.event('job_sync_complete', { total: deduped.length, ratio, sources: perSource })
+  logger.event('job_sync_complete', {
+    total: deduped.length,
+    ratio,
+    totalFetched,
+    staleFilteredTotal,
+    crossSourceRemoved,
+    sources: perSource,
+  })
 }
 
 main().catch((error) => {

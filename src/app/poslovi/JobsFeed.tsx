@@ -1,55 +1,101 @@
-'use client';
+'use client'
 
-import { useMemo } from 'react';
-import { RefreshCw, AlertCircle, Loader2, Filter, RotateCcw } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight } from 'lucide-react'
 
-import { useJobs } from '@/hooks/useJobs';
-import { JobCard } from '@/components/job-card';
-import { mockJobs } from '@/data/mock-data-new';
-import type { Job } from '@/types';
-import type { JobPosting, JobCategory } from '@/types/jobs';
+import { usePortalJobs } from '@/hooks/usePortalJobs'
+import { JobCard } from '@/components/job-card'
+import { mockJobs } from '@/data/mock-data-new'
+import type { Job } from '@/types'
+import type { PortalJobRecord, PortalJobContractType, JobCategory } from '@/types/jobs'
 
-const skeletonItems = Array.from({ length: 6 }, (_, index) => index);
+const skeletonItems = Array.from({ length: 6 }, (_, index) => index)
 
-const seniorityMap: Record<JobPosting['seniority'], Job['experienceLevel']> = {
-  junior: 'entry',
+const CONTRACT_OPTIONS: PortalJobContractType[] = ['full-time', 'part-time', 'contract', 'freelance', 'internship']
+const CONTRACT_LABELS: Record<PortalJobContractType, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  contract: 'Contract',
+  freelance: 'Freelance',
+  internship: 'Internship'
+}
+
+const EXPERIENCE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'entry', label: 'Junior' },
+  { value: 'mid', label: 'Mid' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'lead', label: 'Lead' },
+  { value: 'executive', label: 'Executive' }
+]
+
+const EXPERIENCE_TO_JOB_LEVEL: Record<string, Job['experienceLevel']> = {
+  entry: 'entry',
   mid: 'mid',
   senior: 'senior',
   lead: 'lead',
-  executive: 'lead',
-};
+  executive: 'lead'
+}
 
-function normalizeJob(posting: JobPosting): Job {
-  const postedAt = new Date(posting.postedDate);
-  const applicationDeadline = posting.applicationDeadline
-    ? new Date(posting.applicationDeadline)
-    : undefined;
+const CATEGORY_OPTIONS: { label: string; value: JobCategory }[] = [
+  { label: 'Inženjering', value: 'software-engineering' },
+  { label: 'Data/AI', value: 'data-science' },
+  { label: 'Dizajn', value: 'design' },
+  { label: 'Marketing', value: 'marketing' },
+  { label: 'Prodaja', value: 'sales' },
+  { label: 'Customer Support', value: 'customer-support' },
+  { label: 'Proizvod/PM', value: 'management' },
+  { label: 'HR & Talent', value: 'hr' },
+  { label: 'Finansije', value: 'finance' },
+  { label: 'Operacije', value: 'operations' },
+  { label: 'Ostalo', value: 'other' }
+]
+
+const CATEGORY_LABELS = CATEGORY_OPTIONS.reduce((acc, item) => {
+  acc[item.value] = item.label
+  return acc
+}, {} as Record<JobCategory, string>)
+
+function stripHtml(input?: string | null): string {
+  if (!input) return 'Opis nije dostupan.'
+  return input.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || 'Opis nije dostupan.'
+}
+
+function formatLocation(job: PortalJobRecord): string {
+  if (job.location) return job.location
+  if (job.remote_type) {
+    const label = job.remote_type.replace(/-/g, ' ')
+    return `Remote (${label})`
+  }
+  return job.is_remote ? 'Remote' : 'Lokacija nije navedena'
+}
+
+function mapPortalJob(job: PortalJobRecord): Job {
+  const postedAt = job.posted_at ? new Date(job.posted_at) : new Date()
+  const deadline = job.deadline ? new Date(job.deadline) : undefined
+  const experienceLevel = EXPERIENCE_TO_JOB_LEVEL[job.experience_level ?? 'mid'] ?? 'mid'
 
   return {
-    id: posting.id,
-    title: posting.title,
-    company: posting.company,
-    location: posting.location,
-    companyLogo: undefined,
-    type: posting.contractType,
-    category: posting.category,
-    description: posting.description,
-    requirements: posting.requirements,
-    benefits: posting.benefits,
-    salaryMin: posting.salary?.min,
-    salaryMax: posting.salary?.max,
-    currency: posting.salary?.currency?.toUpperCase() ?? 'USD',
-    isRemote: posting.remote,
-    experienceLevel: seniorityMap[posting.seniority] ?? 'mid',
+    id: job.id,
+    title: job.title,
+    company: job.company,
+    companyLogo: job.company_logo || undefined,
+    location: formatLocation(job),
+    type: (job.type as Job['type']) ?? 'full-time',
+    category: CATEGORY_LABELS[job.category as JobCategory] ?? 'Ostalo',
+    description: stripHtml(job.description),
+    requirements: Array.isArray(job.requirements) ? job.requirements : [],
+    benefits: Array.isArray(job.benefits) ? job.benefits : [],
+    salaryMin: job.salary_min ?? undefined,
+    salaryMax: job.salary_max ?? undefined,
+    currency: job.currency ?? 'USD',
+    isRemote: job.is_remote,
+    experienceLevel,
     postedAt: Number.isNaN(postedAt.getTime()) ? new Date() : postedAt,
-    deadline:
-      applicationDeadline && !Number.isNaN(applicationDeadline.getTime())
-        ? applicationDeadline
-        : undefined,
-    url: posting.applicationUrl || posting.sourceUrl,
-    featured: posting.tags.includes('featured') || posting.remoteType === 'fully-remote',
-    tags: posting.tags,
-  };
+    deadline: deadline && !Number.isNaN(deadline.getTime()) ? deadline : undefined,
+    url: job.url || job.source_url || '#',
+    featured: Boolean(job.featured) || job.remote_type === 'fully-remote',
+    tags: Array.isArray(job.tags) ? job.tags : [],
+  }
 }
 
 function JobCardSkeleton() {
@@ -80,130 +126,193 @@ function JobCardSkeleton() {
         <div className="h-9 w-24 rounded-lg bg-gray-200" />
       </div>
     </div>
-  );
+  )
 }
 
-const contractOptions: JobPosting['contractType'][] = ['full-time', 'part-time', 'contract', 'freelance'];
-const seniorityOptions: JobPosting['seniority'][] = ['junior', 'mid', 'senior', 'lead'];
-const categoryOptions: { label: string; value: JobCategory }[] = [
-  { label: 'Inženjering', value: 'software-engineering' },
-  { label: 'Data/AI', value: 'data-science' },
-  { label: 'Dizajn', value: 'design' },
-  { label: 'Marketing', value: 'marketing' },
-  { label: 'Prodaja', value: 'sales' },
-  { label: 'Customer Support', value: 'customer-support' },
-  { label: 'Proizvod/PM', value: 'management' },
-  { label: 'HR & Talent', value: 'hr' },
-  { label: 'Finansije', value: 'finance' },
-  { label: 'Operacije', value: 'operations' },
-  { label: 'Ostalo', value: 'other' },
-];
+function buildPagination(currentPage: number, totalPages: number): Array<number | 'ellipsis'> {
+  if (totalPages <= 1) return [1]
+  const candidates = new Set<number>([1, totalPages, currentPage])
+  for (const delta of [-2, -1, 1, 2]) {
+    const page = currentPage + delta
+    if (page > 1 && page < totalPages) candidates.add(page)
+  }
+  const ordered = Array.from(candidates).sort((a, b) => a - b)
+  const items: Array<number | 'ellipsis'> = []
+  ordered.forEach((page) => {
+    const last = items[items.length - 1]
+    if (typeof last === 'number' && page - last > 1) {
+      items.push('ellipsis')
+    }
+    items.push(page)
+  })
+  return items
+}
 
 export function JobsFeed() {
   const {
-    jobs,
+    jobs: portalJobs,
     loading,
     error,
     total,
     refreshJobs,
-    loadMore,
-    hasMore,
     filters,
     updateFilters,
     resetFilters,
     facets,
-  } = useJobs({ limit: 12, offset: 0, remote: true });
+  } = usePortalJobs({ limit: 12, offset: 0, remote: true })
 
-  const normalizedJobs = useMemo(() => jobs.map(normalizeJob), [jobs]);
+  const normalizedJobs = useMemo(() => portalJobs.map(mapPortalJob), [portalJobs])
+  const hasRealData = normalizedJobs.length > 0
 
   const fallbackJobs = useMemo(() => {
-    if (normalizedJobs.length > 0 || loading) {
-      return [] as Job[];
+    if (hasRealData || loading) {
+      return [] as Job[]
     }
+    return mockJobs.slice(0, 6)
+  }, [hasRealData, loading])
 
-    return mockJobs.slice(0, 6);
-  }, [normalizedJobs.length, loading]);
+  const visibleJobs = hasRealData ? normalizedJobs : fallbackJobs
+  const pageSize = filters.limit ?? 12
+  const currentOffset = filters.offset ?? 0
+  const totalCount = hasRealData ? total : visibleJobs.length
+  const currentPage = totalCount === 0 ? 1 : Math.floor(currentOffset / pageSize) + 1
+  const totalPages = totalCount === 0 ? 1 : Math.max(1, Math.ceil(totalCount / pageSize))
+  const startRecord = totalCount === 0 ? 0 : currentOffset + 1
+  const endRecord = totalCount === 0 ? 0 : Math.min(totalCount, currentOffset + visibleJobs.length)
 
-  const visibleJobs = normalizedJobs.length > 0 ? normalizedJobs : fallbackJobs;
-  const visibleCount = visibleJobs.length;
-  const totalCount = normalizedJobs.length > 0 ? total : visibleCount;
-  const showFallbackNotice = !loading && normalizedJobs.length === 0;
-  const showSkeletonOnly = loading && visibleJobs.length === 0;
-  const selectedContracts = filters.contractType ?? [];
-  const selectedSeniorities = filters.seniority ?? [];
-  const selectedCategory = filters.category;
-  const isRemoteOnly = filters.remote === true;
-  const facetCounts = facets ?? null;
-  const remoteCount = facetCounts
-    ? (facetCounts.remoteType['fully-remote'] ?? 0) +
-      (facetCounts.remoteType['flexible'] ?? 0) +
-      (facetCounts.remoteType['hybrid'] ?? 0)
-    : null;
+  const facetCounts = facets ?? { contractType: {}, experienceLevel: {}, category: {} }
+  const selectedContracts = filters.contractType ?? []
+  const selectedExperience = filters.experience ?? []
+  const selectedCategory = filters.category as JobCategory | null | undefined
+  const isRemoteOnly = filters.remote !== undefined ? filters.remote : true
 
-  const toggleContract = (contract: Job['type']) => {
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  useEffect(() => {
+    if (!loading && hasRealData) {
+      setLastUpdated(new Date())
+    }
+  }, [loading, hasRealData, portalJobs])
+
+  const goToPage = useCallback((page: number) => {
+    const limit = filters.limit ?? 12
+    const bounded = Math.max(1, page)
+    const nextOffset = (bounded - 1) * limit
+    updateFilters({ offset: nextOffset }, { append: false })
+  }, [filters.limit, updateFilters])
+
+  useEffect(() => {
+    if (!loading && hasRealData) {
+      const expectedTotalPages = Math.max(1, Math.ceil(total / (filters.limit ?? 12)))
+      if (currentPage > expectedTotalPages) {
+        goToPage(expectedTotalPages)
+      }
+    }
+  }, [loading, hasRealData, currentPage, total, filters.limit, goToPage])
+
+  const paginationItems = useMemo(() => buildPagination(currentPage, totalPages), [currentPage, totalPages])
+  const showFallbackNotice = !loading && !hasRealData
+  const showSkeletonOnly = loading && visibleJobs.length === 0
+
+  const toggleContract = (contract: PortalJobContractType) => {
     const next = selectedContracts.includes(contract)
       ? selectedContracts.filter((value) => value !== contract)
-      : [...selectedContracts, contract];
-    updateFilters({ contractType: next.length > 0 ? next : undefined, offset: 0 });
-  };
+      : [...selectedContracts, contract]
+    updateFilters({ contractType: next.length > 0 ? next : undefined, offset: 0 }, { append: false })
+  }
 
-  const toggleSeniority = (seniority: JobPosting['seniority']) => {
-    const next = selectedSeniorities.includes(seniority)
-      ? selectedSeniorities.filter((value) => value !== seniority)
-      : [...selectedSeniorities, seniority];
-    updateFilters({ seniority: next.length > 0 ? next : undefined, offset: 0 });
-  };
+  const toggleExperience = (experience: string) => {
+    const next = selectedExperience.includes(experience)
+      ? selectedExperience.filter((value) => value !== experience)
+      : [...selectedExperience, experience]
+    updateFilters({ experience: next.length > 0 ? next : undefined, offset: 0 }, { append: false })
+  }
 
   const toggleCategory = (category: JobCategory) => {
-    updateFilters({ category: selectedCategory === category ? undefined : category, offset: 0 });
-  };
+    const nextCategory = selectedCategory === category ? null : category
+    updateFilters({ category: nextCategory ?? undefined, offset: 0 }, { append: false })
+  }
 
   const toggleRemote = () => {
-    updateFilters({ remote: isRemoteOnly ? undefined : true, offset: 0 });
-  };
+    updateFilters({ remote: isRemoteOnly ? undefined : true, offset: 0 }, { append: false })
+  }
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (filters.search) count += 1
+    if (selectedContracts.length) count += 1
+    if (selectedExperience.length) count += 1
+    if (selectedCategory) count += 1
+    if (!isRemoteOnly) count += 1
+    return count
+  }, [filters.search, selectedContracts.length, selectedExperience.length, selectedCategory, isRemoteOnly])
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!lastUpdated) return null
+    const diffMs = Date.now() - lastUpdated.getTime()
+    const diffMinutes = Math.round(diffMs / 60000)
+    if (diffMinutes <= 0) return 'upravo sada'
+    if (diffMinutes < 60) return `pre ${diffMinutes} min`
+    const diffHours = Math.round(diffMinutes / 60)
+    if (diffHours < 24) return `pre ${diffHours} h`
+    return lastUpdated.toLocaleDateString('sr-RS', { day: 'numeric', month: 'short' })
+  }, [lastUpdated])
 
   return (
     <section className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Sveže remote pozicije</h2>
           <p className="text-sm text-gray-600">
-            Real-time feed sa novim oglasima. Trenutno prikazujemo{' '}
+            Real-time feed iz agregatora. Prikazujemo{' '}
             <span className="font-semibold text-gray-900" data-testid="jobs-results-count">
               {totalCount}
             </span>{' '}
             rezultata.
           </p>
+          {hasRealData && lastUpdatedLabel && (
+            <div className="mt-1 inline-flex items-center gap-1 text-xs text-gray-500">
+              <Clock className="h-3.5 w-3.5" /> Poslednje osveženo {lastUpdatedLabel}
+            </div>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={refreshJobs}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Osveži oglase
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => resetFilters()}
+            disabled={loading}
+            className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Resetuj filtere
+          </button>
+          <button
+            type="button"
+            onClick={() => refreshJobs()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Osveži oglase
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <p>Privremeni problem sa učitavanjem oglasa. Pokušaćemo opet sa demo setom.</p>
+          <p>Privremeni problem sa učitavanjem oglasa. Pokušaćemo ponovo za par sekundi.</p>
         </div>
       )}
 
       {showFallbackNotice && (
         <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-sm text-indigo-900">
-          Scraper još nije vratio aktivne oglase, pa prikazujemo odabrane primere iz demo baze. Očekujte automatsko ažuriranje čim stignu pravi podaci.
+          Još nemamo aktivne oglase iz agregatora, zato prikazujemo kurirani demo set. Novi podaci se učitavaju jednom dnevno.
         </div>
       )}
 
       <div className="mt-6 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
-            <Filter className="h-3.5 w-3.5" />
-            Filteri
+            <Filter className="h-3.5 w-3.5" /> Filteri
           </span>
           <button
             type="button"
@@ -216,25 +325,14 @@ export function JobsFeed() {
             data-testid="jobs-filter-remote"
           >
             Remote only
-            {remoteCount !== null && (
-              <span className="ml-1 text-[11px] text-blue-600/80">({remoteCount})</span>
-            )}
           </button>
-          <button
-            type="button"
-            onClick={resetFilters}
-            disabled={loading}
-            className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-rose-200 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Resetuj filtere
-          </button>
+          <span className="text-[11px] text-gray-500">Aktivno filtera: {activeFilterCount}</span>
         </div>
 
         <div className="flex flex-wrap gap-2" data-testid="jobs-filter-contract">
-          {contractOptions.map((option) => {
-            const isActive = selectedContracts.includes(option);
-            const count = facetCounts ? facetCounts.contractType[option] : null;
+          {CONTRACT_OPTIONS.map((option) => {
+            const isActive = selectedContracts.includes(option)
+            const count = facetCounts.contractType[option] ?? null
             return (
               <button
                 key={option}
@@ -246,54 +344,43 @@ export function JobsFeed() {
                     : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200 hover:text-emerald-700'
                 }`}
               >
-                {option === 'full-time' && 'Full-time'}
-                {option === 'part-time' && 'Part-time'}
-                {option === 'contract' && 'Contract'}
-                {option === 'freelance' && 'Freelance'}
-                {count !== null && (
+                {CONTRACT_LABELS[option]}
+                {count !== null && count !== undefined && (
                   <span className="ml-1 text-[11px] text-emerald-700/80">({count})</span>
                 )}
               </button>
-            );
+            )
           })}
         </div>
 
         <div className="flex flex-wrap gap-2" data-testid="jobs-filter-seniority">
-          {seniorityOptions.map((option) => {
-            const isActive = selectedSeniorities.includes(option);
-            const labelMap: Record<JobPosting['seniority'], string> = {
-              junior: 'Junior',
-              mid: 'Mid',
-              senior: 'Senior',
-              lead: 'Lead',
-              executive: 'Executive',
-            };
-            const count = facetCounts ? facetCounts.seniority[option] : null;
-
+          {EXPERIENCE_OPTIONS.map(({ value, label }) => {
+            const isActive = selectedExperience.includes(value)
+            const count = facetCounts.experienceLevel[value] ?? null
             return (
               <button
-                key={option}
+                key={value}
                 type="button"
-                onClick={() => toggleSeniority(option)}
+                onClick={() => toggleExperience(value)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                   isActive
                     ? 'border-purple-200 bg-purple-50 text-purple-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-purple-200 hover:text-purple-700'
                 }`}
               >
-                {labelMap[option]}
-                {count !== null && (
+                {label}
+                {count !== null && count !== undefined && (
                   <span className="ml-1 text-[11px] text-purple-700/80">({count})</span>
                 )}
               </button>
-            );
+            )
           })}
         </div>
 
         <div className="flex flex-wrap gap-2" data-testid="jobs-filter-category">
-          {categoryOptions.map(({ label, value }) => {
-            const isActive = selectedCategory === value;
-            const count = facetCounts ? facetCounts.category[value] : null;
+          {CATEGORY_OPTIONS.map(({ label, value }) => {
+            const isActive = selectedCategory === value
+            const count = facetCounts.category[value] ?? null
             return (
               <button
                 key={value}
@@ -306,11 +393,11 @@ export function JobsFeed() {
                 }`}
               >
                 {label}
-                {count !== null && (
+                {count !== null && count !== undefined && (
                   <span className="ml-1 text-[11px] text-indigo-700/80">({count})</span>
                 )}
               </button>
-            );
+            )
           })}
         </div>
       </div>
@@ -330,23 +417,54 @@ export function JobsFeed() {
       </div>
 
       {!loading && visibleJobs.length === 0 && (
-        <p className="mt-6 text-sm text-gray-500">Trenutno nema dostupnih oglasa. Probajte da osvežite za nekoliko minuta.</p>
+        <p className="mt-6 text-sm text-gray-500">Trenutno nema dostupnih oglasa. Pokušajte da osvežite ili promenite filtere.</p>
       )}
 
-      {normalizedJobs.length > 0 && hasMore && (
-        <div className="mt-8 flex justify-center">
-          <button
-            type="button"
-            onClick={loadMore}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-70"
-            data-testid="jobs-load-more"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Loader2 className="h-4 w-4" />}
-            Učitaj još
-          </button>
+      {totalCount > 0 && (
+        <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm text-gray-600">
+            Prikaz {startRecord}-{endRecord} od {totalCount} oglasa
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Prethodna
+            </button>
+            <div className="flex items-center gap-1">
+              {paginationItems.map((item, index) => (
+                typeof item === 'number' ? (
+                  <button
+                    key={`page-${item}`}
+                    type="button"
+                    onClick={() => goToPage(item)}
+                    className={`min-w-[32px] rounded-full px-2 py-1 text-xs font-medium transition ${
+                      item === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:text-blue-700'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ) : (
+                  <span key={`ellipsis-${index}`} className="px-2 text-xs text-gray-400">…</span>
+                )
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= totalPages || loading}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Sledeća <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </section>
-  );
+  )
 }

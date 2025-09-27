@@ -113,10 +113,12 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     }
   }, [])
 
-  const updateFilters = useCallback((partial: Partial<PortalJobFilters>) => {
+  const updateFilters = useCallback((partial: Partial<PortalJobFilters>, options?: { append?: boolean }) => {
     setFilters((prev) => {
       const next = { ...prev, ...partial }
-      const shouldAppend = (partial.offset ?? 0) > 0
+      const nextOffset = next.offset ?? 0
+      const prevOffset = prev.offset ?? 0
+      const shouldAppend = options?.append ?? (nextOffset > prevOffset)
       fetchJobs(next, { append: shouldAppend }).catch((error) => logger.error(error))
       return next
     })
@@ -134,6 +136,16 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     fetchJobs(base).catch((error) => logger.error(error))
   }, [fetchJobs, filters])
 
+  const loadMore = useCallback(() => {
+    setFilters((prev) => {
+      const limit = prev.limit ?? initialFiltersRef.current.limit ?? 20
+      const nextOffset = (prev.offset ?? 0) + limit
+      const next = { ...prev, offset: nextOffset }
+      fetchJobs(next, { append: true }).catch((error) => logger.error(error))
+      return next
+    })
+  }, [fetchJobs])
+
   // Initial load – we capture the initialFiltersRef to avoid re-fetch loops if parent passes new object references.
   useEffect(() => {
     fetchJobs(initialFiltersRef.current).catch((error) => logger.error(error))
@@ -150,6 +162,7 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     updateFilters,
     resetFilters,
     refreshJobs,
+    loadMore,
     hasMore: jobs.length < total,
   }
 }

@@ -168,7 +168,7 @@ Event log primer (JSON):
 
 Automatsko održavanje zavisnosti: Dependabot (`.github/dependabot.yml`) – weekly za npm i GitHub Actions.
 
-Predlozi i prijave problema: https://github.com/zoxknez/BalkanRemote/issues
+Predlozi i prijave problema: https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/issues
 
 ---
 

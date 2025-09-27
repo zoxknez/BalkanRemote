@@ -14,6 +14,13 @@ const contactMethods = [
     external: true,
   },
   {
+    title: 'GitHub profil',
+    description: 'Novi GitHub nalog autora',
+    href: 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o',
+    icon: '🐙',
+    external: true,
+  },
+  {
     title: 'Email',
     description: CONTACT_EMAIL,
     href: `mailto:${CONTACT_EMAIL}`,
@@ -24,14 +31,14 @@ const contactMethods = [
   {
     title: 'GitHub Issues',
     description: 'Otvorite issue za predlog ili prijavu problema',
-    href: 'https://github.com/zoxknez/BalkanRemote/issues/new',
+    href: 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/issues/new',
     icon: '💬',
     external: true,
   },
   {
     title: 'Repo & Diskusija',
     description: 'Zvezdica i diskusija dobrodošli',
-    href: 'https://github.com/zoxknez/BalkanRemote',
+    href: 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote',
     icon: '⭐',
     external: true,
   },
@@ -43,7 +50,7 @@ const contactJsonLd = {
   name: 'Remote Balkan',
   url: 'https://remotebalkan.com',
   email: `mailto:${CONTACT_EMAIL}`,
-  sameAs: ['https://x.com/KoronVirus', 'https://github.com/zoxknez/BalkanRemote'],
+  sameAs: ['https://x.com/KoronVirus', 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o'],
   contactPoint: [
     {
       '@type': 'ContactPoint',

@@ -212,7 +212,7 @@ export default function NalogPage() {
               </a>{' '}
               ili otvorite{' '}
               <a
-                href="https://github.com/zoxknez/BalkanRemote/issues/new"
+                href="https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-indigo-700 underline"

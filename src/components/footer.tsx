@@ -35,8 +35,8 @@ export function Footer() {
     {
       title: 'Za zajednicu',
       links: [
-        { name: 'Otvorite issue', href: 'https://github.com/zoxknez/BalkanRemote/issues/new' },
-        { name: 'Repo na GitHub-u', href: 'https://github.com/zoxknez/BalkanRemote' },
+  { name: 'Otvorite issue', href: 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/issues/new' },
+  { name: 'Repo na GitHub-u', href: 'https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote' },
         { name: 'Kontakt', href: '/kontakt' },
         { name: 'Podrži projekat', href: 'https://paypal.me/o0o0o0o0o0o0o' },
       ],
@@ -68,7 +68,7 @@ export function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
-                href="https://github.com/zoxknez/BalkanRemote" 
+                href="https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors"

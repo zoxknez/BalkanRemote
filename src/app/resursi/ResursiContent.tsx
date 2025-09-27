@@ -223,7 +223,7 @@ function ResursiContent() {
                 <span className="text-3xl">📚</span>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Resursi za Remote Rad</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Resursi za remote rad</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Najbolji sajtovi, alati, kursevi i saveti za uspešnu remote karijeru
             </p>

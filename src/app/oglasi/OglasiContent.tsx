@@ -72,7 +72,7 @@ export default function OglasiContent() {
                 <Briefcase className="w-12 h-12" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Agregirani oglasi (TESTNI TAB)</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Agregirani oglasi (testni tab)</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">Eksperimentalni prikaz najnovijih remote / EU‑timezone poslova iz više izvora. Podaci se osvežavaju jednom dnevno.</p>
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20"><Layers className="w-4 h-4" /> {total} oglasa</div>

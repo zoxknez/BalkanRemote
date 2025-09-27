@@ -340,7 +340,7 @@ export default function KompanijeContent() {
                 <Building2 className="w-12 h-12" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">IT Kompanije na Balkanu</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">IT kompanije na Balkanu</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Balkanske IT kompanije i međunarodne koje zapošljavaju remote talente iz regiona
             </p>

@@ -185,7 +185,7 @@ function AlatiContent() {
                 <span className="text-3xl">🛠️</span>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Alati za Remote Rad</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Alati za remote rad</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Najbolji alati koji će vam olakšati remote rad i povećati produktivnost
             </p>

@@ -70,14 +70,14 @@ function HomeInner() {
                 <div className="absolute inset-0 animate-ping rounded-full bg-green-400 opacity-75" />
                 <div className="relative h-3 w-3 rounded-full bg-green-400" />
               </div>
-              <span className="text-sm font-medium text-green-100">🇷🇸🇭🇷🇧🇦🇲🇪🇦🇱🇲🇰 REMOTE WORK HUB ZA BALKAN</span>
+              <span className="text-sm font-medium text-green-100">🇷🇸🇭🇷🇧🇦🇲🇪🇦🇱🇲🇰 Remote work hub za Balkan</span>
             </motion.div>
 
             <h1 className="bg-gradient-to-r from-white via-green-200 to-blue-300 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-7xl">
-              REMOTE BALKAN
+              Remote Balkan
               <br />
               <span className="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-                CAREER HUB
+                Career hub
               </span>
             </h1>
 
@@ -99,7 +99,7 @@ function HomeInner() {
                   <div className="relative rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4">
                     <div className="flex items-center gap-3 text-lg font-semibold text-white">
                       <Zap className="h-5 w-5" />
-                      POČNI SA REMOTE RADOM
+                      Počni sa remote radom
                     </div>
                   </div>
                 </motion.div>
@@ -113,7 +113,7 @@ function HomeInner() {
                 >
                   <div className="flex items-center gap-3 text-lg font-semibold text-slate-200 group-hover:text-blue-300">
                     <Globe2 className="h-5 w-5" />
-                    IZRAČUNAJ ZARADU
+                    Izračunaj zaradu
                   </div>
                 </motion.div>
               </Link>

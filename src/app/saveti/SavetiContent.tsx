@@ -639,7 +639,7 @@ function SavetiContent() {
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Remote Work Saveti za Balkan</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Remote work saveti za Balkan</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
               Praktični vodič za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije – od registracije do
               prvog klijenta.
@@ -681,7 +681,7 @@ function SavetiContent() {
                   🛤️ Putanje po iskustvu
                 </a>
                 <a href="#quick-start" className="block hover:text-blue-600">
-                  🚀 Quick Start
+                  🚀 Quick start
                 </a>
                 <a href="#tips" className="block hover:text-blue-600">
                   📚 Saveti po kategorijama
@@ -823,7 +823,7 @@ function SavetiContent() {
 
             <div id="quick-start" className="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-8 text-white mb-12">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2">🚀 Quick Start Guide za Remote Rad</h2>
+                <h2 className="text-2xl font-bold mb-2">🚀 Quick start guide za remote rad</h2>
                 <p className="text-green-100">4 koraka do održive remote karijere</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

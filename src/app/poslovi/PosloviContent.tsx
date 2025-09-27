@@ -80,7 +80,7 @@ export default function PosloviContent() {
                 />
                 <OutLink
                   href="https://linkedin.com/jobs/remote-jobs/?currentJobId=4089960638"
-                  label="LinkedIn: Remote poslovi (Srbija filter)"
+                  label="LinkedIn: remote poslovi (Srbija filter)"
                   sub="~480 pozicija, menjaj filtere za HR/BA/MNE"
                 />
               </div>

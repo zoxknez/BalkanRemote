@@ -152,6 +152,8 @@ export function JobsFeed() {
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const detailsRef = useRef<HTMLDivElement | null>(null)
+  const [detailsHeight, setDetailsHeight] = useState(0)
 
   const {
     jobs: portalJobs,
@@ -305,11 +307,27 @@ export function JobsFeed() {
           e.preventDefault()
           goToPage(currentPage - 1)
         }
+      } else if (e.key === 'Escape') {
+        if (showMobileFilters) {
+          setShowMobileFilters(false)
+        }
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [currentPage, totalPages, loading, goToPage])
+  }, [currentPage, totalPages, loading, goToPage, showMobileFilters])
+
+  // Measure filters content height for smooth expand/collapse on mobile
+  useEffect(() => {
+    const measure = () => {
+      const h = detailsRef.current?.scrollHeight ?? 0
+      setDetailsHeight(h)
+    }
+    // Measure immediately and after layout settles
+    measure()
+    const t = setTimeout(measure, 50)
+    return () => clearTimeout(t)
+  }, [showMobileFilters, selectedContracts.length, selectedExperience.length, selectedCategory, isRemoteOnly, loading, facets])
 
   const handleBackToTop = () => {
     const top = sectionRef.current?.getBoundingClientRect().top ?? 0
@@ -362,7 +380,14 @@ export function JobsFeed() {
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Sveže remote pozicije</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Sveže remote pozicije
+            {totalCount > 0 && (
+              <span className="ml-2 align-middle rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                Ukupno: {totalCount}
+              </span>
+            )}
+          </h2>
           <p className="text-sm text-gray-600">
             Real-time feed iz agregatora. Prikazujemo{' '}
             <span className="font-semibold text-gray-900" data-testid="jobs-results-count">
@@ -370,6 +395,10 @@ export function JobsFeed() {
             </span>{' '}
             rezultata.
           </p>
+          {/* Screen reader live updates for results/page changes */}
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            Strana {currentPage} od {totalPages}. Prikaz {startRecord}-{endRecord} od {totalCount} oglasa.
+          </div>
           {hasRealData && lastUpdatedLabel && (
             <div className="mt-1 inline-flex items-center gap-1 text-xs text-gray-500">
               <Clock className="h-3.5 w-3.5" /> Poslednje osveženo {lastUpdatedLabel}
@@ -409,7 +438,12 @@ export function JobsFeed() {
         </div>
       )}
 
-  <div id="jobs-filters-detailed" className={`mt-6 space-y-4 ${showMobileFilters ? 'block' : 'hidden'} md:block`}>
+  <div
+        id="jobs-filters-detailed"
+        ref={detailsRef}
+        className={`mt-6 space-y-4 overflow-hidden transition-[max-height] duration-300 ease-out md:block md:overflow-visible md:transition-none ${showMobileFilters ? 'block' : 'block md:block'}`}
+        style={{ maxHeight: showMobileFilters ? detailsHeight : 0 }}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
             <Filter className="h-3.5 w-3.5" /> Filteri

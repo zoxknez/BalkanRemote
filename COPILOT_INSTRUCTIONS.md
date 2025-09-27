@@ -26,4 +26,4 @@ cp filename filename.backup
 ---
 Датум: 24.09.2025
 Пројекат: RemoteBalkan WebApp
-Git Repo: https://github.com/zoxknez/WebApp.git
+Git Repo: https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote

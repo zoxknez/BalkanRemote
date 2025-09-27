@@ -90,3 +90,36 @@ do $$ begin
     create policy "read job portal listings" on public.job_portal_listings for select using (true);
   end if;
 end $$;
+
+-- Feed stats (observability for job feed sync)
+create table if not exists public.job_feed_stats (
+  source_id text primary key,
+  last_success_at timestamptz,
+  last_error_at timestamptz,
+  success_count integer not null default 0,
+  failure_count integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+create or replace function public.set_job_feed_stats_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists job_feed_stats_set_updated_at on public.job_feed_stats;
+create trigger job_feed_stats_set_updated_at
+before update on public.job_feed_stats
+for each row execute function public.set_job_feed_stats_updated_at();
+
+alter table public.job_feed_stats enable row level security;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'job_feed_stats' and policyname = 'read job feed stats'
+  ) then
+    create policy "read job feed stats" on public.job_feed_stats for select using (true);
+  end if;
+end $$;

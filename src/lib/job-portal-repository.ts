@@ -14,6 +14,37 @@ export async function upsertPortalJobs(listings: PortalJobInsert[]): Promise<voi
   }
 }
 
+export async function markFeedSuccess(sourceId: string, count: number) {
+  const supabase = createSupabaseServer()
+  const { error } = await supabase
+    .from('job_feed_stats')
+    .upsert({
+      source_id: sourceId,
+      last_success_at: new Date().toISOString(),
+      success_count: count,
+    }, { onConflict: 'source_id' })
+
+  if (error) {
+    throw new Error(`Failed to mark feed success: ${error.message}`)
+  }
+}
+
+export async function markFeedError(sourceId: string, message: string) {
+  const supabase = createSupabaseServer()
+  const { error } = await supabase
+    .from('job_feed_stats')
+    .upsert({
+      source_id: sourceId,
+      last_error_at: new Date().toISOString(),
+      failure_count: 1,
+      metadata: { message },
+    }, { onConflict: 'source_id' })
+
+  if (error) {
+    throw new Error(`Failed to mark feed error: ${error.message}`)
+  }
+}
+
 export async function fetchPortalJobs(params: {
   limit: number
   offset: number

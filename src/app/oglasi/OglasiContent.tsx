@@ -22,7 +22,7 @@ export default function OglasiContent() {
     updateFilters,
     resetFilters,
     hasMore
-  } = usePortalJobs({ limit: 20 })
+  } = usePortalJobs({ limit: 20, remote: true })
 
   const contractFacets = useMemo(() => facets?.contractType || {}, [facets])
   const experienceFacets = useMemo(() => facets?.experienceLevel || {}, [facets])
@@ -145,6 +145,14 @@ export default function OglasiContent() {
                   {cat} <span className="text-[10px] opacity-70">{count}</span>
                 </button>
               ))}
+              <button
+                onClick={() => updateFilters({ remote: filters.remote ? undefined : true, offset:0 })}
+                className={cn('inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                  filters.remote ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300 hover:text-amber-700'
+                )}
+              >
+                remote
+              </button>
             </div>
           </div>
         )}

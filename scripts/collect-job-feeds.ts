@@ -4,7 +4,7 @@ import Parser from 'rss-parser'
 import crypto from 'node:crypto'
 
 import { jobFeedSources } from '@/data/job-feeds'
-import { upsertPortalJobs } from '@/lib/job-portal-repository'
+import { upsertPortalJobs, markFeedSuccess, markFeedError } from '@/lib/job-portal-repository'
 import type { PortalJobInsert } from '@/types/jobs'
 import { logger } from '@/lib/logger'
 import { detectContractType, detectExperienceLevel, coerceDate } from '@/lib/job-feed-classifiers'
@@ -159,8 +159,11 @@ async function main() {
       const listings = await collectFeed(source.id)
       allListings.push(...listings)
       logger.event('job_source_collected', { source: source.id, count: listings.length })
+      await markFeedSuccess(source.id, listings.length)
     } catch (error) {
-      logger.event('job_source_error', { source: source.id, error: (error as Error).message })
+      const message = (error as Error).message
+      logger.event('job_source_error', { source: source.id, error: message })
+      try { await markFeedError(source.id, message) } catch (err) { logger.event('job_source_error_mark_failed', { source: source.id, error: (err as Error).message }) }
     }
   }
 

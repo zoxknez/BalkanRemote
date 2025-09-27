@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { MapPin, Briefcase, Building2, Users, ExternalLink, Calendar } from 'lucide-react'
+import { useMemo } from 'react'
 import { Job } from '@/types'
 import { formatDate, formatSalary } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,14 @@ export function JobCard({ job, className }: JobCardProps) {
   }
 
   const titleId = `job-title-${job.id}`
+  const sourceHost = useMemo(() => {
+    try {
+      const host = new URL(job.url).host
+      return host.replace(/^www\./, '')
+    } catch {
+      return null
+    }
+  }, [job.url])
 
   return (
     <motion.div
@@ -76,6 +85,18 @@ export function JobCard({ job, className }: JobCardProps) {
               <Calendar className="w-4 h-4 mr-1" />
               {formatDate(job.postedAt)}
             </time>
+            {sourceHost && (
+              <a
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:text-blue-700 hover:border-blue-300"
+                aria-label={`Otvori izvor: ${sourceHost}`}
+                title={`Otvori izvor: ${sourceHost}`}
+              >
+                {sourceHost}
+              </a>
+            )}
           </div>
         </div>
 

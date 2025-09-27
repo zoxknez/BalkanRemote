@@ -71,7 +71,12 @@ export function Header() {
                     />
                   )}
                   <Icon className="w-4 h-4 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" />
-                  <span className="relative z-10">{item.name}</span>
+                  <span className="relative z-10 flex items-center gap-1">
+                    {item.name}
+                    {item.href === '/oglasi' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/90 text-white font-bold tracking-wide shadow-sm">TEST</span>
+                    )}
+                  </span>
                 </Link>
               )
             })}
@@ -148,7 +153,12 @@ export function Header() {
                     />
                   )}
                   <Icon className="w-4 h-4 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" />
-                  <span className="relative z-10">{item.name}</span>
+                  <span className="relative z-10 flex items-center gap-1">
+                    {item.name}
+                    {item.href === '/oglasi' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/90 text-white font-bold tracking-wide shadow-sm">TEST</span>
+                    )}
+                  </span>
                 </Link>
               )
             })}

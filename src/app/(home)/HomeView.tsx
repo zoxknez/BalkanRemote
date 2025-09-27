@@ -52,7 +52,7 @@ function HomeInner() {
       </div>
 
       <section className="relative pt-16 pb-24 sm:pt-20 sm:pb-32">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

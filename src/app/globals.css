@@ -11,19 +11,12 @@
     color: #111827;
     font-family: Inter, system-ui, sans-serif;
   }
-  /* Prevent horizontal overflow that can appear due to 100vw including scrollbar width in Chromium */
-  html, body {
-    overflow-x: clip;
-    /* Keep layout aligned when vertical scrollbar appears */
-    scrollbar-gutter: stable both-edges;
-  }
 }
 
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -31,7 +24,6 @@
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
-    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

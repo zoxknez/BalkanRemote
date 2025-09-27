@@ -39,19 +39,61 @@ export function JobCard({ job, className }: JobCardProps) {
     }
   }, [job.url])
 
-  const brandMap: Record<string, string> = {
-    'poslovi.infostud.com': 'Infostud',
-    'helloworld.rs': 'HelloWorld',
-    'startit.rs': 'Startit',
-  }
-  const sourceLabel = sourceHost ? (brandMap[sourceHost] ?? sourceHost) : null
+  const sourceLabel = useMemo(() => {
+    if (!sourceHost) return null
+    const brandMap: Record<string, string> = {
+      'poslovi.infostud.com': 'Infostud',
+      'helloworld.rs': 'HelloWorld',
+      'startit.rs': 'Startit',
+      'boards.greenhouse.io': 'Greenhouse',
+      'greenhouse.io': 'Greenhouse',
+      'jobs.lever.co': 'Lever',
+      'lever.co': 'Lever',
+      'workable.com': 'Workable',
+      'smartrecruiters.com': 'SmartRecruiters',
+      'ashbyhq.com': 'Ashby',
+      'recruitee.com': 'Recruitee',
+      'linkedin.com': 'LinkedIn',
+    }
+    if (brandMap[sourceHost]) return brandMap[sourceHost]
+    const patterns: Array<[RegExp, string]> = [
+      [/(\.|^)greenhouse\.io$/i, 'Greenhouse'],
+      [/(\.|^)lever\.co$/i, 'Lever'],
+      [/(\.|^)workable\.com$/i, 'Workable'],
+      [/(\.|^)smartrecruiters\.com$/i, 'SmartRecruiters'],
+      [/(\.|^)ashbyhq\.com$/i, 'Ashby'],
+      [/(\.|^)recruitee\.com$/i, 'Recruitee'],
+      [/(\.|^)linkedin\.com$/i, 'LinkedIn'],
+    ]
+    for (const [re, label] of patterns) {
+      if (re.test(sourceHost)) return label
+    }
+    return sourceHost
+  }, [sourceHost])
 
   const [visited, setVisited] = useState(false)
+  const VISITED_TTL_DAYS = 7
   useEffect(() => {
     try {
       const key = `visited:${job.id}`
-      // Check existing state
-      if (localStorage.getItem(key) === '1') setVisited(true)
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { ts?: number } | null
+          const ts = parsed?.ts ?? 0
+          const ageMs = Date.now() - ts
+          const ttlMs = VISITED_TTL_DAYS * 24 * 60 * 60 * 1000
+          if (ts && ageMs < ttlMs) {
+            setVisited(true)
+          } else {
+            localStorage.removeItem(key)
+          }
+        } catch {
+          // legacy value '1' support
+          if (raw === '1') setVisited(true)
+          // normalize to timestamped value on next click
+        }
+      }
 
       // Intercept link click to mark visited
       // We'll rely on onClick handler on the link below.
@@ -173,7 +215,7 @@ export function JobCard({ job, className }: JobCardProps) {
             title={`Otvori izvor: ${(() => { try { return new URL(job.url).host } catch { return job.url } })()}`}
             onClick={() => {
               try {
-                localStorage.setItem(`visited:${job.id}`, '1')
+                localStorage.setItem(`visited:${job.id}`, JSON.stringify({ ts: Date.now() }))
                 setVisited(true)
               } catch {}
             }}

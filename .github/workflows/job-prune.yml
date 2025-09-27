@@ -1,0 +1,35 @@
+name: Job Feed Prune
+
+on:
+  schedule:
+    - cron: '30 2 1 * *' # 02:30 UTC every 1st of month
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install deps
+        run: npm ci
+      - name: Prune old portal jobs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JOB_PRUNE_MAX_AGE_DAYS: 60
+          LOG_FORMAT: json
+        run: npm run prune:jobs
+      - name: Summary
+        if: always()
+        run: |
+          echo "Prune finished with status: ${{ job.status }}"

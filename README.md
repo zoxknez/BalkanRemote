@@ -91,6 +91,7 @@ Specifično za agregator oglasa (`Oglasi`):
 - `/api/portal-jobs` – API ruta (Node runtime) koja vraća paginiranu listu + facet counts
 - `npm run sync:jobs` – pokreće skriptu `scripts/collect-job-feeds.ts` (RSS parsing + upsert)
 - GitHub Actions workflow `.github/workflows/job-sync.yml` – zakazani nightly sync (03:00 UTC)
+ - GitHub Actions workflow `.github/workflows/job-prune.yml` – mesečno čišćenje starih oglasa (1. u mesecu)
 
 ## 📚 Korisne skripte (package.json)
 
@@ -103,6 +104,8 @@ Specifično za agregator oglasa (`Oglasi`):
 - `find:dupes` – skripta za pronalazak duplikata
 - `sync:jobs` – ručno pokretanje agregacije RSS job oglasa (zahteva `SUPABASE_SERVICE_ROLE_KEY` u env)
 - `prune:jobs` – brisanje starih oglasa (default > 60 dana) (`JOB_PRUNE_MAX_AGE_DAYS=45 npm run prune:jobs`)
+  - `FEED_TIMEOUT_MS` – timeout pojedinačnog feed request-a (default 15000ms)
+  - `FEED_MAX_RETRIES` – broj retry pokušaja po feedu (default 2)
 
 ## 🧭 Roadmap
 
@@ -111,6 +114,7 @@ Specifično za agregator oglasa (`Oglasi`):
 - Job scraping: cron, deduplikacija, verifikacija izvora i UI povezivanje
 - Oglasi: dodatni filteri (remote vs onsite, opseg plate kad postoji), JSON-LD JobPosting schema, brisanje zastarelih oglasa (npr > 60d)
   - (prune skripta dodata – integrisati u mesečni workflow kasnije)
+  - (mesečni workflow dodat)
 ## 🧪 Testovi
 
 Pokreni:

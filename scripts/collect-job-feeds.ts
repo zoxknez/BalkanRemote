@@ -15,6 +15,9 @@ const parser = new Parser({
   }
 })
 
+const FEED_TIMEOUT_MS = parseInt(process.env.FEED_TIMEOUT_MS || '15000', 10)
+const FEED_MAX_RETRIES = parseInt(process.env.FEED_MAX_RETRIES || '2', 10)
+
 const MAX_ITEMS_PER_FEED = 50
 
 function toHash(input: string): string {
@@ -22,6 +25,44 @@ function toHash(input: string): string {
 }
 
 // (detectContractType, detectExperienceLevel, coerceDate) moved to '@/lib/job-feed-classifiers'
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<string> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    return await res.text()
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function loadFeedXML(url: string): Promise<string> {
+  let attempt = 0
+  let lastErr: unknown = null
+  while (attempt <= FEED_MAX_RETRIES) {
+    try {
+      if (attempt > 0) {
+        const backoff = 500 * attempt
+        await new Promise(r => setTimeout(r, backoff))
+      }
+      const xml = await fetchWithTimeout(url, FEED_TIMEOUT_MS)
+      return xml
+    } catch (err) {
+      lastErr = err
+      if ((err as Error).name === 'AbortError') {
+        logger.event('job_source_timeout', { url, attempt })
+      } else {
+        logger.event('job_source_retry', { url, attempt, error: (err as Error).message })
+      }
+      attempt += 1
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('Unknown feed error')
+}
 
 async function collectFeed(sourceId: string): Promise<PortalJobInsert[]> {
   const source = jobFeedSources.find((item) => item.id === sourceId)
@@ -32,7 +73,8 @@ async function collectFeed(sourceId: string): Promise<PortalJobInsert[]> {
   logger.info(`🔄 Fetching ${source.name}`)
 
   if (source.type === 'rss') {
-    const feed = await parser.parseURL(source.url)
+    const xml = await loadFeedXML(source.url)
+    const feed = await parser.parseString(xml)
     const items = (feed.items ?? []).slice(0, MAX_ITEMS_PER_FEED)
 
     return items

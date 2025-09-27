@@ -189,25 +189,27 @@ export function NalogClient() {
         </div>
       )}
       {sessionEmail ? (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-          <p className="text-sm text-gray-700">
-            Prijavljeni kao: <span className="font-medium">{sessionEmail}</span>
-          </p>
-          <button
-            onClick={handleSignOut}
-            className="mt-3 inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800"
-          >
-            Odjava
-          </button>
+        <div className="mx-auto w-full max-w-lg">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p className="text-sm text-gray-700">
+              Prijavljeni kao: <span className="font-medium">{sessionEmail}</span>
+            </p>
+            <button
+              onClick={handleSignOut}
+              className="mt-3 inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800"
+            >
+              Odjava
+            </button>
+          </div>
         </div>
       ) : (
-        <>
+        <div className="mx-auto w-full max-w-lg space-y-6">
           {supabaseAvailable ? null : (
             <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700">
               Registracija nije moguća dok se ne podese Supabase kredencijali.
             </div>
           )}
-          <div className="flex w-full flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Auth modes">
+          <div className="mb-5 flex w-full flex-wrap items-center justify-center gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Auth modes">
             {(['signIn', 'signUp', 'reset'] satisfies AuthMode[]).map((authMode) => (
               <button
                 key={authMode}
@@ -243,7 +245,7 @@ export function NalogClient() {
             </div>
           )}
 
-          <div className="mt-4 space-y-4" aria-disabled={!supabaseAvailable}>
+          <div className="mt-6 space-y-5" aria-disabled={!supabaseAvailable}>
             <label className="block text-sm font-medium text-gray-700" htmlFor="auth-email">
               Email
             </label>
@@ -338,7 +340,7 @@ export function NalogClient() {
               {message && <div className="text-green-700">{message}</div>}
             </div>
 
-            <div className="pt-4">
+            <div className="pt-5">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -361,7 +363,7 @@ export function NalogClient() {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

@@ -155,7 +155,7 @@ export default function NalogPage() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8 -mt-10">
+  <div className="relative z-10 mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8 mt-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <NalogClient />

@@ -28,14 +28,14 @@ function OutLink({ href, label, sub }: OutLinkProps) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block rounded-xl border border-gray-200 bg-white p-5 hover:bg-gray-50 transition-all shadow-sm"
+      className="group block rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-gray-50 hover:shadow-md ring-1 ring-transparent hover:ring-blue-200/60"
     >
       <div className="flex items-center justify-between">
         <div>
           <div className="font-semibold text-gray-900 group-hover:text-blue-700">{label}</div>
           {sub && <div className="text-sm text-gray-600 mt-1">{sub}</div>}
         </div>
-        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-700" />
+        <ExternalLink className="w-4 h-4 text-gray-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-blue-700" />
       </div>
     </Link>
   );
@@ -45,16 +45,32 @@ export default function PosloviContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      {/* Top description bar (consistent with other tabs) */}
+      <div id="top" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/20">
+              <span className="text-3xl">💼</span>
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Remote poslovi i prečice</h1>
+          <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
+            Pregled remote poslova, freelance platformi i direktorijuma kompanija prilagođen talentima sa Balkana.
+          </p>
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Sections */}
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* LinkedIn */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Linkedin className="w-5 h-5 text-blue-600" />
-                <h2 className="text-lg font-semibold text-gray-900">LinkedIn prečice</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 ring-1 ring-blue-600/20">
+                  <Linkedin className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">LinkedIn prečice</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <OutLink
@@ -72,9 +88,11 @@ export default function PosloviContent() {
 
             {/* Video primer */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Video className="w-5 h-5 text-rose-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Primeri i kako izgleda posao</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600/10 text-rose-600 ring-1 ring-rose-600/20">
+                  <Video className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Primeri i kako izgleda posao</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <OutLink
@@ -87,9 +105,11 @@ export default function PosloviContent() {
 
             {/* Global boards */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Globalni remote job board-ovi</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 ring-1 ring-indigo-600/20">
+                  <Briefcase className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Globalni remote job board-ovi</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://remoteok.com/" label="Remote OK" sub="Veliki broj IT i non-IT remote oglasa" />
@@ -103,9 +123,11 @@ export default function PosloviContent() {
 
             {/* Direktorijumi IT kompanija */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Globe className="w-5 h-5 text-blue-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Direktorijumi IT kompanija</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 ring-1 ring-blue-600/20">
+                  <Globe className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Direktorijumi IT kompanija</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <OutLink
@@ -123,9 +145,11 @@ export default function PosloviContent() {
 
             {/* EU timezone */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Globe2 className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-lg font-semibold text-gray-900">EU / timezone-friendly pozicije</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 ring-1 ring-emerald-600/20">
+                  <Globe2 className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">EU / timezone-friendly pozicije</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://euremotejobs.com/" label="EU Remote Jobs" sub="Remote poslovi unutar EU timezone-a" />
@@ -136,9 +160,11 @@ export default function PosloviContent() {
 
             {/* Freelance & vetted */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Rocket className="w-5 h-5 text-fuchsia-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Freelance i vetted platforme</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-fuchsia-600/10 text-fuchsia-600 ring-1 ring-fuchsia-600/20">
+                  <Rocket className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Freelance i vetted platforme</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://www.upwork.com/" label="Upwork" sub="Najveći marketplace" />
@@ -152,9 +178,11 @@ export default function PosloviContent() {
 
             {/* Customer support / VA */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Headphones className="w-5 h-5 text-cyan-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Customer Support / Virtual Assistant</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-600/10 text-cyan-600 ring-1 ring-cyan-600/20">
+                  <Headphones className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Customer Support / Virtual Assistant</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://jobs.supportdriven.com/" label="Support Driven Jobs" sub="Community za CS" />
@@ -173,9 +201,11 @@ export default function PosloviContent() {
 
             {/* Teaching */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <BookOpen className="w-5 h-5 text-amber-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Predavanje engleskog online</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600/10 text-amber-600 ring-1 ring-amber-600/20">
+                  <BookOpen className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Predavanje engleskog online</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://preply.com/en/online/teaching-jobs" label="Preply" sub="Fleksibilni sati" />
@@ -192,9 +222,11 @@ export default function PosloviContent() {
 
             {/* Blogovi / vodiči */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Newspaper className="w-5 h-5 text-purple-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Blogovi i vodiči (ažurno)</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-purple-600/10 text-purple-600 ring-1 ring-purple-600/20">
+                  <Newspaper className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Blogovi i vodiči (ažurno)</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://zapier.com/learn/remote-work/" label="Zapier – Remote Work Guide" sub="Alati, praksa, kultura" />
@@ -215,9 +247,11 @@ export default function PosloviContent() {
 
             {/* Generatori / alati za prijavu */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <List className="w-5 h-5 text-green-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Generatori (CV, Cover letter, portfolija)</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-green-600/10 text-green-600 ring-1 ring-green-600/20">
+                  <List className="w-5 h-5" />
+                </span>
+                <h2 className="text-xl font-semibold text-slate-900">Generatori (CV, Cover letter, portfolija)</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <OutLink href="https://flowcv.com/" label="FlowCV" sub="Besplatan, čist CV generator" />
@@ -231,7 +265,7 @@ export default function PosloviContent() {
           </div>
 
           {/* Sidebar: saveti i sledeći koraci */}
-          <aside className="space-y-8">
+          <aside className="space-y-8 lg:sticky lg:top-24 self-start">
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-2 mb-3">
                 <List className="w-5 h-5 text-green-600" />
@@ -286,7 +320,7 @@ export default function PosloviContent() {
               </ul>
             </section>
 
-            <Link href="#top" className="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-blue-700">
+            <Link href="#top" className="inline-flex items-center gap-2 text-gray-600 text-sm hover:text-blue-700 rounded-full border border-gray-200 px-3 py-1.5">
               <ArrowUp className="w-4 h-4" /> Nazad na vrh
             </Link>
           </aside>

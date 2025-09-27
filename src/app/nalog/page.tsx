@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Sparkles, Users, Shield, Clock } from 'lucide-react'
 
+import { sanitizeHtml } from '@/lib/sanitizeHtml'
+
 import { NalogClient } from './Client'
 
 const faqStructuredData = {
@@ -87,6 +89,8 @@ const helpSteps = [
 ]
 
 export default function NalogPage() {
+  const faqJsonLd = sanitizeHtml(JSON.stringify(faqStructuredData))
+
   const heroMetrics = [
     {
       icon: Sparkles,
@@ -116,11 +120,13 @@ export default function NalogPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <script
-        type="application/ld+json"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
-      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: faqJsonLd }}
+        />
+      )}
 
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">

@@ -116,7 +116,7 @@ export default function PitanjaPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 -mt-10 relative z-10">
+  <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 md:mt-14 pb-16 relative z-10">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Pitanja i sugestije</h1>
         <p className="text-gray-600 mb-6">Postavite pitanje ili predlog. Potrebna je registracija/prijava.</p>

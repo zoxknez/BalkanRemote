@@ -1,4 +1,21 @@
-import { JobPosting, ScraperSource, ScrapeJob, JobCategory } from '@/types/jobs';
+import { JobPosting, ScraperSource, ScrapeJob, JobCategory, JobFacetCounts } from '@/types/jobs';
+
+const CONTRACT_TYPES: JobPosting['contractType'][] = ['full-time', 'part-time', 'contract', 'freelance'];
+const SENIORITY_LEVELS: JobPosting['seniority'][] = ['junior', 'mid', 'senior', 'lead', 'executive'];
+const REMOTE_TYPES: JobPosting['remoteType'][] = ['fully-remote', 'hybrid', 'on-site', 'flexible'];
+const JOB_CATEGORIES: JobCategory[] = [
+  'software-engineering',
+  'data-science',
+  'design',
+  'marketing',
+  'sales',
+  'customer-support',
+  'hr',
+  'finance',
+  'operations',
+  'management',
+  'other',
+];
 import { allScraperSources } from '@/data/scraper-sources';
 import crypto from 'crypto';
 import { logger } from './logger';
@@ -272,6 +289,36 @@ export class JobScraperEngine {
     return process.env.NODE_ENV === 'production';
   }
 
+  private buildFacetCounts(jobs: JobPosting[]): JobFacetCounts {
+    const facets: JobFacetCounts = {
+      contractType: CONTRACT_TYPES.reduce((acc, type) => {
+        acc[type] = 0;
+        return acc;
+      }, {} as Record<JobPosting['contractType'], number>),
+      seniority: SENIORITY_LEVELS.reduce((acc, level) => {
+        acc[level] = 0;
+        return acc;
+      }, {} as Record<JobPosting['seniority'], number>),
+      category: JOB_CATEGORIES.reduce((acc, category) => {
+        acc[category] = 0;
+        return acc;
+      }, {} as Record<JobCategory, number>),
+      remoteType: REMOTE_TYPES.reduce((acc, type) => {
+        acc[type] = 0;
+        return acc;
+      }, {} as Record<JobPosting['remoteType'], number>),
+    };
+
+    for (const job of jobs) {
+      facets.contractType[job.contractType] = (facets.contractType[job.contractType] ?? 0) + 1;
+      facets.seniority[job.seniority] = (facets.seniority[job.seniority] ?? 0) + 1;
+      facets.category[job.category] = (facets.category[job.category] ?? 0) + 1;
+      facets.remoteType[job.remoteType] = (facets.remoteType[job.remoteType] ?? 0) + 1;
+    }
+
+    return facets;
+  }
+
   private setupScheduledScraping(): void {
     if (!this.schedulerEnabled) {
       return;
@@ -328,7 +375,7 @@ export class JobScraperEngine {
     seniority?: string[];
     contractType?: string[];
     sourceSite?: string[];
-  }): { jobs: JobPosting[]; total: number } {
+  }): { jobs: JobPosting[]; total: number; facets: JobFacetCounts } {
     let filteredJobs = [...this.scrapedJobs];
 
     // Apply filters
@@ -390,12 +437,14 @@ export class JobScraperEngine {
     filteredJobs.sort((a, b) => b.postedDate.getTime() - a.postedDate.getTime());
 
     const total = filteredJobs.length;
+    const facets = this.buildFacetCounts(filteredJobs);
     const offset = filters?.offset || 0;
     const limit = filters?.limit || 20;
 
     return {
       jobs: filteredJobs.slice(offset, offset + limit),
-      total
+      total,
+      facets
     };
   }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { JobPosting, JobCategory } from '@/types/jobs';
+import { JobPosting, JobCategory, JobFacetCounts } from '@/types/jobs';
 import { logger } from '@/lib/logger';
 
 export interface JobFilters {
@@ -33,10 +33,12 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<JobFilters>(initialFilters);
+  const [facets, setFacets] = useState<JobFacetCounts | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialFiltersRef = useRef(initialFilters);
 
-  const fetchJobs = useCallback(async (newFilters?: JobFilters) => {
+  const fetchJobs = useCallback(async (newFilters?: JobFilters, { append } = { append: false }) => {
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -48,6 +50,7 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
     setError(null);
 
     const currentFilters = newFilters || filters;
+    const shouldAppend = append || ((currentFilters.offset ?? 0) > 0);
     
     try {
       const searchParams = new URLSearchParams();
@@ -77,8 +80,17 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
         throw new Error(data.error || 'Failed to fetch jobs');
       }
 
-      setJobs(data.data.jobs);
+      if (shouldAppend) {
+        setJobs((prev) => {
+          const existingIds = new Set(prev.map((job) => job.id));
+          const incoming = (data.data.jobs as JobPosting[]).filter((job) => !existingIds.has(job.id));
+          return [...prev, ...incoming];
+        });
+      } else {
+        setJobs(data.data.jobs);
+      }
       setTotal(data.data.total);
+      setFacets(data.data.facets ?? null);
 
     } catch (err) {
       if ((err as DOMException)?.name === 'AbortError') {
@@ -88,6 +100,7 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
       setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
       setJobs([]);
       setTotal(0);
+      setFacets(null);
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;
@@ -99,13 +112,17 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   const updateFilters = useCallback((newFilters: Partial<JobFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
-    fetchJobs(updatedFilters);
+    const shouldAppend = (newFilters.offset ?? 0) > 0;
+    fetchJobs(updatedFilters, { append: shouldAppend });
   }, [filters, fetchJobs]);
 
   const resetFilters = useCallback(() => {
-    const emptyFilters = { limit: 20, offset: 0 };
-    setFilters(emptyFilters);
-    fetchJobs(emptyFilters);
+    const baseFilters: JobFilters = {
+      ...initialFiltersRef.current,
+      offset: 0,
+    };
+    setFilters(baseFilters);
+    fetchJobs(baseFilters);
   }, [fetchJobs]);
 
   const search = useCallback((keywords: string) => {
@@ -125,8 +142,10 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
   }, [loading, jobs.length, total, updateFilters]);
 
   const refreshJobs = useCallback(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    const baseFilters = { ...filters, offset: 0 };
+    setFilters(baseFilters);
+    fetchJobs(baseFilters);
+  }, [fetchJobs, filters]);
 
   // Initial load
   useEffect(() => {
@@ -152,7 +171,8 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
     search,
     loadMore,
     refreshJobs,
-    hasMore: jobs.length < total
+    hasMore: jobs.length < total,
+    facets
   };
 };
 

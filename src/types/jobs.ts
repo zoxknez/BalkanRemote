@@ -39,6 +39,71 @@ export interface JobPosting {
   fingerprint: string; // For duplicate detection
 }
 
+export interface JobFacetCounts {
+  contractType: Record<JobPosting['contractType'], number>;
+  seniority: Record<JobPosting['seniority'], number>;
+  category: Record<JobCategory, number>;
+  remoteType: Record<JobPosting['remoteType'], number>;
+}
+
+export type PortalJobContractType = JobPosting['contractType'] | 'internship';
+
+export interface PortalJobInsert {
+  id?: string;
+  source_id: string;
+  external_id: string;
+  title: string;
+  company: string;
+  company_logo?: string | null;
+  location?: string | null;
+  type?: PortalJobContractType | null;
+  category?: JobCategory | null;
+  description?: string | null;
+  requirements?: string[] | null;
+  benefits?: string[] | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  currency?: string | null;
+  is_remote: boolean;
+  remote_type?: JobPosting['remoteType'] | null;
+  experience_level?: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | null;
+  posted_at: string;
+  deadline?: string | null;
+  url: string;
+  source_url?: string | null;
+  featured?: boolean | null;
+  tags?: string[] | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PortalJobRecord extends PortalJobInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PortalJobSummary {
+  id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  type: PortalJobContractType | null;
+  category: JobCategory | null;
+  description: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  currency: string | null;
+  isRemote: boolean;
+  experienceLevel: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | null;
+  postedAt: string;
+  url: string;
+  sourceId: string;
+  tags: string[];
+  featured: boolean;
+}
+
 export type JobCategory = 
   | 'software-engineering'
   | 'data-science'

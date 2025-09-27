@@ -14,6 +14,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 } from 'lucide-react';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 type CalcMode = 'flat' | 'income' | 'company';
 
@@ -686,7 +687,52 @@ export default function TaxGuideClient() {
 		return { flat, inc };
 	}, [filteredOptions, monthlyIncome, monthlyExpenses]);
 
-	const faqs = FAQS[selectedCountry] ?? [];
+	const registrationSteps = useMemo(
+		() => REGISTRATION_STEPS[selectedCountry] ?? [],
+		[selectedCountry],
+	);
+	const faqs = useMemo(() => FAQS[selectedCountry] ?? [], [selectedCountry]);
+
+	const registrationJsonLd = useMemo(() => {
+		if (registrationSteps.length === 0) {
+			return null;
+		}
+
+		return sanitizeHtml(
+			JSON.stringify({
+				'@context': 'https://schema.org',
+				'@type': 'HowTo',
+				name: `Registracija – ${selectedCountry}`,
+				step: registrationSteps.map((s, idx) => ({
+					'@type': 'HowToStep',
+					name: `Korak ${idx + 1}`,
+					text: s,
+				})),
+			}),
+		);
+	}, [registrationSteps, selectedCountry]);
+
+	const faqJsonLd = useMemo(() => {
+		if (faqs.length === 0) {
+			return null;
+		}
+
+		return sanitizeHtml(
+			JSON.stringify({
+				'@context': 'https://schema.org',
+				'@type': 'FAQPage',
+				mainEntity: faqs.map((f) => ({
+					'@type': 'Question',
+					name: f.question,
+					acceptedAnswer: {
+						'@type': 'Answer',
+						text: f.answer,
+					},
+				})),
+			}),
+		);
+	}, [faqs]);
+
 	const countryInfo = balkanCountriesInfo.find((c) => c.country === selectedCountry);
 	const currency = countryInfo?.currency || selectedTaxOption?.currency || 'RSD';
 
@@ -1323,26 +1369,17 @@ export default function TaxGuideClient() {
 						>
 							<h2 className="text-2xl font-bold text-gray-900 mb-6">Koraci registracije ({selectedCountry})</h2>
 							<ol className="list-decimal pl-6 space-y-2 text-gray-700">
-								{(REGISTRATION_STEPS[selectedCountry] ?? []).map((s, i) => (
+								{registrationSteps.map((s, i) => (
 									<li key={i}>{s}</li>
 								))}
 							</ol>
 
 							{/* HowTo JSON-LD */}
-							{(REGISTRATION_STEPS[selectedCountry] ?? []).length > 0 && (
+							{registrationJsonLd && (
 								<script
 									type="application/ld+json"
 									dangerouslySetInnerHTML={{
-										__html: JSON.stringify({
-											'@context': 'https://schema.org',
-											'@type': 'HowTo',
-											name: `Registracija – ${selectedCountry}`,
-											step: (REGISTRATION_STEPS[selectedCountry] ?? []).map((s, idx) => ({
-												'@type': 'HowToStep',
-												name: `Korak ${idx + 1}`,
-												text: s,
-											})),
-										}),
+										__html: registrationJsonLd,
 									}}
 								/>
 							)}
@@ -1361,22 +1398,11 @@ export default function TaxGuideClient() {
 
 							<div className="space-y-4">
 								{/* FAQ JSON-LD for SEO */}
-								{faqs.length > 0 && (
+								{faqJsonLd && (
 									<script
 										type="application/ld+json"
 										dangerouslySetInnerHTML={{
-											__html: JSON.stringify({
-												'@context': 'https://schema.org',
-												'@type': 'FAQPage',
-												mainEntity: faqs.map((f) => ({
-													'@type': 'Question',
-													name: f.question,
-													acceptedAnswer: {
-														'@type': 'Answer',
-														text: f.answer,
-													},
-												})),
-											}),
+											__html: faqJsonLd,
 										}}
 									/>
 								)}
@@ -1386,8 +1412,10 @@ export default function TaxGuideClient() {
 									</div>
 								)}
 
-								{faqs.map((faq) => (
-									<div key={faq.id} className="border border-gray-200 rounded-lg">
+								{faqs.map((faq) => {
+									const sanitizedAnswer = sanitizeHtml(faq.answer);
+									return (
+										<div key={faq.id} className="border border-gray-200 rounded-lg">
 										<button
 											onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
 											className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -1408,12 +1436,16 @@ export default function TaxGuideClient() {
 													exit={{ opacity: 0, height: 0 }}
 													transition={{ duration: 0.3 }}
 												>
-													<div className="px-6 pb-4 text-gray-600">{faq.answer}</div>
+													<div
+														className="px-6 pb-4 text-gray-600"
+														dangerouslySetInnerHTML={{ __html: sanitizedAnswer }}
+													/>
 												</motion.div>
 											)}
 										</AnimatePresence>
-									</div>
-								))}
+										</div>
+									);
+								})}
 							</div>
 						</motion.div>
 

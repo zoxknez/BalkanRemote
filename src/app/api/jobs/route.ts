@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
         total: result.total,
         page: Math.floor(filters.offset / filters.limit) + 1,
         limit: filters.limit,
-        totalPages: Math.ceil(result.total / filters.limit)
+        totalPages: Math.ceil(result.total / filters.limit),
+        facets: result.facets,
       }
     });
 

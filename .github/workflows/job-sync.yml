@@ -1,0 +1,37 @@
+name: Job Feed Sync
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC daily (~05:00-06:00 CET depending DST)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run job feed sync
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run sync:jobs
+
+      - name: Post-run summary
+        if: always()
+        run: |
+          echo "Job feed sync finished with status: ${{ job.status }}"

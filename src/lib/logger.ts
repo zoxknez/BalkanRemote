@@ -28,6 +28,16 @@ export const logger = {
     if (!shouldLog) return
     safeCall(console.debug, args)
   },
+  event: (name: string, payload?: Record<string, unknown>) => {
+    // Always log events (observability) but allow toggle to plain vs JSON
+    const format = process.env.LOG_FORMAT || 'text'
+    if (format === 'json') {
+      const record = { ts: new Date().toISOString(), evt: name, ...(payload || {}) }
+      safeCall(console.log, [JSON.stringify(record)])
+    } else {
+      safeCall(console.log, [`[evt:${name}]`, payload || {}])
+    }
+  }
 }
 
 export type Logger = typeof logger

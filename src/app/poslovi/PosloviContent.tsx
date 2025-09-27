@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { BalkanItBanner } from '@/components/balkan-it-banner';
+import { JobsFeed } from './JobsFeed';
 
 interface OutLinkProps {
   href: string;
@@ -190,6 +191,8 @@ export default function PosloviContent() {
 
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <JobsFeed />
+
         <BalkanItBanner
           className="mb-8"
           title="🇷🇸🇭🇷🇧🇦🇲🇪 Balkanska IT scena u ekspanziji"

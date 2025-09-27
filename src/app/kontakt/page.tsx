@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { ClipboardButton } from '@/components/clipboard-button'
+import { sanitizeHtml } from '@/lib/sanitizeHtml'
 
 const CONTACT_EMAIL = 'zoxknez@hotmail.com'
 
@@ -74,9 +75,13 @@ export const metadata: Metadata = {
 }
 
 export default function KontaktPage() {
+  const contactJsonLdString = sanitizeHtml(JSON.stringify(contactJsonLd))
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }} />
+      {contactJsonLdString && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: contactJsonLdString }} />
+      )}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white text-2xl mb-3" aria-hidden="true">

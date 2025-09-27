@@ -798,12 +798,13 @@ export function JobsFeed() {
           <div className="text-sm text-gray-600">
             Prikaz {startRecord}-{endRecord} od {totalCount} oglasa
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="navigation" aria-label="Paginacija">
             <button
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1 || loading}
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Prethodna strana ${currentPage > 1 ? `(${currentPage - 1})` : ''}`}
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Prethodna
             </button>
@@ -819,6 +820,8 @@ export function JobsFeed() {
                         ? 'bg-blue-600 text-white'
                         : 'border border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:text-blue-700'
                     }`}
+                    aria-current={item === currentPage ? 'page' : undefined}
+                    aria-label={`Strana ${item}${item === currentPage ? ' (trenutna)' : ''}`}
                   >
                     {item}
                   </button>
@@ -832,6 +835,7 @@ export function JobsFeed() {
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages || loading}
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Sledeća strana ${currentPage < totalPages ? `(${currentPage + 1})` : ''}`}
             >
               Sledeća <ArrowRight className="h-3.5 w-3.5" />
             </button>

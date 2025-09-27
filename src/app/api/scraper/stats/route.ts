@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { jobScraperEngine } from '@/lib/job-scraper-engine';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching scraper stats:', error);
+    logger.error('Error fetching scraper stats:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch scraper statistics' },
       { status: 500 }
@@ -34,7 +35,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('Error starting manual scrape:', error);
+    logger.error('Error starting manual scrape:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to start scraping' },
       { status: 500 }

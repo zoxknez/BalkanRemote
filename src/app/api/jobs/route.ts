@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jobScraperEngine } from '@/lib/job-scraper-engine';
 import { JobCategory } from '@/types/jobs';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching jobs:', error);
+    logger.error('Error fetching jobs:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch jobs' },
       { status: 500 }

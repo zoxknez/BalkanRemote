@@ -1,5 +1,6 @@
 import { CalculatorImpl, CalculatorContext, CalculatorResult, CalculatorMeta } from '@/types/toolbox';
 import { calculatorDefinitions } from '@/data/calculator-definitions';
+import { logger } from './logger';
 
 type RsNetGrossInput = {
   mode: 'NET_TO_GROSS' | 'GROSS_TO_NET';
@@ -341,7 +342,7 @@ export const calculatorImplementations: Record<string, CalculatorImpl> = {
 
           return hours + minutes / 60;
         } catch (error) {
-          console.warn("Failed to resolve timezone", timeZone, error);
+          logger.warn('Failed to resolve timezone', timeZone, error);
           return 0;
         }
       };

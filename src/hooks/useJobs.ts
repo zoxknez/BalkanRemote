@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { JobPosting, JobCategory } from '@/types/jobs';
+import { logger } from '@/lib/logger';
 
 export interface JobFilters {
   limit?: number;
@@ -83,7 +84,7 @@ export const useJobs = (initialFilters: JobFilters = {}) => {
       if ((err as DOMException)?.name === 'AbortError') {
         return;
       }
-      console.error('Error fetching jobs:', err);
+      logger.error('Error fetching jobs:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
       setJobs([]);
       setTotal(0);
@@ -186,7 +187,7 @@ export const useScraperStats = () => {
       setStats(statsData);
 
     } catch (err) {
-      console.error('Error fetching scraper stats:', err);
+      logger.error('Error fetching scraper stats:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch stats');
     } finally {
       setLoading(false);
@@ -218,7 +219,7 @@ export const useScraperStats = () => {
       }, 2000);
 
     } catch (err) {
-      console.error('Error triggering scraping:', err);
+      logger.error('Error triggering scraping:', err);
       setError(err instanceof Error ? err.message : 'Failed to start scraping');
     } finally {
       setLoading(false);

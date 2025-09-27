@@ -1,6 +1,7 @@
 import { JobPosting, ScraperSource, ScrapeJob, JobCategory } from '@/types/jobs';
 import { allScraperSources } from '@/data/scraper-sources';
 import crypto from 'crypto';
+import { logger } from './logger';
 
 export class JobScraperEngine {
   private activeScrapeJobs: Map<string, ScrapeJob> = new Map();
@@ -16,7 +17,7 @@ export class JobScraperEngine {
     if (this.schedulerEnabled) {
       this.setupScheduledScraping();
     } else {
-      console.info(
+      logger.info(
         'ℹ️ JobScraperEngine scheduled scraping disabled. Set SCRAPER_SCHEDULE_ENABLED=true to enable.'
       );
     }
@@ -26,19 +27,19 @@ export class JobScraperEngine {
    * Main scraping method - scrapes all active sources
    */
   public async scrapeAllSources(): Promise<void> {
-    console.log('🚀 Starting scheduled scraping of all sources...');
+    logger.info('🚀 Starting scheduled scraping of all sources...');
     const activeSources = allScraperSources.filter(source => source.isActive);
     
     const scrapePromises = activeSources.map(source => 
       this.scrapeSource(source).catch(error => {
-        console.error(`❌ Failed to scrape ${source.name}:`, error);
+        logger.error(`❌ Failed to scrape ${source.name}:`, error);
         return null;
       })
     );
 
     await Promise.allSettled(scrapePromises);
     this.lastScrapeTime = new Date();
-    console.log('✅ Completed scraping all sources');
+    logger.info('✅ Completed scraping all sources');
   }
 
   /**
@@ -62,7 +63,7 @@ export class JobScraperEngine {
     this.activeScrapeJobs.set(scrapeJob.id, scrapeJob);
 
     try {
-      console.log(`🔍 Scraping ${source.name}...`);
+      logger.info(`🔍 Scraping ${source.name}...`);
       
       const scrapedJobs = await this.performScraping(source);
       
@@ -83,7 +84,9 @@ export class JobScraperEngine {
       source.errorCount = 0;
       source.successRate = this.calculateSuccessRate(source);
 
-      console.log(`✅ ${source.name}: Found ${scrapedJobs.length}, Inserted ${inserted}, Updated ${updated}, Skipped ${duplicates}`);
+      logger.info(
+        `✅ ${source.name}: Found ${scrapedJobs.length}, Inserted ${inserted}, Updated ${updated}, Skipped ${duplicates}`
+      );
 
     } catch (error) {
       scrapeJob.status = 'failed';
@@ -96,7 +99,7 @@ export class JobScraperEngine {
       source.errorCount++;
       source.successRate = this.calculateSuccessRate(source);
 
-      console.error(`❌ Failed to scrape ${source.name}:`, error);
+  logger.error(`❌ Failed to scrape ${source.name}:`, error);
 
       // Retry logic
       if (scrapeJob.retryCount < scrapeJob.maxRetries) {
@@ -276,13 +279,13 @@ export class JobScraperEngine {
 
     if (!this.scheduledInterval) {
       this.scheduledInterval = setInterval(() => {
-        this.scrapeAllSources().catch(console.error);
+  this.scrapeAllSources().catch(error => logger.error(error));
       }, 12 * 60 * 60 * 1000);
     }
 
     if (!this.initialScheduleTimeout) {
       this.initialScheduleTimeout = setTimeout(() => {
-        this.scrapeAllSources().catch(console.error);
+  this.scrapeAllSources().catch(error => logger.error(error));
       }, 30000);
     }
   }
@@ -669,7 +672,7 @@ export class JobScraperEngine {
   public async manualScrapeSource(sourceId: string): Promise<ScrapeJob | null> {
     const source = allScraperSources.find(s => s.id === sourceId);
     if (!source) {
-      console.error(`Source ${sourceId} not found`);
+  logger.error(`Source ${sourceId} not found`);
       return null;
     }
     

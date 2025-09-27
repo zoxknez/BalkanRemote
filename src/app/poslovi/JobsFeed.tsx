@@ -408,6 +408,12 @@ export function JobsFeed() {
     window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
+  const scrollToSectionTop = () => {
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
+  }
+
   const handleCopyLink = async () => {
     try {
       const url = window.location.href
@@ -616,6 +622,27 @@ export function JobsFeed() {
             Remote only
           </button>
           <span className="text-[11px] text-gray-500">Aktivno filtera: {activeFilterCount}</span>
+          {/* Page size selector */}
+          <label className="ml-auto inline-flex items-center gap-2 text-[11px] text-gray-600">
+            <span className="sr-only">Rezultata po stranici</span>
+            <span className="hidden sm:inline">Po stranici:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                const nextLimit = parseInt(e.target.value, 10)
+                if (Number.isFinite(nextLimit) && nextLimit > 0) {
+                  updateFilters({ limit: nextLimit, offset: 0 }, { append: false })
+                  scrollToSectionTop()
+                }
+              }}
+              className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              aria-label="Rezultata po stranici"
+            >
+              {[12, 24, 48].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className="flex flex-wrap gap-2" data-testid="jobs-filter-contract">

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { MapPin, Briefcase, Building2, Users, ExternalLink, Calendar } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Job } from '@/types'
 import { formatDate, formatSalary } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -38,6 +38,28 @@ export function JobCard({ job, className }: JobCardProps) {
       return null
     }
   }, [job.url])
+
+  const brandMap: Record<string, string> = {
+    'poslovi.infostud.com': 'Infostud',
+    'helloworld.rs': 'HelloWorld',
+    'startit.rs': 'Startit',
+  }
+  const sourceLabel = sourceHost ? (brandMap[sourceHost] ?? sourceHost) : null
+
+  const [visited, setVisited] = useState(false)
+  useEffect(() => {
+    try {
+      const key = `visited:${job.id}`
+      // Check existing state
+      if (localStorage.getItem(key) === '1') setVisited(true)
+
+      // Intercept link click to mark visited
+      // We'll rely on onClick handler on the link below.
+
+    } catch {
+      // ignore storage issues
+    }
+  }, [job.id])
 
   return (
     <motion.div
@@ -85,16 +107,16 @@ export function JobCard({ job, className }: JobCardProps) {
               <Calendar className="w-4 h-4 mr-1" />
               {formatDate(job.postedAt)}
             </time>
-            {sourceHost && (
+            {sourceLabel && (
               <a
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 inline-block rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:text-blue-700 hover:border-blue-300"
-                aria-label={`Otvori izvor: ${sourceHost}`}
-                title={`Otvori izvor: ${sourceHost}`}
+                aria-label={`Otvori izvor: ${sourceLabel}`}
+                title={`Otvori izvor: ${sourceLabel}`}
               >
-                {sourceHost}
+                {sourceLabel}
               </a>
             )}
           </div>
@@ -143,9 +165,18 @@ export function JobCard({ job, className }: JobCardProps) {
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            className={cn(
+              "inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
+              visited ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"
+            )}
             aria-label={`Otvori oglas: ${job.title} — ${job.company}`}
             title={`Otvori izvor: ${(() => { try { return new URL(job.url).host } catch { return job.url } })()}`}
+            onClick={() => {
+              try {
+                localStorage.setItem(`visited:${job.id}`, '1')
+                setVisited(true)
+              } catch {}
+            }}
           >
             Prijavi se
             <ExternalLink className="w-4 h-4 ml-1" />

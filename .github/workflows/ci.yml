@@ -17,10 +17,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        # Using v5 to stay consistent with other workflows. Optionally pin to commit SHA.
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -29,11 +28,8 @@ jobs:
       - name: Lint
         run: npm run lint -- --max-warnings=0
       - name: Type check
-        run: npx tsc --noEmit
-      - name: Unit & API tests
-        run: npm test
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm run test:ci
       - name: Production build (classic)
         run: npm run build:classic
-      - name: Summary
-        run: |
-          echo "CI completed successfully"

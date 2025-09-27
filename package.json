@@ -7,8 +7,10 @@
     "build": "next build --turbopack",
     "build:classic": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+  "test": "vitest run",
+  "test:ci": "vitest run --reporter=dot",
     "find:dupes": "node scripts/find-duplicates.mjs",
     "sync:jobs": "tsx scripts/collect-job-feeds.ts",
     "prune:jobs": "tsx scripts/prune-old-portal-jobs.ts"

@@ -25,6 +25,7 @@ describe('job-schema utilities', () => {
     }])
     expect(items).toHaveLength(1)
     expect(items[0].employmentType).toBe('CONTRACTOR')
-    expect(items[0].baseSalary.value.minValue).toBe(60000)
+    expect(items[0].baseSalary).toBeDefined()
+    expect(items[0].baseSalary!.value.minValue).toBe(60000)
   })
 })

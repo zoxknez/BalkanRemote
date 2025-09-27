@@ -42,6 +42,11 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
 
   const abortRef = useRef<AbortController | null>(null)
   const initialFiltersRef = useRef(initialFilters)
+  const filtersRef = useRef(filters)
+
+  useEffect(() => {
+    filtersRef.current = filters
+  }, [filters])
 
   const fetchJobs = useCallback(async (overrides?: PortalJobFilters, { append } = { append: false }) => {
     if (abortRef.current) {
@@ -54,7 +59,7 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     setLoading(true)
     setError(null)
 
-    const nextFilters = overrides ?? filters
+    const nextFilters = overrides ?? filtersRef.current
     const params = new URLSearchParams()
 
     Object.entries(nextFilters).forEach(([key, value]) => {
@@ -106,7 +111,7 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
         setLoading(false)
       }
     }
-  }, [filters])
+  }, [])
 
   const updateFilters = useCallback((partial: Partial<PortalJobFilters>) => {
     setFilters((prev) => {

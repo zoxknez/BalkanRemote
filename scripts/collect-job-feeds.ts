@@ -163,7 +163,7 @@ async function main() {
       perSource[source.id] = { ok: true, count: listings.length }
       logger.event('job_source_collected', { source: source.id, count: listings.length, dryRun })
       if (!dryRun) {
-        await markFeedSuccess(source.id, listings.length)
+  await markFeedSuccess(source.id)
       }
     } catch (error) {
       const message = (error as Error).message

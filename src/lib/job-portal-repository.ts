@@ -14,7 +14,7 @@ export async function upsertPortalJobs(listings: PortalJobInsert[]): Promise<voi
   }
 }
 
-export async function markFeedSuccess(sourceId: string, count: number) {
+export async function markFeedSuccess(sourceId: string) {
   const supabase = createSupabaseServer()
   // increment success_count safely
   const { data: existing } = await supabase

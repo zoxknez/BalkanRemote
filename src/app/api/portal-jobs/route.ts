@@ -7,6 +7,24 @@ import { logger } from '@/lib/logger'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Simple in-memory rate limiting (best-effort; per-instance)
+const RATE_LIMIT_WINDOW_MS = (parseInt(process.env.PORTAL_JOBS_RATE_WINDOW_SEC || '60', 10)) * 1000
+const RATE_LIMIT_MAX = parseInt(process.env.PORTAL_JOBS_RATE_MAX || '60', 10)
+type Bucket = { count: number; expires: number }
+const buckets = new Map<string, Bucket>()
+
+function rateLimit(ip: string | null): boolean {
+  if (!ip) return false
+  const now = Date.now()
+  let bucket = buckets.get(ip)
+  if (!bucket || bucket.expires < now) {
+    bucket = { count: 0, expires: now + RATE_LIMIT_WINDOW_MS }
+    buckets.set(ip, bucket)
+  }
+  bucket.count += 1
+  return bucket.count > RATE_LIMIT_MAX
+}
+
 const parseBoolean = (value: string | null): boolean | undefined => {
   if (value === null) return undefined
   if (value === 'true') return true
@@ -25,6 +43,13 @@ const parseList = (values: string[]): string[] | undefined => {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null
+    if (rateLimit(ip)) {
+      return NextResponse.json({ success: false, error: 'Rate limit exceeded' }, { status: 429, headers: {
+        'Cache-Control': 'no-store'
+      } })
+    }
 
     const limit = Math.min(parseInt(searchParams.get('limit') || '24', 10), 100)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
@@ -57,12 +82,18 @@ export async function GET(request: NextRequest) {
         jobs: rows,
         facets,
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'CDN-Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
     })
   } catch (error) {
     logger.error('Failed to fetch portal jobs', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch portal jobs' },
-      { status: 500 },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
     )
   }
 }

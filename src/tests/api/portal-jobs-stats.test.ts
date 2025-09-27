@@ -18,20 +18,25 @@ describe('GET /api/portal-jobs/stats (token gated)', () => {
   })
 
   interface Row { source_id: string; last_success_at: string | null; last_error_at: string | null; success_count: number; failure_count: number; updated_at: string; metadata?: Record<string, unknown> }
+  interface MockQueryBuilder {
+    from(table: string): MockQueryBuilder
+    select(_cols: string): MockQueryBuilder
+    order(_col: string): Promise<{ data: Row[]; error: null }>
+  }
   function mockStatsReturn(rows: Row[] = []) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.spyOn(supa, 'createSupabaseServer').mockReturnValue({
+    const mock: MockQueryBuilder = {
       from() { return this },
       select() { return this },
       order() { return Promise.resolve({ data: rows, error: null }) }
-    } as any)
+    }
+    vi.spyOn(supa, 'createSupabaseServer').mockReturnValue(mock as unknown as ReturnType<typeof supa.createSupabaseServer>)
   }
 
   it('rejects when token missing', async () => {
     mockStatsReturn([])
     const url = new URL('http://localhost/api/portal-jobs/stats')
     const req = new NextRequest(url.toString(), { method: 'GET' })
-  const res = await getStats(req as unknown as Request)
+    const res = await getStats(req as unknown as Request)
     expect(res.status).toBe(401)
     const json = await res.json()
     expect(json.error).toBe('Unauthorized')
@@ -42,7 +47,7 @@ describe('GET /api/portal-jobs/stats (token gated)', () => {
     mockStatsReturn(rows)
     const url = new URL('http://localhost/api/portal-jobs/stats')
     const req = new NextRequest(url.toString(), { method: 'GET', headers: { Authorization: 'Bearer secret-token' } })
-  const res = await getStats(req as unknown as Request)
+    const res = await getStats(req as unknown as Request)
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.success).toBe(true)
@@ -53,7 +58,7 @@ describe('GET /api/portal-jobs/stats (token gated)', () => {
     mockStatsReturn([])
     const url = new URL('http://localhost/api/portal-jobs/stats')
     const req = new NextRequest(url.toString(), { method: 'GET', headers: { Authorization: 'Bearer nope' } })
-  const res = await getStats(req as unknown as Request)
+    const res = await getStats(req as unknown as Request)
     expect(res.status).toBe(401)
   })
 })

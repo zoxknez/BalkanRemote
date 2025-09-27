@@ -129,16 +129,11 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     fetchJobs(base).catch((error) => logger.error(error))
   }, [fetchJobs, filters])
 
-  // We intentionally run this only once on mount; fetchJobs reference is stable for lifecycle we care about.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Initial load – we capture the initialFiltersRef to avoid re-fetch loops if parent passes new object references.
   useEffect(() => {
-    fetchJobs(initialFilters).catch((error) => logger.error(error))
-    return () => {
-      if (abortRef.current) {
-        abortRef.current.abort()
-      }
-    }
-  }, [])
+    fetchJobs(initialFiltersRef.current).catch((error) => logger.error(error))
+    return () => { abortRef.current?.abort() }
+  }, [fetchJobs])
 
   return {
     jobs,

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        # Using v5 to stay consistent with other workflows. Optionally pin to commit SHA.
+        uses: actions/checkout@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install deps
+        run: npm ci
+      - name: Lint
+        run: npm run lint -- --max-warnings=0
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Unit & API tests
+        run: npm test
+      - name: Production build (classic)
+        run: npm run build:classic
+      - name: Summary
+        run: |
+          echo "CI completed successfully"

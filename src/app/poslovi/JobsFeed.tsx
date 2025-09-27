@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
 
 import { usePortalJobs } from '@/hooks/usePortalJobs'
 import { JobCard } from '@/components/job-card'
@@ -149,6 +149,9 @@ function buildPagination(currentPage: number, totalPages: number): Array<number 
 }
 
 export function JobsFeed() {
+  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
   const {
     jobs: portalJobs,
     loading,
@@ -199,6 +202,10 @@ export function JobsFeed() {
     const bounded = Math.max(1, page)
     const nextOffset = (bounded - 1) * limit
     updateFilters({ offset: nextOffset }, { append: false })
+    // Smooth scroll to top of jobs section after page change
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80 // leave some space below sticky header
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }, [filters.limit, updateFilters])
 
   useEffect(() => {
@@ -219,6 +226,9 @@ export function JobsFeed() {
       ? selectedContracts.filter((value) => value !== contract)
       : [...selectedContracts, contract]
     updateFilters({ contractType: next.length > 0 ? next : undefined, offset: 0 }, { append: false })
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
   const toggleExperience = (experience: string) => {
@@ -226,15 +236,24 @@ export function JobsFeed() {
       ? selectedExperience.filter((value) => value !== experience)
       : [...selectedExperience, experience]
     updateFilters({ experience: next.length > 0 ? next : undefined, offset: 0 }, { append: false })
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
   const toggleCategory = (category: JobCategory) => {
     const nextCategory = selectedCategory === category ? null : category
     updateFilters({ category: nextCategory ?? undefined, offset: 0 }, { append: false })
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
   const toggleRemote = () => {
     updateFilters({ remote: isRemoteOnly ? undefined : true, offset: 0 }, { append: false })
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
   const activeFilterCount = useMemo(() => {
@@ -258,8 +277,24 @@ export function JobsFeed() {
     return lastUpdated.toLocaleDateString('sr-RS', { day: 'numeric', month: 'short' })
   }, [lastUpdated])
 
+  // Show back-to-top button after scroll
+  useEffect(() => {
+    const onScroll = () => {
+      setShowBackToTop(window.scrollY > 400)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const handleBackToTop = () => {
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
+  }
+
   return (
-    <section className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <section ref={sectionRef} className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm relative">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Sveže remote pozicije</h2>
@@ -309,7 +344,7 @@ export function JobsFeed() {
         </div>
       )}
 
-      <div className="mt-6 space-y-4">
+  <div className="mt-6 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
             <Filter className="h-3.5 w-3.5" /> Filteri
@@ -401,6 +436,18 @@ export function JobsFeed() {
           })}
         </div>
       </div>
+
+      {showBackToTop && (
+        <button
+          type="button"
+          onClick={handleBackToTop}
+          className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-4 py-2 text-sm font-medium text-gray-700 shadow-lg backdrop-blur transition hover:border-blue-300 hover:text-blue-700"
+          aria-label="Nazad na vrh oglasa"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Na vrh
+        </button>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
         {showSkeletonOnly

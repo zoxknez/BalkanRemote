@@ -138,21 +138,30 @@ export default function PosloviContent() {
 
             {/* Metrics summary */}
             <div className="mt-6 flex flex-wrap justify-center gap-4">
-              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+              <div
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm"
+                data-testid="jobs-sources-count"
+              >
                 <Sparkles className="h-5 w-5 text-yellow-300" />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Izvora</p>
                   <p className="text-lg font-semibold text-white">{totalLinks}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+              <div
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm"
+                data-testid="jobs-sections-count"
+              >
                 <List className="h-5 w-5 text-green-200" />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Sekcija</p>
                   <p className="text-lg font-semibold text-white">{totalSections}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm">
+              <div
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white/20 px-4 py-3 shadow-sm"
+                data-testid="jobs-reading-minutes"
+              >
                 <Clock className="h-5 w-5 text-blue-200" />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-100">Minuta čitanja</p>

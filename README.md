@@ -14,6 +14,7 @@ Live: https://balkan-remote.vercel.app
 - Nalog: kompletan Auth UX (email/password, potvrda lozinke, indikator jačine, reset lozinke, OAuth Google/GitHub)
 - SEO osnova: sitemap/robots sa automatskim base URL fallback‑om (NEXT_PUBLIC_SITE_URL → VERCEL_URL)
 - Merenje: Vercel Analytics + Speed Insights
+- Health-check: `/api/health` endpoint koji proverava Supabase dostupnost (za uptime monitoring)
 
 Napomena: Postoji osnovni kod za job scraping engine, ali je trenutno isključen/by‑design mock i API rute nisu aktivno povezane sa realnim izvorima.
 
@@ -81,6 +82,7 @@ Za Google i GitHub prijavu:
 - `NEXT_PUBLIC_SITE_URL` – kanonski osnovni URL; ako nije postavljen, koristi se Vercel `VERCEL_URL`
 - `NEXT_PUBLIC_SUPABASE_URL` – Supabase Project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` – Supabase anon/public key (bezbedno za klijent uz RLS)
+- `/api/health` – GET endpoint (bez auth) vraća JSON sa statusom Supabase konekcije (koristi se za monitoring)
 - `SCRAPER_SCHEDULE_ENABLED` – opcioni feature flag (by default false)
 
 ## 📚 Korisne skripte (package.json)

@@ -92,6 +92,7 @@ Specifično za agregator oglasa (`Oglasi`):
 - `npm run sync:jobs` – pokreće skriptu `scripts/collect-job-feeds.ts` (RSS parsing + upsert)
 - GitHub Actions workflow `.github/workflows/job-sync.yml` – zakazani nightly sync (03:00 UTC)
  - GitHub Actions workflow `.github/workflows/job-prune.yml` – mesečno čišćenje starih oglasa (1. u mesecu)
+ - (opciono) `NEXT_PUBLIC_ENABLE_JOB_SCHEMA` = `1` za JSON-LD JobPosting (limitirano na prvih 5)
 
 ## 📚 Korisne skripte (package.json)
 
@@ -106,6 +107,8 @@ Specifično za agregator oglasa (`Oglasi`):
 - `prune:jobs` – brisanje starih oglasa (default > 60 dana) (`JOB_PRUNE_MAX_AGE_DAYS=45 npm run prune:jobs`)
   - `FEED_TIMEOUT_MS` – timeout pojedinačnog feed request-a (default 15000ms)
   - `FEED_MAX_RETRIES` – broj retry pokušaja po feedu (default 2)
+  - `PORTAL_JOBS_RATE_WINDOW_SEC` / `PORTAL_JOBS_RATE_MAX` – rate limit API /api/portal-jobs (default 60 req / 60s)
+  - `NEXT_PUBLIC_ENABLE_JOB_SCHEMA` – uključi JSON-LD JobPosting (SEO eksperimentalno)
 
 ## 🧭 Roadmap
 

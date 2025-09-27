@@ -31,5 +31,8 @@ jobs:
         run: npm run prune:jobs
       - name: Summary
         if: always()
+        env:
+          RESULT_STATUS: ${{ job.status }}
         run: |
-          echo "Prune finished with status: ${{ job.status }}"
+          echo "Prune finished with status: ${RESULT_STATUS}"
+          echo "Job prune status: ${RESULT_STATUS}" >> $GITHUB_STEP_SUMMARY

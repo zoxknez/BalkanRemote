@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
+        # Using major tag; optionally pin to a full SHA for stricter supply‑chain security.
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -29,9 +30,13 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LOG_FORMAT: json
         run: npm run sync:jobs
 
       - name: Post-run summary
         if: always()
+        env:
+          RESULT_STATUS: ${{ job.status }}
         run: |
-          echo "Job feed sync finished with status: ${{ job.status }}"
+          echo "Job feed sync finished with status: ${RESULT_STATUS}"
+          echo "Job feed sync status: ${RESULT_STATUS}" >> $GITHUB_STEP_SUMMARY

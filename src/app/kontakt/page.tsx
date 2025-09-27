@@ -117,8 +117,13 @@ export default function KontaktPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" role="list">
           {contactMethods.map((method) => {
+            const isIdentityLink = method.href.startsWith('https://github.com/zoxknez') || method.href.startsWith('https://x.com/KoronVirus')
             const externalProps = method.external
-              ? { target: '_blank', rel: method.title === 'GitHub profil' ? 'me noopener noreferrer' : 'noopener noreferrer' }
+              ? {
+                  target: '_blank',
+                  rel: isIdentityLink ? 'me noopener noreferrer' : 'noopener noreferrer',
+                  title: 'Otvara se u novoj kartici',
+                }
               : {}
 
             return (
@@ -142,8 +147,8 @@ export default function KontaktPage() {
                   <div className="mt-4">
                     <ClipboardButton
                       value={CONTACT_EMAIL}
-                      copyText="Kopiraj email"
-                      copiedText="Email je kopiran!"
+                      copyText={"Kopiraj email"}
+                      copiedText={"Email je kopiran!"}
                       className="border-indigo-200 text-indigo-700"
                     />
                   </div>

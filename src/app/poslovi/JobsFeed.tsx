@@ -2,14 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp, Search } from 'lucide-react'
+import { InfoTooltip } from '@/components/info-tooltip'
+import { COPY_LINK_TEXT, COPY_LINK_TITLE_FILTERS, COPY_LINK_TOOLTIP_FILTERS, COPY_LINK_COPIED, COPY_LINK_ERROR } from '@/data/ui-copy'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { usePortalJobs } from '@/hooks/usePortalJobs'
 import { JobCard } from '@/components/job-card'
+import { ClipboardButton, type ClipboardStatus } from '@/components/clipboard-button'
 import { mockJobs } from '@/data/mock-data-new'
 import type { Job } from '@/types'
 import type { PortalJobRecord, PortalJobContractType, JobCategory } from '@/types/jobs'
+import { useCurrentUrl } from '@/hooks/useCurrentUrl'
 
 const skeletonItems = Array.from({ length: 6 }, (_, index) => index)
 
@@ -155,17 +159,48 @@ export function JobsFeed() {
   const router = useRouter()
   const pathname = usePathname()
   const sectionRef = useRef<HTMLDivElement | null>(null)
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const detailsRef = useRef<HTMLDivElement | null>(null)
   const [detailsHeight, setDetailsHeight] = useState(0)
   const [searchText, setSearchText] = useState('')
-  const [copied, setCopied] = useState(false)
+  // Clipboard: use shared hook to get current URL
+  const currentUrl = useCurrentUrl()
+  const [clearedVisited, setClearedVisited] = useState(false)
+  const [clearedPreferences, setClearedPreferences] = useState(false)
+  const [hideVisited, setHideVisited] = useState<boolean>(() => {
+    try {
+      const hv = params.get('hideVisited')
+      if (hv === '1' || hv === 'true') return true
+      if (hv === '0' || hv === 'false') return false
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('jobs:hideVisited') : null
+      return saved === '1'
+    } catch {
+      return false
+    }
+  })
+  const VISITED_TTL_DAYS = 7
+
+  // Mark dependency so linter recognizes usage; also could be used for analytics
+  useEffect(() => {
+    if (clearedPreferences) {
+      // placeholder for event/logging
+    }
+  }, [clearedPreferences])
 
   // Build initial filters from URL (one-time for this component mount)
   const initialLimit = (() => {
-    const l = parseInt(params.get('limit') || '12', 10)
-    if (Number.isFinite(l) && l > 0 && l <= 50) return l
+    const limitParam = params.get('limit')
+    if (limitParam) {
+      const l = parseInt(limitParam, 10)
+      if (Number.isFinite(l) && l > 0 && l <= 50) return l
+    }
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('jobs:pageSize') : null
+      const n = saved ? parseInt(saved, 10) : NaN
+      if (Number.isFinite(n) && n > 0 && n <= 50) return n
+    } catch {}
     return 12
   })()
   const initialPage = (() => {
@@ -181,6 +216,12 @@ export function JobsFeed() {
     const r = params.get('remote')
     if (r === 'false' || r === '0' || r === 'any') return undefined
     if (r === 'true' || r === '1') return true
+    // Fallback to saved preference
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('jobs:remoteOnly') : null
+      if (saved === 'any' || saved === '0') return undefined
+      if (saved === '1' || saved === 'true') return true
+    } catch {}
     return true // default to remote-only
   })()
   const initialContract = (() => {
@@ -234,7 +275,31 @@ export function JobsFeed() {
     return mockJobs.slice(0, 6)
   }, [hasRealData, loading])
 
-  const visibleJobs = hasRealData ? normalizedJobs : fallbackJobs
+  const isVisited = useCallback((id: string | number) => {
+    try {
+      const raw = localStorage.getItem(`visited:${id}`)
+      if (!raw) return false
+      try {
+        const parsed = JSON.parse(raw) as { ts?: number } | null
+        const ts = parsed?.ts ?? 0
+        if (!ts) return raw === '1'
+        const ageMs = Date.now() - ts
+        const ttlMs = VISITED_TTL_DAYS * 24 * 60 * 60 * 1000
+        return ageMs < ttlMs
+      } catch {
+        return raw === '1'
+      }
+    } catch {
+      return false
+    }
+  }, [])
+
+  const baseJobs = hasRealData ? normalizedJobs : fallbackJobs
+  const visibleJobs = useMemo(() => {
+    if (!hideVisited) return baseJobs
+    return baseJobs.filter((j) => !isVisited(j.id))
+  }, [baseJobs, hideVisited, isVisited])
+  const hiddenOnPage = hideVisited ? Math.max(0, baseJobs.length - visibleJobs.length) : 0
   const pageSize = filters.limit ?? 12
   const currentOffset = filters.offset ?? 0
   const totalCount = hasRealData ? total : visibleJobs.length
@@ -327,10 +392,46 @@ export function JobsFeed() {
   }
 
   const toggleRemote = () => {
-    updateFilters({ remote: isRemoteOnly ? undefined : true, offset: 0 }, { append: false })
+    const nextRemote = isRemoteOnly ? undefined : true
+    updateFilters({ remote: nextRemote, offset: 0 }, { append: false })
+    try { localStorage.setItem('jobs:remoteOnly', nextRemote ? '1' : 'any') } catch {}
     const top = sectionRef.current?.getBoundingClientRect().top ?? 0
     const absoluteTop = window.scrollY + top - 80
     window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
+  }
+
+  const toggleHideVisited = () => {
+    setHideVisited((v) => {
+      const next = !v
+      try { localStorage.setItem('jobs:hideVisited', next ? '1' : '0') } catch {}
+      return next
+    })
+    const top = sectionRef.current?.getBoundingClientRect().top ?? 0
+    const absoluteTop = window.scrollY + top - 80
+    window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
+  }
+
+  const clearVisitedHistory = () => {
+    try {
+      const toRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('visited:')) toRemove.push(key)
+      }
+      toRemove.forEach((k) => localStorage.removeItem(k))
+      setClearedVisited(true)
+      setTimeout(() => setClearedVisited(false), 1500)
+    } catch {}
+  }
+
+  const clearPreferences = () => {
+    try {
+      localStorage.removeItem('jobs:pageSize')
+      localStorage.removeItem('jobs:remoteOnly')
+      localStorage.removeItem('jobs:hideVisited')
+      setClearedPreferences(true)
+      setTimeout(() => setClearedPreferences(false), 1500)
+    } catch {}
   }
 
   const activeFilterCount = useMemo(() => {
@@ -371,6 +472,11 @@ export function JobsFeed() {
       const tag = target?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === '/') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
       if (e.key === 'ArrowRight') {
         if (!loading && currentPage < totalPages) {
           e.preventDefault()
@@ -415,25 +521,7 @@ export function JobsFeed() {
     window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
 
-  const handleCopyLink = async () => {
-    try {
-      const url = window.location.href
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url)
-      } else {
-        const ta = document.createElement('textarea')
-        ta.value = url
-        document.body.appendChild(ta)
-        ta.select()
-        document.execCommand('copy')
-        document.body.removeChild(ta)
-      }
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1200)
-    } catch {
-      // noop
-    }
-  }
+  // ClipboardButton handles copy and announcements internally
 
   // Reflect filters to URL (page, limit, q, category, contractType[], experience[], remote)
   useEffect(() => {
@@ -462,37 +550,64 @@ export function JobsFeed() {
     setSingle('q', (filters.search ?? '').toString().trim() || null)
     setSingle('category', filters.category ?? null)
     setMulti('contractType', (filters.contractType as string[] | undefined))
-    setMulti('experience', (filters.experience as string[] | undefined))
+  setMulti('experience', (filters.experience as string[] | undefined))
 
   // Remote: default experience is remote-only (even when filters.remote is undefined)
   const remoteOnly = filters.remote !== undefined ? !!filters.remote : true
   setSingle('remote', remoteOnly ? '1' : 'any')
+  // UI-only flag in URL for shareability
+  setSingle('hideVisited', hideVisited ? '1' : null)
 
     // We use page, not offset, in URL
     p.delete('offset')
 
     router.replace(`${pathname}?${p.toString()}`, { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.limit, filters.offset, filters.remote, filters.contractType, filters.experience, filters.category, filters.search, pathname, router])
+  }, [filters.limit, filters.offset, filters.remote, filters.contractType, filters.experience, filters.category, filters.search, pathname, router, hideVisited])
 
   return (
     <section ref={sectionRef} className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm relative">
       {/* Mobile sticky quick filters bar */}
       <div className="md:hidden sticky top-16 z-30 -mx-6 mb-4 border-b border-gray-100 bg-white/90 px-6 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
-            aria-expanded={showMobileFilters}
-            aria-controls="jobs-filters-detailed"
-          >
-            <Filter className="h-4 w-4" />
-            Filteri
-            <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1 text-xs font-semibold text-gray-700">
-              {activeFilterCount}
-            </span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleHideVisited}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition ${
+                hideVisited
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200 hover:text-emerald-700'
+              }`}
+              aria-pressed={hideVisited}
+              aria-label="Uključi/isključi prikaz posećenih oglasa"
+              title="Sakriva samo oglase koji su već posećeni na ovoj stranici. Oznake posećenih traju 7 dana."
+            >
+              Sakrij posećene
+            </button>
+            <InfoTooltip
+              className="md:hidden"
+              label="Šta znači 'Sakrij posećene'"
+              title="Objašnjenje opcije 'Sakrij posećene'"
+              text="Sakriva samo oglase koje ste već otvorili na ovoj stranici. Oznaka ‘posećeno’ traje 7 dana i može se obrisati kroz ‘Očisti posećene’."
+            />
+            {hideVisited && hiddenOnPage > 0 && (
+              <div className="mt-1 text-xs text-emerald-700">Sakriveno: {hiddenOnPage} posećenih na ovoj stranici</div>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
+              aria-expanded={showMobileFilters}
+              aria-controls="jobs-filters-detailed"
+            >
+              <Filter className="h-4 w-4" />
+              Filteri
+              <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1 text-xs font-semibold text-gray-700">
+                {activeFilterCount}
+              </span>
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -506,6 +621,15 @@ export function JobsFeed() {
               aria-label="Uključi/isključi Remote only filter"
             >
               Remote only
+            </button>
+            <button
+              type="button"
+              onClick={clearVisitedHistory}
+              className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-rose-200 hover:text-rose-700"
+              aria-label="Očisti istoriju posećenih oglasa"
+              title="Obriši oznake posećenih oglasa"
+            >
+              Očisti posećene
             </button>
             <button
               type="button"
@@ -535,6 +659,9 @@ export function JobsFeed() {
             </span>{' '}
             rezultata.
           </p>
+          {hideVisited && hiddenOnPage > 0 && (
+            <div className="mt-1 text-xs text-emerald-700">Sakriveno: {hiddenOnPage} posećenih na ovoj stranici</div>
+          )}
           {/* Screen reader live updates for results/page changes */}
           <div className="sr-only" aria-live="polite" aria-atomic="true">
             Strana {currentPage} od {totalPages}. Prikaz {startRecord}-{endRecord} od {totalCount} oglasa.
@@ -544,39 +671,64 @@ export function JobsFeed() {
               <Clock className="h-3.5 w-3.5" /> Poslednje osveženo {lastUpdatedLabel}
             </div>
           )}
+          {/* SR-only status messages for actions */}
+          <div className="sr-only" aria-live="polite">
+            {clearedVisited ? 'Oznake posećenih su obrisane.' : ''}
+            {clearedPreferences ? 'Preferencije prikaza su resetovane.' : ''}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleCopyLink}
+          <ClipboardButton
+            value={currentUrl}
+            copyText={COPY_LINK_TEXT}
+            copiedText={COPY_LINK_COPIED}
+            errorText={COPY_LINK_ERROR}
+            title={COPY_LINK_TITLE_FILTERS}
             className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
-            aria-label="Kopiraj link sa filterima"
-            title="Kopiraj link sa aktivnim filterima"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {copied ? (
-                <motion.span
-                  key="copied"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  Link kopiran
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="copy"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  Kopiraj link
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
+            showIcon={false}
+            announceValue={false}
+            renderLabel={(status: ClipboardStatus) => (
+              <AnimatePresence mode="wait" initial={false}>
+                {status === 'copied' ? (
+                  <motion.span
+                    key="copied"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    Link kopiran
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="copy"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    {COPY_LINK_TEXT}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            )}
+          />
+          <InfoTooltip
+            className="hidden md:inline-block"
+            label="Šta radi 'Kopiraj link'"
+            title="Objašnjenje opcije 'Kopiraj link'"
+            text={COPY_LINK_TOOLTIP_FILTERS}
+          />
+          {clearedVisited && (
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
+              Oznake posećenih su obrisane
+            </span>
+          )}
+          {clearedPreferences && (
+            <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-medium text-indigo-700">
+              Preferencije su resetovane
+            </span>
+          )}
           <button
             type="button"
             onClick={() => resetFilters()}
@@ -628,9 +780,13 @@ export function JobsFeed() {
               placeholder="Pretraga oglasa (naziv, kompanija, tagovi)"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+              ref={searchInputRef}
+              id="jobs-search-input"
               className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-3 py-1 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100"
               aria-label="Pretraga poslova"
+              aria-describedby="jobs-search-help"
             />
+            <div id="jobs-search-help" className="sr-only">Savjet: Pritisnite kosu crtu (/) da fokusirate polje za pretragu.</div>
           </div>
           <button
             type="button"
@@ -645,6 +801,43 @@ export function JobsFeed() {
           >
             Remote only
           </button>
+            <button
+            type="button"
+            onClick={toggleHideVisited}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              hideVisited
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200 hover:text-emerald-700'
+            }`}
+            aria-pressed={hideVisited}
+              title="Sakriva samo oglase koji su već posećeni na ovoj stranici. Oznake posećenih traju 7 dana."
+          >
+            Sakrij posećene
+          </button>
+            <InfoTooltip
+              className="ml-1 hidden md:inline-block"
+              label="Šta znači 'Sakrij posećene'"
+              title="Objašnjenje opcije 'Sakrij posećene'"
+              text="Sakriva samo oglase koje ste već otvorili na ovoj stranici. Oznaka ‘posećeno’ traje 7 dana i može se obrisati kroz ‘Očisti posećene’."
+            />
+          <button
+            type="button"
+            onClick={clearVisitedHistory}
+            className="rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition border-gray-200 bg-white hover:border-rose-200 hover:text-rose-700"
+            aria-label="Očisti istoriju posećenih oglasa"
+            title="Obriši oznake posećenih oglasa"
+          >
+            Očisti posećene
+          </button>
+            <button
+              type="button"
+              onClick={clearPreferences}
+              className="rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition border-gray-200 bg-white hover:border-indigo-300 hover:text-indigo-700"
+              aria-label="Resetuj sačuvane preferencije prikaza"
+              title="Obriši sačuvane preferencije (po stranici, remote only, sakrij posećene)"
+            >
+              Reset preferenci
+            </button>
           <span className="text-[11px] text-gray-500">Aktivno filtera: {activeFilterCount}</span>
           {/* Page size selector */}
           <label className="ml-auto inline-flex items-center gap-2 text-[11px] text-gray-600">
@@ -656,6 +849,7 @@ export function JobsFeed() {
                 const nextLimit = parseInt(e.target.value, 10)
                 if (Number.isFinite(nextLimit) && nextLimit > 0) {
                   updateFilters({ limit: nextLimit, offset: 0 }, { append: false })
+                  try { localStorage.setItem('jobs:pageSize', String(nextLimit)) } catch {}
                   scrollToSectionTop()
                 }
               }}
@@ -813,6 +1007,21 @@ export function JobsFeed() {
                 Iskustvo: {EXPERIENCE_OPTIONS.find((o) => o.value === ex)?.label || ex} ✕
               </motion.button>
             ))}
+            {hideVisited && (
+              <motion.button
+                type="button"
+                onClick={() => setHideVisited(false)}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label="Prikaži posećene oglase"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+              >
+                Sakrij posećene: uključeno ✕
+              </motion.button>
+            )}
             {!isRemoteOnly && (
               <motion.button
                 type="button"
@@ -870,7 +1079,21 @@ export function JobsFeed() {
       </div>
 
       {!loading && visibleJobs.length === 0 && (
-        <p className="mt-6 text-sm text-gray-500">Trenutno nema dostupnih oglasa. Pokušajte da osvežite ili promenite filtere.</p>
+        <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+          <p className="mb-3">
+            Trenutno nema dostupnih oglasa za izabrane filtere.
+            {hideVisited && hiddenOnPage >= 0 && ' Neki oglasi su možda sakriveni jer su već posećeni.'}
+          </p>
+          {hideVisited && (
+            <button
+              type="button"
+              onClick={() => setHideVisited(false)}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700"
+            >
+              Prikaži posećene
+            </button>
+          )}
+        </div>
       )}
 
       {totalCount > 0 && (
@@ -921,6 +1144,42 @@ export function JobsFeed() {
             </button>
           </div>
         </div>
+      )}
+      {/* JSON-LD ItemList for visible jobs on current page */}
+      {visibleJobs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'ItemList',
+              itemListElement: visibleJobs.map((job, idx) => {
+                const position = (currentOffset ?? 0) + idx + 1
+                const employmentTypeMap: Record<string, string> = {
+                  'full-time': 'FULL_TIME',
+                  'part-time': 'PART_TIME',
+                  contract: 'CONTRACTOR',
+                  freelance: 'CONTRACTOR',
+                  internship: 'INTERN',
+                }
+                return {
+                  '@type': 'ListItem',
+                  position,
+                  url: job.url,
+                  item: {
+                    '@type': 'JobPosting',
+                    title: job.title,
+                    datePosted: job.postedAt?.toISOString?.() || undefined,
+                    employmentType: employmentTypeMap[job.type] || job.type,
+                    jobLocationType: job.isRemote ? 'TELECOMMUTE' : undefined,
+                    hiringOrganization: job.company ? { '@type': 'Organization', name: job.company } : undefined,
+                    description: job.description?.slice(0, 300),
+                  },
+                }
+              }),
+            }),
+          }}
+        />
       )}
     </section>
   )

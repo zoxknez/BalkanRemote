@@ -162,6 +162,38 @@ Pokriće:
 - JSON-LD schema utili (`job-schema.test.ts`)
 - API /api/portal-jobs osnovna integracija i rate limit scenario (`src/tests/api/portal-jobs.test.ts`)
 
+### UI komponenta: ClipboardButton
+
+Pogledaj `src/components/clipboard-button.tsx` – pristupačno dugme za kopiranje sa fallback‑om i animiranim labelama.
+
+Primena (osnovno):
+
+```tsx
+<ClipboardButton value={currentUrl} title="Kopiraj link" />
+```
+
+Sa animiranom labelom i bez ikone:
+
+```tsx
+<ClipboardButton
+  value={currentUrl}
+  title="Kopiraj link"
+  showIcon={false}
+  announceValue={false}
+  renderLabel={(status) => (
+    status === 'copied' ? 'Link kopiran' : 'Kopiraj link'
+  )}
+/>
+```
+
+Ključni props:
+- `value: string` – tekst za kopiranje (ako je prazan, dugme je disabled)
+- `copyText`, `copiedText`, `errorText` – tekstovi stanja
+- `title`, `ariaLabel` – pristupačni nazivi (ako `ariaLabel` nije zadat, koristi se `title` pa `copyText`)
+- `announceValue?: boolean` – da li SR treba da pročita i vrednost (za dugačke URL‑ove postavi na `false`)
+- `renderLabel?: (status) => ReactNode` – prilagođena labela (može uz animacije)
+- `showIcon?: boolean` – prikaži/sakrij ikonu
+
 Napomena: rate limit test koristi in-memory bucket i izvršava 61 uzastopni poziv – ako promeniš `PORTAL_JOBS_RATE_MAX`, ažuriraj i test.
 
 ## 📊 Logging

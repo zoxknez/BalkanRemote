@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCurrentUrl } from '@/hooks/useCurrentUrl';
 import {
 	Calculator,
 	FileText,
@@ -15,6 +16,9 @@ import {
 	ChevronUp,
 } from 'lucide-react';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { ClipboardButton } from '@/components/clipboard-button';
+import { InfoTooltip } from '@/components/info-tooltip';
+import { COPY_LINK_TEXT, COPY_LINK_COPIED, COPY_LINK_ERROR, COPY_LINK_TITLE_TAXGUIDE, COPY_LINK_TOOLTIP_TAXGUIDE } from '@/data/ui-copy';
 
 type CalcMode = 'flat' | 'income' | 'company';
 
@@ -583,8 +587,8 @@ export default function TaxGuideClient() {
 	const searchParams = useSearchParams();
 	const [selectedCountry, setSelectedCountry] = useState<string>('Srbija');
 	const [selectedOptionId, setSelectedOptionId] = useState<string>('srbija-pausal');
-	const [copied, setCopied] = useState(false);
 	const initRef = useRef(true);
+	const currentUrl = useCurrentUrl();
 
 	const countryCurrency =
 		balkanCountriesInfo.find((c) => c.country === selectedCountry)?.currency || 'RSD';
@@ -875,19 +879,23 @@ export default function TaxGuideClient() {
 							<div className="bg-white rounded-2xl shadow p-6 mb-8">
 								<div className="flex items-center justify-between mb-4">
 									<h2 className="text-xl font-bold text-gray-900">Brze činjenice – {countryInfo.country}</h2>
-									<button
-										onClick={async () => {
-											try {
-												await navigator.clipboard.writeText(window.location.href);
-												setCopied(true);
-												setTimeout(() => setCopied(false), 1500);
-											} catch {}
-										}}
-										className="text-sm px-3 py-1.5 rounded-lg border hover:bg-gray-50"
-										title="Kopiraj link sa odabranom zemljom/opcijom"
-									>
-										{copied ? 'Kopirano ✅' : 'Kopiraj link'}
-									</button>
+									<div className="flex items-center gap-2">
+										<ClipboardButton
+											value={currentUrl}
+											copyText={COPY_LINK_TEXT}
+											copiedText={COPY_LINK_COPIED}
+											errorText={COPY_LINK_ERROR}
+											title={COPY_LINK_TITLE_TAXGUIDE}
+											disabled={!currentUrl}
+											className="text-sm px-3 py-1.5 rounded-lg border hover:bg-gray-50"
+											announceValue={false}
+										/>
+										<InfoTooltip
+											text={COPY_LINK_TOOLTIP_TAXGUIDE}
+											label="Šta radi 'Kopiraj link'"
+											title="Objašnjenje opcije 'Kopiraj link'"
+										/>
+									</div>
 								</div>
 								<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
 									<div className="p-4 rounded-xl bg-gray-50 border">

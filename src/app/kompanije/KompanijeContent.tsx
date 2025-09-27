@@ -1,13 +1,17 @@
- 'use client'
+'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useCurrentUrl } from '@/hooks/useCurrentUrl'
 import { motion } from 'framer-motion'
-import { Search, Building2, Users, TrendingUp, Star, Link as LinkIcon, Check, ArrowUp, CheckCircle } from 'lucide-react'
+import { Search, Building2, Users, TrendingUp, Star, ArrowUp, CheckCircle } from 'lucide-react'
 import { CompanyCard } from '@/components/company-card'
 import { BalkanItBanner } from '@/components/balkan-it-banner'
 import { mockCompanies } from '@/data/mock-data'
 import type { Company } from '@/types'
+import { ClipboardButton } from '@/components/clipboard-button'
+import { InfoTooltip } from '@/components/info-tooltip'
+import { COPY_LINK_TEXT, COPY_LINK_COPIED, COPY_LINK_ERROR, COPY_LINK_TITLE_FILTERS, COPY_LINK_TOOLTIP_FILTERS } from '@/data/ui-copy'
 
 const INDUSTRY_LABELS: Record<string, string> = {
   Technology: 'Tehnologija & Software',
@@ -88,6 +92,8 @@ function buildRegionInsights(companies: Company[]): RegionSummary[] {
   }).filter(Boolean) as RegionSummary[]
 }
 
+// ... later inside the default export/component scope (file uses 'use client', so hooks are fine)
+
 export default function KompanijeContent() {
   const params = useSearchParams()
   const router = useRouter()
@@ -98,9 +104,10 @@ export default function KompanijeContent() {
   const [hiringOnly, setHiringOnly] = useState(false)
   const [sortBy, setSortBy] = useState<'rating' | 'openPositions' | 'founded' | 'name'>('rating')
   const [isLoading, setIsLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
+  // ClipboardButton handles copy feedback internally
   const [showTop, setShowTop] = useState(false)
   const firstLoadRef = useRef(true)
+  const currentUrl = useCurrentUrl()
 
   // Initialize state from URL on first mount
   useEffect(() => {
@@ -121,6 +128,8 @@ export default function KompanijeContent() {
     if (sort && ['rating', 'openPositions', 'founded', 'name'].includes(sort)) setSortBy(sort)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // currentUrl is derived via useCurrentUrl
 
   // Reflect filters in URL; avoid loops by not depending on params
   useEffect(() => {
@@ -442,21 +451,23 @@ export default function KompanijeContent() {
                   Obriši filtere
                 </button>
 
-                <button
-                  onClick={async () => {
-                    try {
-                      const url = window.location.href
-                      await navigator.clipboard.writeText(url)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 1500)
-                    } catch {}
-                  }}
-                  className="w-full sm:w-auto px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 inline-flex items-center justify-center gap-2"
-                  title="Kopiraj link sa filterima"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4 text-gray-600" />}
-                  {copied ? 'Kopirano' : 'Kopiraj link'}
-                </button>
+                <div className="w-full sm:w-auto inline-flex items-center gap-2">
+                  <ClipboardButton
+                    value={currentUrl}
+                    copyText={COPY_LINK_TEXT}
+                    copiedText={COPY_LINK_COPIED}
+                    errorText={COPY_LINK_ERROR}
+                    title={COPY_LINK_TITLE_FILTERS}
+                    className="w-full sm:w-auto"
+                    announceValue={false}
+                    disabled={!currentUrl}
+                  />
+                  <InfoTooltip
+                    text={COPY_LINK_TOOLTIP_FILTERS}
+                    label="Šta radi 'Kopiraj link'"
+                    title="Objašnjenje opcije 'Kopiraj link'"
+                  />
+                </div>
               </div>
             </div>
           </div>

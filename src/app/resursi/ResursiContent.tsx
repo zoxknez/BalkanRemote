@@ -2,11 +2,15 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCurrentUrl } from '@/hooks/useCurrentUrl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { ResourceCard } from '@/components/resource-card';
+import { ClipboardButton } from '@/components/clipboard-button';
+import { InfoTooltip } from '@/components/info-tooltip';
 import { mockResources } from '@/data/mock-data';
+import { COPY_LINK_TEXT, COPY_LINK_COPIED, COPY_LINK_ERROR, COPY_LINK_TITLE_FILTERS, COPY_LINK_TOOLTIP_FILTERS } from '@/data/ui-copy';
 import type { Resource } from '@/types';
 
 const RESOURCES_PER_PAGE = 8; // 2x4 grid
@@ -38,12 +42,13 @@ function ResursiContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const currentUrl = useCurrentUrl();
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [selectedLength, setSelectedLength] = useState<'all' | 'short' | 'medium' | 'long'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<'rating' | 'title'>('rating');
   const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // ClipboardButton provides its own feedback; no separate copied state here
   const firstLoadRef = useRef(true);
   const [showTop, setShowTop] = useState(false);
 
@@ -374,20 +379,23 @@ function ResursiContent() {
                 <option value="title">Sortiraj: A–Z</option>
               </select>
 
-              <button
-                onClick={async () => {
-                  try {
-                    const url = window.location.href;
-                    await navigator.clipboard.writeText(url);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1500);
-                  } catch {}
-                }}
-                className="px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto whitespace-nowrap"
-                title="Kopiraj link sa filterima"
-              >
-                {copied ? 'Kopirano ✅' : 'Kopiraj link'}
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <ClipboardButton
+                  value={currentUrl}
+                  copyText={COPY_LINK_TEXT}
+                  copiedText={COPY_LINK_COPIED}
+                  errorText={COPY_LINK_ERROR}
+                  title={COPY_LINK_TITLE_FILTERS}
+                  className="w-full sm:w-auto"
+                  announceValue={false}
+                  disabled={!currentUrl}
+                />
+                <InfoTooltip
+                  text={COPY_LINK_TOOLTIP_FILTERS}
+                  label="Šta radi 'Kopiraj link'"
+                  title="Objašnjenje opcije 'Kopiraj link'"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { MapPin, Briefcase, Building2, Users, ExternalLink, Calendar } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Job } from '@/types'
+import { ClipboardButton } from '@/components/clipboard-button'
+import { COPY_LINK_TEXT } from '@/data/ui-copy'
 import { formatDate, formatSalary } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
@@ -73,6 +75,14 @@ export function JobCard({ job, className }: JobCardProps) {
 
   const [visited, setVisited] = useState(false)
   const VISITED_TTL_DAYS = 7
+  const isNew = useMemo(() => {
+    try {
+      const diff = Date.now() - job.postedAt.getTime()
+      return diff < 48 * 60 * 60 * 1000
+    } catch {
+      return false
+    }
+  }, [job.postedAt])
   useEffect(() => {
     try {
       const key = `visited:${job.id}`
@@ -149,11 +159,22 @@ export function JobCard({ job, className }: JobCardProps) {
               <Calendar className="w-4 h-4 mr-1" />
               {formatDate(job.postedAt)}
             </time>
+            {isNew && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.18 }}
+                className="mt-1 inline-block rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700"
+                aria-label="Novi oglas"
+              >
+                Novo
+              </motion.div>
+            )}
             {sourceLabel && (
               <a
                 href={job.url}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="noopener noreferrer nofollow"
                 className="mt-1 inline-block rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:text-blue-700 hover:border-blue-300"
                 aria-label={`Otvori izvor: ${sourceLabel}`}
                 title={`Otvori izvor: ${sourceLabel}`}
@@ -203,26 +224,51 @@ export function JobCard({ job, className }: JobCardProps) {
           <div className="text-lg font-semibold text-green-600">
             {formatSalary(job.salaryMin, job.salaryMax, job.currency)}
           </div>
-          <a
-            href={job.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
-              visited ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"
+          <div className="flex items-center gap-2">
+            <ClipboardButton
+              value={job.url}
+              copyText={COPY_LINK_TEXT}
+              copiedText="Link kopiran!"
+              title="Kopiraj URL oglasa u clipboard"
+              className="rounded-full border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-700 hover:bg-white px-3 py-1.5 text-xs"
+              announceValue={false}
+            />
+            {visited && (
+              <motion.span
+                initial={{ opacity: 0, y: -2 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18 }}
+                className="hidden sm:inline-block rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] font-medium text-gray-600"
+                aria-label="Oglas je već posećen"
+              >
+                Posećeno
+              </motion.span>
             )}
-            aria-label={`Otvori oglas: ${job.title} — ${job.company}`}
-            title={`Otvori izvor: ${(() => { try { return new URL(job.url).host } catch { return job.url } })()}`}
-            onClick={() => {
-              try {
-                localStorage.setItem(`visited:${job.id}`, JSON.stringify({ ts: Date.now() }))
-                setVisited(true)
-              } catch {}
-            }}
-          >
-            Prijavi se
-            <ExternalLink className="w-4 h-4 ml-1" />
-          </a>
+            <span id={`job-cta-host-${job.id}`} className="sr-only">
+              Izvor: {(() => { try { return new URL(job.url).host } catch { return job.url } })()}
+            </span>
+            <a
+              href={job.url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className={cn(
+                "inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
+                visited ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"
+              )}
+              aria-label={`Otvori oglas: ${job.title} — ${job.company}`}
+              title={`Otvori izvor: ${(() => { try { return new URL(job.url).host } catch { return job.url } })()}`}
+              aria-describedby={`job-cta-host-${job.id}`}
+              onClick={() => {
+                try {
+                  localStorage.setItem(`visited:${job.id}`, JSON.stringify({ ts: Date.now() }))
+                  setVisited(true)
+                } catch {}
+              }}
+            >
+              Prijavi se
+              <ExternalLink className="w-4 h-4 ml-1" />
+            </a>
+          </div>
         </div>
       </div>
     </motion.div>

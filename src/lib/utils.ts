@@ -26,3 +26,34 @@ export function slugify(text: string) {
     .replace(/[^\w ]+/g, '')
     .replace(/ +/g, '-')
 }
+
+// Copy utility with robust fallback (textarea + execCommand)
+export async function copyToClipboard(value: string): Promise<void> {
+  // Prefer the modern Clipboard API
+  if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value)
+      return
+    } catch {
+      // Fall through to the legacy fallback below
+    }
+  }
+
+  // Fallback: textarea + execCommand('copy')
+  if (typeof document === 'undefined') {
+    throw new Error('Clipboard API not available in this environment')
+  }
+
+  const ta = document.createElement('textarea')
+  ta.value = value
+  ta.setAttribute('readonly', '')
+  ta.style.position = 'absolute'
+  ta.style.left = '-9999px'
+  document.body.appendChild(ta)
+  ta.select()
+  const ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false
+  document.body.removeChild(ta)
+  if (!ok) {
+    throw new Error('Copy command is not supported or failed')
+  }
+}

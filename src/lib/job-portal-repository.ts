@@ -16,12 +16,21 @@ export async function upsertPortalJobs(listings: PortalJobInsert[]): Promise<voi
 
 export async function markFeedSuccess(sourceId: string, count: number) {
   const supabase = createSupabaseServer()
+  // increment success_count safely
+  const { data: existing } = await supabase
+    .from('job_feed_stats')
+    .select('success_count')
+    .eq('source_id', sourceId)
+    .single()
+
+  const nextCount = (existing?.success_count || 0) + 1
+
   const { error } = await supabase
     .from('job_feed_stats')
     .upsert({
       source_id: sourceId,
       last_success_at: new Date().toISOString(),
-      success_count: count,
+      success_count: nextCount,
     }, { onConflict: 'source_id' })
 
   if (error) {
@@ -31,13 +40,22 @@ export async function markFeedSuccess(sourceId: string, count: number) {
 
 export async function markFeedError(sourceId: string, message: string) {
   const supabase = createSupabaseServer()
+  const { data: existing } = await supabase
+    .from('job_feed_stats')
+    .select('failure_count, metadata')
+    .eq('source_id', sourceId)
+    .single()
+
+  const nextFailures = (existing?.failure_count || 0) + 1
+  const mergedMeta = { ...(existing?.metadata || {}), lastErrorMessage: message }
+
   const { error } = await supabase
     .from('job_feed_stats')
     .upsert({
       source_id: sourceId,
       last_error_at: new Date().toISOString(),
-      failure_count: 1,
-      metadata: { message },
+      failure_count: nextFailures,
+      metadata: mergedMeta,
     }, { onConflict: 'source_id' })
 
   if (error) {

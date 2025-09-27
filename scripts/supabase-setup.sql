@@ -101,6 +101,9 @@ create table if not exists public.job_feed_stats (
   updated_at timestamptz not null default now()
 );
 
+-- Ensure metadata column exists (for storing last error message etc.)
+alter table public.job_feed_stats add column if not exists metadata jsonb;
+
 create or replace function public.set_job_feed_stats_updated_at()
 returns trigger as $$
 begin

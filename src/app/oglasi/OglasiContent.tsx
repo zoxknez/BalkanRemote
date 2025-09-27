@@ -36,6 +36,16 @@ export default function OglasiContent() {
   }, [contractFacets])
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeFilterCount = (() => {
+    let c = 0
+    if (filters.search) c++
+    if (filters.contractType && filters.contractType.length) c++
+    if (filters.experience && filters.experience.length) c++
+    if (filters.category) c++
+    // remote je default true – brojimo samo kad je isključeno (tj. filter promenjen)
+    if (filters.remote === undefined) c++
+    return c
+  })()
 
   return (
     <div className="min-h-screen bg-white">
@@ -51,7 +61,12 @@ export default function OglasiContent() {
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">Eksperimentalni prikaz najnovijih remote / EU‑timezone poslova iz više izvora. Podaci se osvežavaju jednom dnevno.</p>
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20"><Layers className="w-4 h-4" /> {total} oglasa</div>
-              {jobs.length>0 && <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20"><Filter className="w-4 h-4" /> Filteri aktivni</div>}
+              {jobs.length>0 && activeFilterCount>0 && (
+                <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">
+                  <Filter className="w-4 h-4" />
+                  <span>Filteri: {activeFilterCount}</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

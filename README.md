@@ -1,6 +1,6 @@
 # 🚀 Remote Balkan – Career Hub
 
-[![CI](https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/actions/workflows/ci.yml/badge.svg)](https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/actions/workflows/ci.yml)
+[![CI](https://github.com/zoxknez/BalkanRemote/actions/workflows/ci.yml/badge.svg)](https://github.com/zoxknez/BalkanRemote/actions/workflows/ci.yml)
 
 Platforma za remote rad iz Balkana: poreski vodič, resursi i alati, poslovi, mini forum za pitanja, i prijava/registracija.
 
@@ -181,7 +181,7 @@ Event log primer (JSON):
 
 Automatsko održavanje zavisnosti: Dependabot (`.github/dependabot.yml`) – weekly za npm i GitHub Actions.
 
-Predlozi i prijave problema: https://github.com/o0o0o0o0o0o0o0o0o0o0o0o0o0o0o0o/balkan_remote/issues
+Predlozi i prijave problema: https://github.com/zoxknez/BalkanRemote/issues
 
 ---
 

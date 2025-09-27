@@ -4,6 +4,8 @@ import { ClipboardButton } from '@/components/clipboard-button'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
 
 const CONTACT_EMAIL = 'zoxknez@hotmail.com'
+const MAILTO_SUBJECT = 'Remote Balkan — upit'
+const MAILTO_BODY = 'Zdravo,\n\nPovod: '
 
 const contactMethods = [
   {
@@ -23,7 +25,7 @@ const contactMethods = [
   {
     title: 'Email',
     description: CONTACT_EMAIL,
-    href: `mailto:${CONTACT_EMAIL}`,
+    href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(MAILTO_SUBJECT)}&body=${encodeURIComponent(MAILTO_BODY)}`,
     icon: '📧',
     external: false,
     action: 'copy-email' as const,
@@ -50,7 +52,11 @@ const contactJsonLd = {
   name: 'Remote Balkan',
   url: 'https://remotebalkan.com',
   email: `mailto:${CONTACT_EMAIL}`,
-  sameAs: ['https://x.com/KoronVirus', 'https://github.com/zoxknez/BalkanRemote'],
+  sameAs: [
+    'https://x.com/KoronVirus',
+    'https://github.com/zoxknez',
+    'https://github.com/zoxknez/BalkanRemote',
+  ],
   contactPoint: [
     {
       '@type': 'ContactPoint',
@@ -83,6 +89,17 @@ export const metadata: Metadata = {
 
 export default function KontaktPage() {
   const contactJsonLdString = sanitizeHtml(JSON.stringify(contactJsonLd))
+  const vcard = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    'FN:Remote Balkan',
+    `EMAIL;TYPE=INTERNET:${CONTACT_EMAIL}`,
+    'ORG:Remote Balkan',
+    'URL:https://remotebalkan.com',
+    'NOTE:Kontakt podaci za Remote Balkan',
+    'END:VCARD',
+  ].join('\n')
+  const vcardDataUri = `data:text/vcard;base64,${Buffer.from(vcard, 'utf-8').toString('base64')}`
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -98,7 +115,7 @@ export default function KontaktPage() {
           <p className="text-gray-600 mt-2">Najbrži načini da se javite ili predložite poboljšanje</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" role="list">
           {contactMethods.map((method) => {
             const externalProps = method.external
               ? { target: '_blank', rel: method.title === 'GitHub profil' ? 'me noopener noreferrer' : 'noopener noreferrer' }
@@ -109,7 +126,9 @@ export default function KontaktPage() {
                 key={method.title}
                 href={method.href}
                 {...externalProps}
-                className="group flex h-full flex-col justify-between rounded-xl border border-gray-200 p-5 transition hover:border-indigo-300 hover:shadow-sm"
+                aria-label={`Kontakt preko: ${method.title}`}
+                className="group flex h-full flex-col justify-between rounded-xl border border-gray-200 p-5 transition hover:border-indigo-300 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                role="listitem"
               >
                 <div>
                   <div className="text-2xl" aria-hidden="true">
@@ -134,8 +153,18 @@ export default function KontaktPage() {
           })}
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          Preferiramo javne kanale kako bismo znanje i rešenja delili sa zajednicom.
+        <div className="mt-8 flex flex-col items-center gap-3 text-center">
+          <div className="text-sm text-gray-500">
+            Preferiramo javne kanale kako bismo znanje i rešenja delili sa zajednicom.
+          </div>
+          <a
+            href={vcardDataUri}
+            download="remote-balkan.vcf"
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            aria-label="Preuzmi vCard kontakt (VCF)"
+          >
+            Preuzmi vCard (.vcf)
+          </a>
         </div>
       </div>
     </div>

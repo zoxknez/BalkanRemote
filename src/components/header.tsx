@@ -104,15 +104,33 @@ export function Header() {
 
           {/* Mobile menu button */}
           <div className="md:hidden ml-auto">
-            <button
+            <motion.button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
               aria-label={isOpen ? 'Zatvori meni' : 'Otvori meni'}
               aria-expanded={isOpen}
               aria-controls="mobile-nav"
+              whileTap={{ scale: 0.95 }}
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+              <span className="relative flex h-9 w-9 items-center justify-center">
+                {!isOpen && (
+                  <span className="absolute inset-0 rounded-full bg-blue-500/30 animate-ping" aria-hidden />
+                )}
+                <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/40">
+                  {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </span>
+              </span>
+              <span
+                className={`text-xs font-semibold uppercase tracking-wide ${
+                  isOpen ? 'text-blue-600' : 'text-gray-700'
+                }`}
+              >
+                Meni
+                {!isOpen && (
+                  <span className="ml-2 inline-flex h-2 w-2 animate-pulse rounded-full bg-rose-500/80" aria-hidden />
+                )}
+              </span>
+            </motion.button>
           </div>
         </div>
       </div>

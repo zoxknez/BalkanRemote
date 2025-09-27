@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { usePortalJobs } from '@/hooks/usePortalJobs'
 import { JobCard } from '@/components/job-card'
@@ -149,11 +150,56 @@ function buildPagination(currentPage: number, totalPages: number): Array<number 
 }
 
 export function JobsFeed() {
+  const params = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const detailsRef = useRef<HTMLDivElement | null>(null)
   const [detailsHeight, setDetailsHeight] = useState(0)
+
+  // Build initial filters from URL (one-time for this component mount)
+  const initialLimit = (() => {
+    const l = parseInt(params.get('limit') || '12', 10)
+    if (Number.isFinite(l) && l > 0 && l <= 50) return l
+    return 12
+  })()
+  const initialPage = (() => {
+    const p = parseInt(params.get('page') || '1', 10)
+    return Number.isFinite(p) && p > 0 ? p : 1
+  })()
+  const initialOffset = (() => {
+    const off = parseInt(params.get('offset') || '', 10)
+    if (Number.isFinite(off) && off >= 0) return off
+    return (initialPage - 1) * initialLimit
+  })()
+  const initialRemote = (() => {
+    const r = params.get('remote')
+    if (r === 'false' || r === '0' || r === 'any') return undefined
+    if (r === 'true' || r === '1') return true
+    return true // default to remote-only
+  })()
+  const initialContract = (() => {
+    const values = params.getAll('contractType') as PortalJobContractType[]
+    const valid = values.filter((v) => (CONTRACT_OPTIONS as string[]).includes(v))
+    return valid.length ? valid : undefined
+  })()
+  const initialExperience = (() => {
+    const values = params.getAll('experience')
+    const valid = values.filter((v) => EXPERIENCE_OPTIONS.some((o) => o.value === v))
+    return valid.length ? valid : undefined
+  })()
+  const initialCategory = (() => {
+    const c = params.get('category') || undefined
+    if (!c || c === 'all') return undefined
+    const exists = CATEGORY_OPTIONS.some((o) => o.value === c)
+    return exists ? (c as JobCategory) : undefined
+  })()
+  const initialSearch = (() => {
+    const q = params.get('q') || params.get('search')
+    return q && q.trim().length ? q.trim() : undefined
+  })()
 
   const {
     jobs: portalJobs,
@@ -165,7 +211,15 @@ export function JobsFeed() {
     updateFilters,
     resetFilters,
     facets,
-  } = usePortalJobs({ limit: 12, offset: 0, remote: true })
+  } = usePortalJobs({
+    limit: initialLimit,
+    offset: initialOffset,
+    remote: initialRemote,
+    contractType: initialContract,
+    experience: initialExperience,
+    category: initialCategory,
+    search: initialSearch,
+  })
 
   const normalizedJobs = useMemo(() => portalJobs.map(mapPortalJob), [portalJobs])
   const hasRealData = normalizedJobs.length > 0
@@ -334,6 +388,46 @@ export function JobsFeed() {
     const absoluteTop = window.scrollY + top - 80
     window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' })
   }
+
+  // Reflect filters to URL (page, limit, q, category, contractType[], experience[], remote)
+  useEffect(() => {
+    const p = new URLSearchParams(params.toString())
+    const setSingle = (key: string, value?: string | number | boolean | null) => {
+      if (value === undefined || value === null || value === '' || value === 'all') {
+        p.delete(key)
+        return
+      }
+      p.set(key, String(value))
+    }
+    const setMulti = (key: string, values?: string[]) => {
+      p.delete(key)
+      if (!values || values.length === 0) return
+      values.forEach((v) => p.append(key, v))
+    }
+
+    const limit = filters.limit ?? 12
+    const page = Math.max(1, Math.floor((filters.offset ?? 0) / limit) + 1)
+    setSingle('page', page)
+    // Keep limit only if not default
+    if (limit !== 12) setSingle('limit', limit)
+    else p.delete('limit')
+
+    // Prefer q for search
+    setSingle('q', (filters.search ?? '').toString().trim() || null)
+    setSingle('category', filters.category ?? null)
+    setMulti('contractType', (filters.contractType as string[] | undefined))
+    setMulti('experience', (filters.experience as string[] | undefined))
+
+  // Remote: default experience is remote-only (even when filters.remote is undefined)
+  const remoteOnly = filters.remote !== undefined ? !!filters.remote : true
+  setSingle('remote', remoteOnly ? '1' : 'any')
+
+    // We use page, not offset, in URL
+    p.delete('offset')
+
+    router.replace(`${pathname}?${p.toString()}`, { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.limit, filters.offset, filters.remote, filters.contractType, filters.experience, filters.category, filters.search, pathname, router])
 
   return (
     <section ref={sectionRef} className="mb-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm relative">
@@ -535,6 +629,78 @@ export function JobsFeed() {
             )
           })}
         </div>
+
+        {/* Active filter chips */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {filters.search && (
+              <button
+                type="button"
+                onClick={() => updateFilters({ search: undefined, offset: 0 }, { append: false })}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label="Ukloni filter pretrage"
+              >
+                Pretraga: “{filters.search}” ✕
+              </button>
+            )}
+            {selectedCategory && (
+              <button
+                type="button"
+                onClick={() => updateFilters({ category: undefined, offset: 0 }, { append: false })}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label="Ukloni kategoriju"
+              >
+                Kategorija: {CATEGORY_LABELS[selectedCategory]} ✕
+              </button>
+            )}
+            {selectedContracts.map((ct) => (
+              <button
+                key={`chip-ct-${ct}`}
+                type="button"
+                onClick={() => {
+                  const next = selectedContracts.filter((v) => v !== ct)
+                  updateFilters({ contractType: next.length ? next : undefined, offset: 0 }, { append: false })
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label={`Ukloni tip ugovora ${CONTRACT_LABELS[ct]}`}
+              >
+                Ugovor: {CONTRACT_LABELS[ct]} ✕
+              </button>
+            ))}
+            {selectedExperience.map((ex) => (
+              <button
+                key={`chip-ex-${ex}`}
+                type="button"
+                onClick={() => {
+                  const next = selectedExperience.filter((v) => v !== ex)
+                  updateFilters({ experience: next.length ? next : undefined, offset: 0 }, { append: false })
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label={`Ukloni nivo iskustva ${ex}`}
+              >
+                Iskustvo: {EXPERIENCE_OPTIONS.find((o) => o.value === ex)?.label || ex} ✕
+              </button>
+            ))}
+            {!isRemoteOnly && (
+              <button
+                type="button"
+                onClick={() => updateFilters({ remote: true, offset: 0 }, { append: false })}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+                aria-label="Vrati Remote only"
+              >
+                Remote: bilo koji ✕
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => resetFilters()}
+              className="ml-1 inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
+              aria-label="Ukloni sve filtere"
+            >
+              Ukloni sve ✕
+            </button>
+          </div>
+        )}
       </div>
 
       {showBackToTop && (

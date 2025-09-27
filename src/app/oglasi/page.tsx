@@ -15,6 +15,17 @@ interface JobLite {
   currency: string | null
 }
 
+function mapEmploymentType(raw: string | null): string {
+  if (!raw) return 'FULL_TIME'
+  switch (raw) {
+    case 'part-time': return 'PART_TIME'
+    case 'contract': return 'CONTRACTOR'
+    case 'freelance': return 'CONTRACTOR'
+    case 'internship': return 'INTERN'
+    default: return 'FULL_TIME'
+  }
+}
+
 function JobSchemaInjector() {
   const [jobs, setJobs] = useState<JobLite[]>([])
   useEffect(() => {
@@ -27,15 +38,15 @@ function JobSchemaInjector() {
         if (!json?.data?.jobs) return
         const mapped: JobLite[] = json.data.jobs.map((j: any) => ({
           id: j.id,
-            title: j.title,
-            company: j.company,
-            url: j.url,
-            posted_at: j.posted_at,
-            type: j.type,
-            location: j.location,
-            salary_min: j.salary_min,
-            salary_max: j.salary_max,
-            currency: j.currency,
+          title: j.title,
+          company: j.company,
+          url: j.url,
+          posted_at: j.posted_at,
+          type: j.type,
+          location: j.location,
+          salary_min: j.salary_min,
+          salary_max: j.salary_max,
+          currency: j.currency,
         }))
         setJobs(mapped)
       }).catch(() => {})
@@ -51,7 +62,7 @@ function JobSchemaInjector() {
       title: j.title,
       datePosted: j.posted_at,
       hiringOrganization: { '@type': 'Organization', name: j.company },
-      employmentType: j.type || 'FULL_TIME',
+  employmentType: mapEmploymentType(j.type),
       applicantLocationRequirements: { '@type': 'Country', name: 'Remote' },
       jobLocationType: 'TELECOMMUTE',
       directApply: true,

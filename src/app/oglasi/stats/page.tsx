@@ -2,7 +2,8 @@ import React, { Suspense } from 'react'
 import { AlertCircle, CheckCircle2, RefreshCcw } from 'lucide-react'
 
 async function fetchStats() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/portal-jobs/stats`, { next: { revalidate: 60 } })
+  // Relative fetch radi u server komponenti i koristi internu Next fetch logiku + revalidate.
+  const res = await fetch('/api/portal-jobs/stats', { next: { revalidate: 60 } })
   if (!res.ok) {
     throw new Error('Failed to load stats')
   }
@@ -68,13 +69,20 @@ async function StatsTable() {
 }
 
 export default function OglasiStatsPage() {
+  if (!process.env.NEXT_PUBLIC_ENABLE_FEED_STATS) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center text-sm text-gray-500">
+        Statistika feedova je isključena. (Feature flag: NEXT_PUBLIC_ENABLE_FEED_STATS)
+      </div>
+    )
+  }
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center gap-3 mb-8">
         <RefreshCcw className="w-6 h-6 text-blue-600" />
         <h1 className="text-2xl font-bold tracking-tight">Oglasi – Feed Health</h1>
       </div>
-      <p className="text-sm text-gray-600 mb-6">Pregled uspeha i grešaka pri dnevnoj agregaciji. Podaci se keširaju 60s.</p>
+      <p className="text-sm text-gray-600 mb-6">Pregled uspeha i grešaka pri dnevnoj agregaciji. Podaci se keširaju 60s. (Feature flag: NEXT_PUBLIC_ENABLE_FEED_STATS)</p>
       <Suspense fallback={<div className="text-sm text-gray-500">Učitavanje...</div>}>
         <StatsTable />
       </Suspense>

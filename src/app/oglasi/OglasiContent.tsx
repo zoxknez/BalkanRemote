@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { usePortalJobs } from '@/hooks/usePortalJobs'
 import { PortalJobContractType } from '@/types/jobs'
@@ -36,6 +36,21 @@ export default function OglasiContent() {
   }, [contractFacets])
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  // Infinite scroll uz IntersectionObserver (prefetch sledeće strane).
+  useEffect(() => {
+    if (!sentinelRef.current) return
+    const node = sentinelRef.current
+    const observer = new IntersectionObserver(entries => {
+      const entry = entries[0]
+      if (entry.isIntersecting && hasMore && !loading) {
+        updateFilters({ offset: (filters.offset || 0) + (filters.limit || 20) })
+      }
+    }, { rootMargin: '400px 0px 0px 0px' })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasMore, loading, filters.offset, filters.limit, updateFilters])
   const activeFilterCount = (() => {
     let c = 0
     if (filters.search) c++
@@ -203,13 +218,17 @@ export default function OglasiContent() {
         {/* Load more */}
         <div className="flex justify-center mt-10">
           {hasMore && (
-            <button
-              disabled={loading}
-              onClick={() => updateFilters({ offset: (filters.offset||0) + (filters.limit||20) })}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 text-sm font-medium shadow hover:shadow-md transition disabled:opacity-60"
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />} Učitaj još
-            </button>
+            <div className="flex flex-col items-center gap-3">
+              <button
+                disabled={loading}
+                onClick={() => updateFilters({ offset: (filters.offset||0) + (filters.limit||20) })}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 text-sm font-medium shadow hover:shadow-md transition disabled:opacity-60"
+              >
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />} Učitaj još
+              </button>
+              <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
+              <p className="text-[11px] text-gray-400">Automatsko učitavanje pri skrolu…</p>
+            </div>
           )}
           {!hasMore && !loading && jobs.length>0 && (
             <div className="text-sm text-gray-500">Nema više rezultata.</div>

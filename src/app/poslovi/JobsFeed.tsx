@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw, AlertCircle, Filter, RotateCcw, Clock, ArrowLeft, ArrowRight, ArrowUp, Search } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { usePortalJobs } from '@/hooks/usePortalJobs'
 import { JobCard } from '@/components/job-card'
@@ -550,8 +551,31 @@ export function JobsFeed() {
             onClick={handleCopyLink}
             className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700"
             aria-label="Kopiraj link sa filterima"
+            title="Kopiraj link sa aktivnim filterima"
           >
-            {copied ? 'Link kopiran' : 'Kopiraj link'}
+            <AnimatePresence mode="wait" initial={false}>
+              {copied ? (
+                <motion.span
+                  key="copied"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  Link kopiran
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="copy"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  Kopiraj link
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
           <button
             type="button"
@@ -720,28 +744,39 @@ export function JobsFeed() {
         {/* Active filter chips */}
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
+            <AnimatePresence initial={false}>
             {filters.search && (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => updateFilters({ search: undefined, offset: 0 }, { append: false })}
                 className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
                 aria-label="Ukloni filter pretrage"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Pretraga: “{filters.search}” ✕
-              </button>
+              </motion.button>
             )}
             {selectedCategory && (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => updateFilters({ category: undefined, offset: 0 }, { append: false })}
                 className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
                 aria-label="Ukloni kategoriju"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Kategorija: {CATEGORY_LABELS[selectedCategory]} ✕
-              </button>
+              </motion.button>
             )}
             {selectedContracts.map((ct) => (
-              <button
+              <motion.button
                 key={`chip-ct-${ct}`}
                 type="button"
                 onClick={() => {
@@ -750,12 +785,17 @@ export function JobsFeed() {
                 }}
                 className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
                 aria-label={`Ukloni tip ugovora ${CONTRACT_LABELS[ct]}`}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Ugovor: {CONTRACT_LABELS[ct]} ✕
-              </button>
+              </motion.button>
             ))}
             {selectedExperience.map((ex) => (
-              <button
+              <motion.button
                 key={`chip-ex-${ex}`}
                 type="button"
                 onClick={() => {
@@ -764,28 +804,41 @@ export function JobsFeed() {
                 }}
                 className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
                 aria-label={`Ukloni nivo iskustva ${ex}`}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Iskustvo: {EXPERIENCE_OPTIONS.find((o) => o.value === ex)?.label || ex} ✕
-              </button>
+              </motion.button>
             ))}
             {!isRemoteOnly && (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => updateFilters({ remote: true, offset: 0 }, { append: false })}
                 className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
                 aria-label="Vrati Remote only"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
               >
                 Remote: bilo koji ✕
-              </button>
+              </motion.button>
             )}
-            <button
+            <motion.button
               type="button"
               onClick={() => resetFilters()}
               className="ml-1 inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 hover:border-rose-200 hover:text-rose-700"
               aria-label="Ukloni sve filtere"
+              layout
+              whileTap={{ scale: 0.97 }}
             >
               Ukloni sve ✕
-            </button>
+            </motion.button>
+            </AnimatePresence>
           </div>
         )}
       </div>

@@ -8,7 +8,7 @@ export const stats = [
 ] as const
 
 export const heroHighlights = [
-  { icon: Globe2, label: 'Remote iz Balkana', pulse: true },
+  { icon: Globe2, label: 'Remote poslovi', pulse: true },
   { icon: Zap, label: 'Praktični saveti i alati', pulse: false },
   { icon: Building2, label: 'Lokalne i globalne firme', pulse: false },
 ] as const

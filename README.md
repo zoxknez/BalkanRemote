@@ -130,7 +130,13 @@ Pokreni:
 npm test
 ```
 
-Dodati testovi za klasifikatore oglasa (`src/lib/__tests__/job-feed-classifiers.test.ts`).
+Pokriće:
+- Kalkulator engine (`calculator-engine.test.ts`)
+- Klasifikatori oglasa (`job-feed-classifiers.test.ts`)
+- JSON-LD schema utili (`job-schema.test.ts`)
+- API /api/portal-jobs osnovna integracija i rate limit scenario (`src/tests/api/portal-jobs.test.ts`)
+
+Napomena: rate limit test koristi in-memory bucket i izvršava 61 uzastopni poziv – ako promeniš `PORTAL_JOBS_RATE_MAX`, ažuriraj i test.
 
 ## 📊 Logging
 
@@ -146,6 +152,8 @@ Event log primer (JSON):
 - Dodatni kalkulatori i proširenja poreskog vodiča
 
 ## 🤝 Contributing
+
+Automatsko održavanje zavisnosti: Dependabot (`.github/dependabot.yml`) – weekly za npm i GitHub Actions.
 
 Predlozi i prijave problema: https://github.com/zoxknez/BalkanRemote/issues
 

@@ -96,6 +96,7 @@ Specifično za agregator oglasa (`Oglasi`):
  - Manual dry-run: `.github/workflows/job-sync-dry-run.yml` (workflow_dispatch) – koristi `JOB_SYNC_DRY_RUN=1` i NE piše u bazu
  - (opciono) `NEXT_PUBLIC_ENABLE_FEED_STATS` = `1` javni prikaz health tabele na `/oglasi/stats`
  - (opciono) `FEED_STATS_TOKEN` – ako je postavljen, `/api/portal-jobs/stats` zahteva header `Authorization: Bearer <token>` i UI strana prosleđuje token server-side; bez ovoga endpoint je public.
+ - `SUPABASE_SERVICE_ROLE_KEY` – neophodan za API/stats stranicu (server-only). Ako nije postavljen, `/oglasi/stats` prikazuje poruku i API vraća grešku.
 
 ## 📚 Korisne skripte (package.json)
 
@@ -115,6 +116,7 @@ Specifično za agregator oglasa (`Oglasi`):
   - `JOB_SYNC_DRY_RUN=1` – u sync skripti preskače DB upsert i feed stats updejte (samo prikuplja i loguje)
   - `NEXT_PUBLIC_ENABLE_FEED_STATS` – prikazuje javnu stats stranicu `/oglasi/stats`
   - `FEED_STATS_TOKEN` – štiti stats API (vidi gore); koristi Bearer auth
+  - `SUPABASE_SERVICE_ROLE_KEY` – potreban za server-side čitanje `job_feed_stats` (stats API i UI)
   
 ### Dedupe ratio logging
 

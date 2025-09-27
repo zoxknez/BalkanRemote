@@ -3,6 +3,18 @@ import { AlertCircle, CheckCircle2, RefreshCcw, Clock } from 'lucide-react'
 
 async function fetchStats() {
   // Relative fetch radi u server komponenti i koristi internu Next fetch logiku + revalidate.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('Feed stats disabled: SUPABASE_SERVICE_ROLE_KEY not set. Returning empty dataset.')
+    return [] as Array<{
+      source_id: string
+      last_success_at: string | null
+      last_error_at: string | null
+      success_count: number
+      failure_count: number
+      updated_at: string
+      metadata?: { lastErrorMessage?: string }
+    }>
+  }
   const headers: Record<string,string> = {}
   if (process.env.FEED_STATS_TOKEN) {
     headers['Authorization'] = `Bearer ${process.env.FEED_STATS_TOKEN}`
@@ -85,6 +97,14 @@ export default function OglasiStatsPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center text-sm text-gray-500">
         Statistika feedova je isključena. (Feature flag: NEXT_PUBLIC_ENABLE_FEED_STATS)
+      </div>
+    )
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center text-sm text-gray-500">
+        Feed statistika je privremeno nedostupna jer nije definisan server-side ključ.<br />
+        Postavi <code>SUPABASE_SERVICE_ROLE_KEY</code> u Vercel okruženju da bi ova stranica radila.
       </div>
     )
   }

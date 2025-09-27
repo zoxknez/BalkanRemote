@@ -63,7 +63,8 @@ export function Footer() {
                 href="https://x.com/KoronVirus" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="X (Twitter) profil"
+                className="text-gray-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -71,8 +72,9 @@ export function Footer() {
                 href="https://github.com/zoxknez" 
                 target="_blank"
                 rel="me noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 title="GitHub profil"
+                aria-label="GitHub profil (rel=me)"
               >
                 <User className="w-5 h-5" />
               </a>
@@ -80,15 +82,17 @@ export function Footer() {
                 href="https://github.com/zoxknez/BalkanRemote" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 title="Repo na GitHub-u"
+                aria-label="GitHub repozitorijum: BalkanRemote"
               >
                 <Github className="w-5 h-5" />
               </a>
               <a 
-                href="mailto:zoxknez@hotmail.com"
-                className="text-gray-400 hover:text-white transition-colors"
+                href="mailto:zoxknez@hotmail.com?subject=Remote%20Balkan%20%E2%80%94%20upit&body=Zdravo%2C%0A%0APovod%3A%20"
+                className="text-gray-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 title="Pošalji email"
+                aria-label="Pošalji email"
               >
                 <Mail className="w-5 h-5" />
               </a>

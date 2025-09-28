@@ -25,6 +25,12 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Resursi za remote karijeru | Remote Balkan',
+    description: 'Istraži najbolje sajtove, alate i sadržaje koji pomažu profesionalcima sa Balkana da uspešno rade remote.',
+    images: [buildOgImageUrl('Resursi za remote karijeru')],
+  },
 };
 
 export default function ResursiPage() {

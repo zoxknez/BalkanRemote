@@ -25,6 +25,12 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Remote work saveti za Balkan | Remote Balkan',
+    description: 'Praktični saveti, checkliste i resursi za freelance i remote rad.',
+    images: [buildOgImageUrl('Remote work saveti za Balkan')],
+  },
 }
 
 export default function SavetiPage() {

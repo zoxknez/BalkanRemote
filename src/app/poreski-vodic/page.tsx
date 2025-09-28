@@ -25,6 +25,12 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
+    description: 'Modeli oporezivanja, kalkulatori i zvanični linkovi.',
+    images: [buildOgImageUrl('Poreski vodič za remote rad')],
+  },
 };
 
 export default function PoreskiVodicPage() {

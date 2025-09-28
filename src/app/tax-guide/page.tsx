@@ -25,6 +25,12 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Balkan remote tax guide | Remote Balkan',
+    description: 'Calculators, comparisons and official links across the region.',
+    images: [buildOgImageUrl('Balkan remote tax guide')],
+  },
 }
 
 export default function TaxGuidePage() {

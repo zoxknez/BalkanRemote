@@ -213,16 +213,23 @@ export async function fetchPortalJobs(params: {
   const debugRepo = process.env.PORTAL_JOBS_DEBUG === '1'
   if (debugRepo) logger.info('[fetchPortalJobs] start', { params })
 
-  const applyFilters = (qb: any) => {
-    if (remote !== undefined) qb = qb.eq('is_remote', remote)
-    if (contractType && contractType.length > 0) qb = qb.in('type', contractType)
-    if (category) qb = qb.eq('category', category)
-    if (experienceLevel && experienceLevel.length > 0) qb = qb.in('experience_level', experienceLevel)
-    if (search) qb = applySearch(qb, search)
-    return qb
+  type Filterable<T> = {
+    eq: (col: string, val: unknown) => T
+    in: (col: string, vals: unknown[]) => T
+    or: (expr: string) => T
+    textSearch?: (col: string, query: string, opts?: Record<string, unknown>) => T
+  }
+  const applyFilters = <T extends Filterable<T>>(qb: T): T => {
+    let q = qb
+    if (remote !== undefined) q = q.eq('is_remote', remote)
+    if (contractType && contractType.length > 0) q = q.in('type', contractType)
+    if (category) q = q.eq('category', category)
+    if (experienceLevel && experienceLevel.length > 0) q = q.in('experience_level', experienceLevel)
+    if (search) q = applySearch(q, search)
+    return q
   }
 
-  const applySearch = (qb: any, term: string) => {
+  const applySearch = <T extends Filterable<T>>(qb: T, term: string): T => {
     const trimmed = term.trim()
     if (!trimmed) return qb
     const fallback = () => qb.or([
@@ -231,9 +238,9 @@ export async function fetchPortalJobs(params: {
       `location.ilike.%${trimmed}%`,
       `tags.cs.{${trimmed}}`,
     ].join(','))
-    if (trimmed.length > 2 && typeof (qb as any).textSearch === 'function') {
+    if (trimmed.length > 2 && typeof qb.textSearch === 'function') {
       try {
-        return (qb as any).textSearch('search_vector', trimmed, { type: 'plain' })
+        return qb.textSearch('search_vector', trimmed, { type: 'plain' })
       } catch {
         return fallback()
       }
@@ -251,20 +258,21 @@ export async function fetchPortalJobs(params: {
   const prefixQuery = tokens.map(t => `${t}:*`).join(' & ')
   const tsQuery = prefixQuery || escaped
   // Weighted rank & tighter headline options.
-  const baseSelect = shouldRank
+  const baseSelect: string = shouldRank
     ? `*,rank:ts_rank_cd(search_vector, to_tsquery('simple','${tsQuery}')),headline:ts_headline('simple', coalesce(description,''), to_tsquery('simple','${tsQuery}'), 'MaxFragments=1, MaxWords=20, MinWords=4, ShortWord=2, HighlightAll=FALSE, StartSel=<mark>, StopSel=</mark>')`
     : '*'
 
   let listingQuery = supabase
     .schema('public')
     .from('job_portal_listings')
-    .select(baseSelect as any, { count: 'exact' })
+    .select(baseSelect, { count: 'exact' })
     .range(offset, offset + limit - 1)
 
   if (shouldRank) {
-    listingQuery = listingQuery
-      .order('rank' as any, { ascending: false, nullsFirst: false })
-      .order(orderBy, { ascending: false })
+    const orderDynamic = (q: typeof listingQuery, col: string) =>
+      (q as unknown as { order: (c: string, o?: { ascending?: boolean; nullsFirst?: boolean }) => typeof listingQuery })
+        .order(col, { ascending: false, nullsFirst: false })
+    listingQuery = orderDynamic(listingQuery, 'rank').order(orderBy, { ascending: false })
   } else {
     listingQuery = listingQuery.order(orderBy, { ascending: false })
   }
@@ -281,13 +289,14 @@ export async function fetchPortalJobs(params: {
   }
 
   // Facet queries: must call select() FIRST so that filter methods (eq, in) exist on returned PostgrestFilterBuilder
-  const facetQuery = (column: string) => {
+  const facetQuery = async (column: 'type' | 'experience_level' | 'category') => {
     let q = supabase
       .schema('public')
       .from('job_portal_listings')
       .select(column)
     q = applyFilters(q)
-    return q
+    const res = await q
+    return (res.data ?? []) as Array<Record<string, unknown>>
   }
 
   const [typeAgg, expAgg, catAgg] = await Promise.all([
@@ -297,14 +306,14 @@ export async function fetchPortalJobs(params: {
   ])
 
   const contractTypeCounts: Record<string, number> = {}
-  ;(((typeAgg.data as PortalJobRecord[] | null) || []))
-    .forEach(r => { if (r.type) contractTypeCounts[r.type] = (contractTypeCounts[r.type] || 0) + 1 })
+  ;(typeAgg)
+    .forEach(r => { const v = r['type']; if (typeof v === 'string') contractTypeCounts[v] = (contractTypeCounts[v] || 0) + 1 })
   const experienceCounts: Record<string, number> = {}
-  ;(((expAgg.data as PortalJobRecord[] | null) || []))
-    .forEach(r => { if (r.experience_level) experienceCounts[r.experience_level] = (experienceCounts[r.experience_level] || 0) + 1 })
+  ;(expAgg)
+    .forEach(r => { const v = r['experience_level']; if (typeof v === 'string') experienceCounts[v] = (experienceCounts[v] || 0) + 1 })
   const categoryCounts: Record<string, number> = {}
-  ;(((catAgg.data as PortalJobRecord[] | null) || []))
-    .forEach(r => { if (r.category) categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1 })
+  ;(catAgg)
+    .forEach(r => { const v = r['category']; if (typeof v === 'string') categoryCounts[v] = (categoryCounts[v] || 0) + 1 })
 
   const result = { ...baseResult, globalFacets: {
     contractType: contractTypeCounts,

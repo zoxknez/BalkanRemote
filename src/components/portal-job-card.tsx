@@ -173,11 +173,10 @@ export function PortalJobCard({ job, searchTerm }: PortalJobCardProps) {
           )}
         </div>
 
-        {searchTerm && (job as any).headline ? (
+        {searchTerm && (job as unknown as { headline?: string }).headline ? (
           <p
             className="text-sm text-gray-700 line-clamp-3 leading-relaxed [&_mark]:bg-yellow-200/70 [&_mark]:rounded [&_mark]:px-0.5"
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml((job as any).headline as string) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml((job as unknown as { headline?: string }).headline || '') }}
           />
         ) : job.description && (
           <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
@@ -197,8 +196,8 @@ export function PortalJobCard({ job, searchTerm }: PortalJobCardProps) {
         <footer className="flex items-center justify-between pt-1">
           <div className="text-sm font-semibold text-green-600 flex items-center gap-2">
             {formatSalary(job.salary_min ?? undefined, job.salary_max ?? undefined, job.currency ?? undefined)}
-            {searchTerm && (job as any).rank !== undefined && (
-              <span className="text-[10px] font-normal text-gray-400">rank {(job as any).rank.toFixed(3)}</span>
+            {searchTerm && (job as unknown as { rank?: number }).rank !== undefined && (
+              <span className="text-[10px] font-normal text-gray-400">rank {((job as unknown as { rank?: number }).rank || 0).toFixed(3)}</span>
             )}
           </div>
           <a href={job.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700">

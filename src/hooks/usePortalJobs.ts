@@ -93,7 +93,6 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
       if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
         const sp = new URLSearchParams(window.location.search)
         if (sp.get('debug') === '1') {
-          // eslint-disable-next-line no-console
             console.log('[usePortalJobs] raw payload', { payload, notice, supabaseEnv, filters: nextFilters })
         }
       }

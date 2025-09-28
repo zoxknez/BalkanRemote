@@ -30,12 +30,12 @@ describe('GET /api/portal-jobs/suggest', () => {
     }
     // companies call will reuse same chain; second promise resolves similarly
     let callCount = 0
-    vi.spyOn(mock as any, 'limit').mockImplementation(() => {
+    vi.spyOn(mock as unknown as { limit: () => Promise<{ data: unknown[]; error: null }> }, 'limit').mockImplementation(() => {
       callCount += 1
       if (callCount === 1) return Promise.resolve({ data: [ { title: 'React Developer' } ], error: null })
       return Promise.resolve({ data: [ { company: 'Reactive Labs' } ], error: null })
     })
-    vi.spyOn(supa, 'createSupabaseServer').mockReturnValue(mock as any)
+    vi.spyOn(supa, 'createSupabaseServer').mockReturnValue(mock as unknown as ReturnType<typeof supa.createSupabaseServer>)
     const url = new URL('http://localhost/api/portal-jobs/suggest?q=react')
     const req = new NextRequest(url.toString())
     const res = await suggest(req)

@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
         'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=60'
       }
     })
-  } catch (err: unknown) {
+  } catch (_err: unknown) {
     return NextResponse.json({ success: true, suggestions: [] }, { headers: { 'Cache-Control': 'public, max-age=5' } })
   }
 }

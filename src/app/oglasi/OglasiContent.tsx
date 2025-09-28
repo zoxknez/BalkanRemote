@@ -65,8 +65,15 @@ export default function OglasiContent() {
     })(),
     search: searchParams?.get('search') || undefined,
     category: searchParams?.get('category') || undefined,
-    contractType: searchParams?.getAll('contractType')?.length ? (searchParams.getAll('contractType') as any) : undefined,
-    experience: searchParams?.getAll('experience')?.length ? (searchParams.getAll('experience') as any) : undefined,
+    contractType: (() => {
+      const values = searchParams?.getAll('contractType') || []
+      const filtered = values.filter((v): v is PortalJobContractType => (CONTRACT_SET as Set<string>).has(v))
+      return filtered.length ? filtered : undefined
+    })(),
+    experience: (() => {
+      const values = searchParams?.getAll('experience') || []
+      return values.length ? values : undefined
+    })(),
     remote:
       searchParams?.get('remote') === 'false'
         ? undefined
@@ -80,7 +87,7 @@ export default function OglasiContent() {
 
   const orderedContractKeys: PortalJobContractType[] = useMemo(() => {
     const allKeys = Object.keys(contractFacets) as PortalJobContractType[]
-    const primary = CONTRACT_ORDER.filter(k => (contractFacets as any)[k])
+    const primary = CONTRACT_ORDER.filter((k) => Number((contractFacets as Record<string, number>)[k] || 0) > 0)
     const rest = allKeys.filter(k => !CONTRACT_SET.has(k))
     return [...primary, ...rest]
   }, [contractFacets])
@@ -183,7 +190,7 @@ export default function OglasiContent() {
       }
     }, 350)
     return () => { if (urlSyncRef.current) clearTimeout(urlSyncRef.current) }
-  }, [filters.search, filters.category, filters.contractType, filters.experience, filters.remote, filters.order, router, currentPage, limit])
+  }, [filters.search, filters.category, filters.contractType, filters.experience, filters.remote, filters.order, filters.offset, router, currentPage, limit])
 
   // Simple tab concept (client side)
   const [tab, setTab] = useState<'explore' | 'saved' | 'stats'>('explore')
@@ -218,10 +225,11 @@ export default function OglasiContent() {
 
   // Respond to bookmark events to keep KPI in sync
   useEffect(() => {
-    function handler(e: any) {
+    function handler(e: Event) {
+      const detail = (e as CustomEvent<{ id?: string; added?: boolean }>).detail
       setBookmarkCount(prev => {
         if (prev == null) return prev
-        const added = !!e.detail?.added
+        const added = !!detail?.added
         const next = prev + (added ? 1 : -1)
         return next < 0 ? 0 : next
       })
@@ -230,19 +238,23 @@ export default function OglasiContent() {
         updateFilters({ mode: 'bookmarks', offset: 0 })
       }
     }
-    window.addEventListener('job-bookmark-changed', handler as any)
-    return () => window.removeEventListener('job-bookmark-changed', handler as any)
+    window.addEventListener('job-bookmark-changed', handler as EventListener)
+    return () => window.removeEventListener('job-bookmark-changed', handler as EventListener)
   }, [tab, updateFilters])
 
   // Switch hook mode based on tab
-  const previousExploreFiltersRef = useRef<any | null>(null)
+  const previousExploreFiltersRef = useRef<ReturnType<typeof usePortalJobs> extends infer R
+    ? R extends { filters: infer F }
+      ? F
+      : Record<string, unknown>
+    : Record<string, unknown> | null>(null)
   useEffect(() => {
     if (tab === 'saved') {
       // store current explore filters to restore later
       previousExploreFiltersRef.current = filters
       updateFilters({ mode: 'bookmarks', offset: 0, limit: 200 })
-    } else if (tab === 'explore' && (filters as any).mode === 'bookmarks') {
-      const restore: any = previousExploreFiltersRef.current ? { ...previousExploreFiltersRef.current } : {}
+    } else if (tab === 'explore' && filters.mode === 'bookmarks') {
+      const restore = previousExploreFiltersRef.current ? { ...(previousExploreFiltersRef.current as Record<string, unknown>) } : {}
       delete restore.mode
       updateFilters({ ...restore, offset: 0, limit: 20, mode: 'all' })
     }
@@ -382,12 +394,13 @@ export default function OglasiContent() {
                     onBlur={() => { setTimeout(() => setShowSuggestions(false), 120) }}
                     className="w-full h-11 md:h-12 rounded-xl border border-gray-300 bg-white pl-12 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
                     aria-autocomplete="list"
-                    aria-expanded={showSuggestions}
+                    aria-controls={showSuggestions ? 'search-suggest-list' : undefined}
                     aria-activedescendant={highlightedIndex >= 0 ? `suggest-${highlightedIndex}` : undefined}
                   />
                   {showSuggestions && suggestions.length > 0 && (
                     <ul
                       role="listbox"
+                      id="search-suggest-list"
                       className="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg text-sm"
                     >
                       {suggestions.map((s, i) => {
@@ -423,7 +436,7 @@ export default function OglasiContent() {
                   <SelectWrapper label="Broj" value={String(limit)} onChange={(v) => updateFilters({ limit: parseInt(v, 10) || 6, offset: 0 })}>
                     {[6, 12, 24, 36].map(n => <option key={n} value={n}>{n}/str</option>)}
                   </SelectWrapper>
-                  <SelectWrapper label="Sort" value={filters.order || 'posted'} onChange={(v) => updateFilters({ order: v as any, offset: 0 })}>
+                  <SelectWrapper label="Sort" value={filters.order || 'posted'} onChange={(v) => updateFilters({ order: (v as 'posted' | 'created'), offset: 0 })}>
                     <option value="posted">Najnovije</option>
                     <option value="created">Dodato</option>
                   </SelectWrapper>
@@ -463,7 +476,7 @@ export default function OglasiContent() {
                             className={filterPillClass('contract', active)}
                           >
                             <span className="md:text-[12px]">{key}</span>
-                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{(contractFacets as any)[key]}</span>
+                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{(contractFacets as Record<string, number>)[key]}</span>
                           </button>
                         )
                       })}
@@ -683,10 +696,10 @@ export default function OglasiContent() {
                 ><ChevronLeft className="w-4 h-4" /></button>
                 <div className="flex items-center gap-1">
                   {paginationPages.map((p, i) => p === '…' ? (
-                    <span key={i} className="px-2 text-gray-400 select-none">…</span>
+                    <span key={`ellipsis-${i}`} className="px-2 text-gray-400 select-none">…</span>
                   ) : (
                     <button
-                      key={p}
+                      key={`page-${p}`}
                       onClick={() => updateFilters({ offset: (p - 1) * limit })}
                       aria-current={p === currentPage ? 'page' : undefined}
                       className={cn('min-w-[42px] h-9 px-3 rounded-full border text-xs font-medium transition', p === currentPage ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-600 shadow' : 'border-gray-300 bg-white/90 backdrop-blur hover:border-blue-400 hover:text-blue-700 shadow-sm')}
@@ -762,7 +775,14 @@ export default function OglasiContent() {
   )
 }
 
-function ActiveFilterChips({ filters, onRemove }: { filters: any; onRemove: (type: string, value?: string) => void }) {
+type ChipFilters = {
+  search?: string | null
+  contractType?: PortalJobContractType[]
+  experience?: string[]
+  category?: string | null
+  remote?: boolean
+}
+function ActiveFilterChips({ filters, onRemove }: { filters: ChipFilters; onRemove: (type: string, value?: string) => void }) {
   const chips: { key: string; label: string; type: string; value?: string }[] = []
   if (filters.search) chips.push({ key: 'search', label: `Pretraga: ${filters.search}`, type: 'search' })
   if (filters.contractType) (filters.contractType as string[]).forEach(ct => chips.push({ key: `ct-${ct}`, label: ct, type: 'contractType', value: ct }))

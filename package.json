@@ -20,6 +20,8 @@
     "db:reload-schema": "tsx scripts/reload-postgrest-schema.ts",
     "db:apply-sql": "tsx scripts/run-sql.ts",
     "db:notify-reload": "tsx scripts/notify-postgrest.ts"
+    ,
+    "ingest:official": "tsx scripts/run-official-ingest.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

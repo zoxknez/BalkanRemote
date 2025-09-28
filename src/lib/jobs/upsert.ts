@@ -14,6 +14,8 @@ export async function upsertJobs(jobs: NormalizedJob[]) {
     salary_min: j.salaryMin ?? null,
     salary_max: j.salaryMax ?? null,
     salary_currency: j.salaryCurrency ?? null,
+    salary_min_eur: j.salaryMinEur ?? null,
+    salary_max_eur: j.salaryMaxEur ?? null,
     posted_at: j.postedAt,
     apply_url: j.applyUrl,
     raw: j.raw ?? null,

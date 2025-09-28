@@ -9,6 +9,9 @@ export type NormalizedJob = {
   salaryMin?: number | null;
   salaryMax?: number | null;
   salaryCurrency?: string | null;
+  // EUR normalized (optional)
+  salaryMinEur?: number | null;
+  salaryMaxEur?: number | null;
   postedAt: string; // ISO
   applyUrl: string;
   raw?: unknown; // stored for traceability

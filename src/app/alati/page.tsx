@@ -251,6 +251,8 @@ function AlatiContent() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
+                  id="tools-search"
+                  name="tools-search"
                   type="text"
                   placeholder="Pretražite alate po nazivu ili funkcionalnosti..."
                   value={searchTerm}
@@ -263,6 +265,8 @@ function AlatiContent() {
             {/* Filters */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
               <select
+                id="tools-category"
+                name="tools-category"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent whitespace-nowrap"
@@ -275,6 +279,8 @@ function AlatiContent() {
               </select>
 
               <select
+                id="tools-pricing"
+                name="tools-pricing"
                 value={selectedPricing}
                 onChange={(e) => setSelectedPricing(e.target.value)}
                 className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent whitespace-nowrap"
@@ -287,6 +293,8 @@ function AlatiContent() {
               </select>
 
               <select
+                id="tools-sort"
+                name="tools-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'rating' | 'name')}
                 className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent whitespace-nowrap"

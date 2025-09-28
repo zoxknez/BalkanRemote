@@ -29,7 +29,7 @@ export function Header() {
       {/* Skip to content */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-[60] bg-blue-600 text-white px-3 py-2 rounded">Preskoči na sadržaj</a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-16 items-center gap-4 md:gap-6 md:grid md:grid-cols-[auto_1fr_auto]">
+  <div className="items-center gap-4 md:gap-6 md:grid md:grid-cols-[auto_1fr_auto] min-h-[4rem] py-2">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group flex-none">
             <span className="relative inline-flex">
@@ -49,7 +49,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav
-            className="hidden md:flex w-full min-w-0 items-center justify-center md:flex-wrap xl:flex-nowrap gap-1.5 xl:gap-2 overflow-hidden"
+            className="hidden md:flex w-full min-w-0 items-center justify-center md:flex-wrap gap-1.5 xl:gap-2"
             role="navigation"
             aria-label="Glavna navigacija"
           >
@@ -62,7 +62,7 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`group relative inline-flex items-center gap-1.5 md:whitespace-normal xl:whitespace-nowrap rounded-full border px-2.5 xl:px-3 py-1.5 text-[13px] font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                  className={`group relative inline-flex items-center gap-1.5 md:whitespace-normal xl:whitespace-nowrap rounded-full border px-2.5 xl:px-3 py-1.5 text-[13px] font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 max-w-[11rem] xl:max-w-none truncate ${
                     active
                       ? 'text-blue-700 border-blue-100'
                       : 'text-gray-600 border-transparent hover:border-blue-100 hover:text-blue-600'
@@ -76,14 +76,14 @@ export function Header() {
                     />
                   )}
                   <Icon className="w-3.5 h-3.5 xl:w-4 xl:h-4 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" />
-                  <span className="relative z-10 flex items-center gap-1">{item.name}</span>
+                  <span className="relative z-10 flex items-center gap-1 truncate">{item.name}</span>
                 </Link>
               )
             })}
           </nav>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3 flex-none pl-4 z-10">
+          <div className="hidden md:flex items-center gap-3 flex-none pl-4 shrink-0">
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"

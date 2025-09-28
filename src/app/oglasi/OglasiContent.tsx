@@ -358,6 +358,8 @@ export default function OglasiContent() {
                 <div className="relative flex-1 min-w-[240px]">
                   <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
+                    id="jobs-search"
+                    name="jobs-search"
                     type="text"
                     value={searchInput}
                     placeholder="Pretraga po nazivu ili kompaniji..."
@@ -433,10 +435,10 @@ export default function OglasiContent() {
 
                 {/* Controls */}
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
-                  <SelectWrapper label="Broj" value={String(limit)} onChange={(v) => updateFilters({ limit: parseInt(v, 10) || 6, offset: 0 })}>
+                  <SelectWrapper label="Broj" name="jobs-page-size" value={String(limit)} onChange={(v) => updateFilters({ limit: parseInt(v, 10) || 6, offset: 0 })}>
                     {[6, 12, 24, 36].map(n => <option key={n} value={n}>{n}/str</option>)}
                   </SelectWrapper>
-                  <SelectWrapper label="Sort" value={filters.order || 'posted'} onChange={(v) => updateFilters({ order: (v as 'posted' | 'created'), offset: 0 })}>
+                  <SelectWrapper label="Sort" name="jobs-sort" value={filters.order || 'posted'} onChange={(v) => updateFilters({ order: (v as 'posted' | 'created'), offset: 0 })}>
                     <option value="posted">Najnovije</option>
                     <option value="created">Dodato</option>
                   </SelectWrapper>
@@ -849,13 +851,17 @@ type SelectWrapperProps = {
   value: string
   onChange: (value: string) => void
   children: ReactNode
+  name?: string
+  id?: string
 }
 
-function SelectWrapper({ label, value, onChange, children }: SelectWrapperProps) {
+function SelectWrapper({ label, value, onChange, children, name, id }: SelectWrapperProps) {
   return (
     <label className="relative inline-flex items-center text-[10px] font-semibold uppercase tracking-wide text-gray-500">
       <span className="sr-only">{label}</span>
       <select
+        id={id || name}
+        name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="appearance-none rounded-xl border border-gray-300 bg-white/80 backdrop-blur px-3 pr-7 py-2 text-xs md:text-sm md:py-2.5 font-medium text-gray-700 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm"

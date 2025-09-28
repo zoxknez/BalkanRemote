@@ -1,7 +1,7 @@
 "use client";
 
 import { useJobs } from '@/lib/hooks/useJobs';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const COUNTRIES = ['', 'RS', 'HR', 'BA', 'SI', 'ME', 'MK', 'AL', 'RO', 'BG', 'HU', 'PL', 'DE', 'AT', 'CH', 'IT'];
 const LEVELS = ['intern','junior','mid','senior','lead','principal'] as const;
@@ -133,6 +133,35 @@ export default function OfficialJobsPage() {
         >
           Export CSV
         </a>
+        <button
+          className="rounded px-3 py-2 border"
+          onClick={async () => {
+            const name = prompt('Naziv pretrage (npr. "React Senior EU"):');
+            if (!name) return;
+            const payload = {
+              name,
+              params: {
+                q: filters.q ?? '',
+                country: filters.country ?? '',
+                remote: !!filters.remote,
+                sinceDays: filters.sinceDays ?? 30,
+                stack: filters.stack ?? [],
+                level: filters.level ?? [],
+                sort
+              }
+            };
+            const res = await fetch('/api/saved-searches', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!json.ok) alert('Greška: ' + (json.error || ''));
+            else alert('Sačuvano ✅');
+          }}
+        >
+          Sačuvaj pretragu
+        </button>
       </div>
 
       {error && (
@@ -140,6 +169,21 @@ export default function OfficialJobsPage() {
           {error}
         </div>
       )}
+
+      <SavedSearches onLoad={(p) => {
+        setFilters(f => ({
+          ...f,
+          q: p.q ?? '',
+          country: p.country ?? '',
+          remote: !!p.remote,
+          sinceDays: p.sinceDays ?? 30,
+          stack: Array.isArray(p.stack) ? p.stack : [],
+          level: Array.isArray(p.level) ? p.level : [],
+          page: 1,
+        }));
+        setSort(p.sort ?? 'posted_desc');
+        void refetch();
+      }} />
 
       <ul className="space-y-3">
         {items.map(j => (
@@ -188,4 +232,42 @@ function renderSalary(min?: number | null, max?: number | null, cur?: string | n
   const range = min && max && min !== max ? `${min}–${max}${unit}` : `${min ?? max}${unit}`;
   const eur = (minEur || maxEur) ? ` (€ ${minEur && maxEur && minEur !== maxEur ? `${minEur}–${maxEur}` : (minEur ?? maxEur)})` : '';
   return <span> • {range}{eur}</span>;
+}
+
+type Saved = { id: string; name: string; params: any; created_at: string };
+
+function SavedSearches({ onLoad }: { onLoad: (p: any) => void }) {
+  const [items, setItems] = useState<Saved[]>([]);
+  const [err, setErr] = useState<string|null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch('/api/saved-searches', { cache: 'no-store' });
+      if (res.status === 401) { setItems([]); return; }
+      const json = await res.json();
+      if (!json.ok) setErr(json.error || 'Error');
+      else setItems(json.items || []);
+    })();
+  }, []);
+
+  if (err) return null;
+  if (!items.length) return null;
+
+  return (
+    <div className="mt-3 text-sm">
+      <div className="mb-1 text-gray-600">Sačuvane pretrage:</div>
+      <div className="flex flex-wrap gap-2">
+        {items.map(s => (
+          <button
+            key={s.id}
+            className="border rounded px-2 py-1 hover:bg-gray-50"
+            onClick={() => onLoad(s.params)}
+            title={new Date(s.created_at).toLocaleString()}
+          >
+            {s.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }

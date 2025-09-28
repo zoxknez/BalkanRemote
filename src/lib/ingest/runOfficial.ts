@@ -8,6 +8,8 @@ import { getRatesToEUR, toEUR } from '@/lib/fx/batchRates';
 
 type Task = { id: string; run: () => Promise<NormalizedJob[]> };
 
+const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 const remotiveQueries = ['developer', 'engineer', 'designer', 'marketing'] as const;
 const remoteOkQueries = ['developer', 'engineer', 'devops', 'frontend', 'backend'] as const;
 const wwrCategories = ['programming', 'design', 'marketing'] as const;
@@ -102,5 +104,11 @@ export async function ingestOfficialFeeds() {
     )
   );
 
-  await Promise.allSettled(jobsPromises);
+  const results = await Promise.allSettled(jobsPromises);
+  results.forEach((r) => {
+    if (r.status === 'rejected') {
+      // Optionally log or track telemetry here
+      // console.warn('Task rejected in ingestOfficialFeeds', r.reason);
+    }
+  });
 }

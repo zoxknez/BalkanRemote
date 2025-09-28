@@ -13,6 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
       { src: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
+  { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   }
 }

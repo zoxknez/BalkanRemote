@@ -57,6 +57,16 @@ export default function PosloviContent() {
           <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">
             Pregled remote poslova, freelance platformi i direktorijuma kompanija prilagođen talentima sa Balkana.
           </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <Link href="/api/jobs/rss" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm ring-1 ring-white/20 hover:bg-white/20">
+              RSS
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+            <Link href="/api/jobs/feed.json" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm ring-1 ring-white/20 hover:bg-white/20">
+              JSON
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">

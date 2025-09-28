@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: '/tax-guide',
     images: [
       {
-        url: buildOgImageUrl('Balkan remote tax guide', 'Comparisons, calculators and official links'),
+        url: buildOgImageUrl('Balkan remote tax guide', 'Comparisons, calculators and official links') + '&theme=guide',
         width: 1200,
         height: 630,
         alt: 'Balkan remote tax guide',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Balkan remote tax guide | Remote Balkan',
     description: 'Calculators, comparisons and official links across the region.',
-    images: [buildOgImageUrl('Balkan remote tax guide')],
+    images: [buildOgImageUrl('Balkan remote tax guide') + '&theme=guide'],
   },
 }
 

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: '/poreski-vodic',
     images: [
       {
-        url: buildOgImageUrl('Poreski vodič za remote rad', 'Modeli oporezivanja i kalkulatori'),
+        url: buildOgImageUrl('Poreski vodič za remote rad', 'Modeli oporezivanja i kalkulatori') + '&theme=guide',
         width: 1200,
         height: 630,
         alt: 'Poreski vodič za remote rad na Balkanu',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
     description: 'Modeli oporezivanja, kalkulatori i zvanični linkovi.',
-    images: [buildOgImageUrl('Poreski vodič za remote rad')],
+    images: [buildOgImageUrl('Poreski vodič za remote rad') + '&theme=guide'],
   },
 };
 

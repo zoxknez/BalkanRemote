@@ -11,6 +11,10 @@ export const metadata: Metadata = {
     'Kurirana lista remote poslova, freelance platformi i direktorijuma kompanija prilagođena talentima sa Balkana.',
   alternates: {
     canonical: '/poslovi',
+    types: {
+      'application/rss+xml': '/api/jobs/rss',
+      'application/feed+json': '/api/jobs/feed.json',
+    },
   },
   openGraph: {
     title: 'Remote poslovi i prečice | Remote Balkan',
@@ -18,7 +22,7 @@ export const metadata: Metadata = {
     url: '/poslovi',
     images: [
       {
-        url: buildOgImageUrl('Remote poslovi i prečice', 'Agregirani oglasi i platforme'),
+        url: buildOgImageUrl('Remote poslovi i prečice', 'Agregirani oglasi i platforme') + '&theme=jobs',
         width: 1200,
         height: 630,
         alt: 'Remote poslovi i prečice',
@@ -30,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Remote poslovi i prečice | Remote Balkan',
     description: 'Aktuelni remote oglasi i platforme za talente sa Balkana.',
-    images: [buildOgImageUrl('Remote poslovi i prečice')],
+    images: [buildOgImageUrl('Remote poslovi i prečice') + '&theme=jobs'],
   },
 };
 

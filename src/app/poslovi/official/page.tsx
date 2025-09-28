@@ -313,7 +313,7 @@ export default function OfficialJobsPage() {
               const json = await res.json().catch(() => null);
               if (!json?.ok) alert('Greška: ' + (json?.error || ''));
               else alert('Sačuvano ✅');
-            } catch (e) {
+            } catch {
               alert('Greška pri čuvanju pretrage.');
             }
           }}

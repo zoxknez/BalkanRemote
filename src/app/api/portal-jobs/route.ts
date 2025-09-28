@@ -5,6 +5,7 @@ import { fetchPortalJobs } from '@/lib/job-portal-repository'
 import type { PortalJobContractType, ScraperSource } from '@/types/jobs'
 import { logger } from '@/lib/logger'
 import crypto from 'node:crypto'
+import { mockJobs } from '@/data/mock-data-new'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,25 +34,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
 
-    // Graceful fallback if Supabase credentials are not available (e.g., local dev without envs)
-    // We now also allow SUPABASE_URL (without NEXT_PUBLIC_) as a fallback to avoid silent empty data when only server vars are set.
-    const hasSupabaseCreds = Boolean((process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY)
-    if (!hasSupabaseCreds) {
-      const res = NextResponse.json({
-        success: true,
-        data: {
-          total: 0,
-          limit: 0,
-          offset: 0,
-          hasMore: false,
-          jobs: [],
-          facets: { contractType: {}, experienceLevel: {}, category: {} },
-        },
-      })
-      res.headers.set('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60')
-      res.headers.set('X-Notice', 'Supabase credentials missing; returning empty listings')
-      return res
-    }
+    // We'll parse filters first, then decide whether to use Supabase or a mock fallback.
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null
     if (rateLimit(ip)) {
@@ -92,6 +75,92 @@ export async function GET(request: NextRequest) {
     const contractType = parsed.data.contractType as PortalJobContractType[] | undefined
     const experienceLevel = parsed.data.experience
     const orderBy = parsed.data.order === 'created' ? 'created_at' : 'posted_at'
+
+    // Graceful fallback if Supabase credentials are not available (e.g., local dev without envs)
+    // We now also allow SUPABASE_URL (without NEXT_PUBLIC_) as a fallback to avoid silent empty data when only server vars are set.
+    const hasSupabaseCreds = Boolean((process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    if (!hasSupabaseCreds) {
+      // Filter and map mock jobs to the PortalJobRecord shape
+      const all = mockJobs.slice()
+      const q = (search || '').toLowerCase()
+      const filtered = all.filter(j => {
+        if (remote !== undefined && j.isRemote !== remote) return false
+        if (contractType && contractType.length > 0 && !contractType.includes(j.type as PortalJobContractType)) return false
+        if (category && j.category && j.category !== category) return false
+        if (experienceLevel && experienceLevel.length > 0 && j.experienceLevel && !experienceLevel.includes(j.experienceLevel)) return false
+        if (q && !(j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q))) return false
+        return true
+      })
+      filtered.sort((a, b) => {
+        const aTime = new Date(a.postedAt).getTime()
+        const bTime = new Date(b.postedAt).getTime()
+        return bTime - aTime
+      })
+      const total = filtered.length
+      const page = filtered.slice(offset, offset + limit)
+      const rows = page.map(j => ({
+        id: `mock-${j.id}`,
+        source_id: 'mock',
+        external_id: String(j.id),
+        title: j.title,
+        company: j.company,
+        company_logo: (j as { companyLogo?: string }).companyLogo || null,
+        location: j.location || null,
+        type: (j.type as PortalJobContractType) || null,
+        category: null,
+        description: j.description || null,
+        requirements: (j.requirements as string[] | undefined) || null,
+        benefits: (j.benefits as string[] | undefined) || null,
+        salary_min: (j as { salaryMin?: number }).salaryMin ?? null,
+        salary_max: (j as { salaryMax?: number }).salaryMax ?? null,
+        currency: (j as { currency?: string }).currency ?? null,
+        is_remote: !!j.isRemote,
+        remote_type: null,
+        experience_level: (j as { experienceLevel?: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' }).experienceLevel ?? null,
+        posted_at: new Date(j.postedAt).toISOString(),
+        deadline: null,
+        url: j.url,
+        source_url: null,
+        featured: !!(j as { featured?: boolean }).featured,
+        tags: (j as { tags?: string[] }).tags || [],
+        metadata: { fallback: true, categoryLabel: j.category || null },
+        created_at: new Date(j.postedAt).toISOString(),
+        updated_at: new Date(j.postedAt).toISOString(),
+      }))
+
+      // Facets based on the unfiltered mock set
+      const contractFacet: Record<string, number> = {}
+      const expFacet: Record<string, number> = {}
+      const catFacet: Record<string, number> = {}
+      for (const j of all) {
+        contractFacet[j.type] = (contractFacet[j.type] || 0) + 1
+        if (j.experienceLevel) expFacet[j.experienceLevel] = (expFacet[j.experienceLevel] || 0) + 1
+        if (j.category) catFacet[j.category] = (catFacet[j.category] || 0) + 1
+      }
+
+      // Summary
+      const now = Date.now()
+      const newToday = all.filter(j => (now - new Date(j.postedAt).getTime()) <= 24 * 60 * 60 * 1000).length
+      const totalRemote = all.filter(j => j.isRemote).length
+      const remotePct = all.length > 0 ? Math.round((totalRemote / all.length) * 1000) / 10 : null
+
+      const payload = {
+        success: true as const,
+        data: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + rows.length < total,
+          jobs: rows,
+          facets: { contractType: contractFacet, experienceLevel: expFacet, category: catFacet },
+          summary: { newToday, remotePct, totalRemote },
+        },
+      }
+      const res = NextResponse.json(payload)
+      res.headers.set('X-Notice', 'Using mock data (no Supabase credentials)')
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
 
     const { rows, total, globalFacets } = await fetchPortalJobs({
       limit,

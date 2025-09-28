@@ -27,6 +27,19 @@ export function slugify(text: string) {
     .replace(/ +/g, '-')
 }
 
+// Build absolute URL for scraping endpoints; supports absolute ep and {query}
+export function buildUrl(baseUrl: string, endpoint: string, query?: string): string {
+  const ep = endpoint.replace('{query}', encodeURIComponent(query ?? ''))
+  if (/^https?:\/\//i.test(ep)) return ep
+  try {
+    return new URL(ep, baseUrl).toString()
+  } catch {
+    // Fallback string concat if URL fails
+    const sep = baseUrl.endsWith('/') || ep.startsWith('/') ? '' : '/'
+    return `${baseUrl}${sep}${ep}`
+  }
+}
+
 // Copy utility with robust fallback (textarea + execCommand)
 export async function copyToClipboard(value: string): Promise<void> {
   // Prefer the modern Clipboard API

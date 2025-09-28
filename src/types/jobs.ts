@@ -139,14 +139,26 @@ export interface ScraperSource {
     applicationUrl: string;
     postedDate?: string;
   };
+  // Optional detail selectors when applicationUrl leads to internal detail page
+  detailSelectors?: {
+    description?: string;
+    salary?: string;
+    applyUrl?: string;
+  };
   searchTerms: string[];
   maxPages: number;
-  country: string[];
+  country: string[]; // legacy; prefer regions/countriesISO for new sources
+  regions?: ('GLOBAL'|'EU'|'CEE'|'BALKAN')[];
+  countriesISO?: string[]; // ISO-3166 alpha-2 codes e.g., 'RS','HR'
   tags: string[];
   lastScraped?: Date;
   lastSuccessfulScrape?: Date;
   errorCount: number;
   successRate: number;
+  // Compliance / integration hints
+  requiresOfficialApi?: boolean;
+  hasRss?: boolean;
+  jsonApi?: string | null;
 }
 
 export interface ScrapeJob {

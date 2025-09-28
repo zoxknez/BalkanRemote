@@ -1,5 +1,12 @@
 import React, { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { AlertCircle, CheckCircle2, RefreshCcw, Clock } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Oglasi – status izvora',
+  description: 'Status kolekcije izvora za agregirane oglase',
+  robots: { index: false, follow: false },
+}
 
 async function fetchStats() {
   // Relative fetch radi u server komponenti i koristi internu Next fetch logiku + revalidate.

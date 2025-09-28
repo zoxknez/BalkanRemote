@@ -18,7 +18,7 @@ const parser = new Parser({
 const FEED_TIMEOUT_MS = parseInt(process.env.FEED_TIMEOUT_MS || '15000', 10)
 const FEED_MAX_RETRIES = parseInt(process.env.FEED_MAX_RETRIES || '2', 10)
 
-const MAX_ITEMS_PER_FEED = 50
+const MAX_ITEMS_PER_FEED = 50 // hard ceiling
 const JOB_MAX_AGE_DAYS = parseInt(process.env.JOB_MAX_AGE_DAYS || '45', 10)
 const JOB_MAX_AGE_MS = JOB_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
 
@@ -110,9 +110,14 @@ async function collectFeed(sourceId: string): Promise<PortalJobInsert[]> {
   logger.info(`🔄 Fetching ${source.name}`)
 
   if (source.type === 'rss') {
+    if (source.active === false) {
+      logger.info(`⏭️  Skipping inactive source ${source.name}`)
+      return []
+    }
     const xml = await loadFeedXML(source.url)
     const feed = await parser.parseString(xml)
-    const items = (feed.items ?? []).slice(0, MAX_ITEMS_PER_FEED)
+    const perSourceCap = Math.min(source.maxItems ?? 30, MAX_ITEMS_PER_FEED)
+    const items = (feed.items ?? []).slice(0, perSourceCap)
 
     return items
       .map((item): PortalJobInsert | null => {

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { buildOgImageUrl } from '@/lib/site'
 import { Sparkles, Users, Shield, Clock } from 'lucide-react'
 
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
@@ -47,14 +48,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Remote Balkan nalog',
     description: 'Jedinstveno mesto za vaše kalkulatore, alate i resurse iz Remote Balkan zajednice.',
-    url: 'https://remotebalkan.com/nalog',
+    url: '/nalog',
     siteName: 'Remote Balkan',
     type: 'website',
+    images: [
+      { url: buildOgImageUrl('Nalog | Remote Balkan', 'Prijava i registracija'), width: 1200, height: 630 },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Nalog | Remote Balkan',
     description: 'Prijava i registracija za ekskluzivne Remote Balkan alatke i sadržaj.',
+    images: [buildOgImageUrl('Nalog | Remote Balkan')],
   },
 }
 

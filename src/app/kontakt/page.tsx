@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { ClipboardButton } from '@/components/clipboard-button'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
+import { buildOgImageUrl } from '@/lib/site'
 
 const CONTACT_EMAIL = 'zoxknez@hotmail.com'
 const MAILTO_SUBJECT = 'Remote Balkan — upit'
@@ -76,14 +77,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Kontakt | Remote Balkan',
     description: 'Najbrže do Remote Balkan tima preko javnih kanala, emaila ili GitHub diskusija.',
-    url: 'https://remotebalkan.com/kontakt',
+    url: '/kontakt',
     siteName: 'Remote Balkan',
     type: 'website',
+    images: [
+      { url: buildOgImageUrl('Kontakt', 'Javni kanali i email'), width: 1200, height: 630, alt: 'Kontakt' },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Kontakt | Remote Balkan',
     description: 'Najbrži načini da se javite Remote Balkan zajednici.',
+    images: [buildOgImageUrl('Kontakt')],
   },
 }
 

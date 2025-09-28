@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import TaxGuideClient from './Client';
+import { buildOgImageUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
@@ -14,7 +15,15 @@ export const metadata: Metadata = {
     title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
     description:
       'Detaljan poreski vodič: modeli oporezivanja, kalkulatori i zvanični linkovi za freelancere i kompanije iz regiona.',
-    url: 'https://remotebalkan.com/poreski-vodic',
+    url: '/poreski-vodic',
+    images: [
+      {
+        url: buildOgImageUrl('Poreski vodič za remote rad', 'Modeli oporezivanja i kalkulatori'),
+        width: 1200,
+        height: 630,
+        alt: 'Poreski vodič za remote rad na Balkanu',
+      },
+    ],
   },
 };
 

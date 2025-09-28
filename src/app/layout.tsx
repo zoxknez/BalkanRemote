@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { buildOgImageUrl } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -51,7 +52,12 @@ export const metadata: Metadata = {
     locale: 'sr_RS',
     type: 'website',
     images: [
-      { url: '/globe.svg', width: 1200, height: 630, alt: 'Remote Balkan' }
+      {
+        url: buildOgImageUrl('Remote Balkan – Career Hub', 'Sve za remote rad iz Balkana'),
+        width: 1200,
+        height: 630,
+        alt: 'Remote Balkan – Career Hub',
+      },
     ],
   },
   twitter: {
@@ -59,7 +65,7 @@ export const metadata: Metadata = {
     title: 'Remote Balkan – Career Hub',
     description:
       'Praktični alati i vodiči za remote rad iz Balkana: porezi, banke, kompanije i resursi.',
-    images: ['/globe.svg']
+    images: [buildOgImageUrl('Remote Balkan – Career Hub')]
   },
 };
 

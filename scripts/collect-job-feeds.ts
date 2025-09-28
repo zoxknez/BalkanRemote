@@ -1,7 +1,5 @@
 #!/usr/bin/env tsx
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('./env.cjs')
+import './env'
 import Parser from 'rss-parser'
 import crypto from 'node:crypto'
 

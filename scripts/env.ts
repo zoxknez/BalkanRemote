@@ -15,5 +15,5 @@ if (fs.existsSync(localPath)) {
   config({ path: defaultPath, ...optionsBase })
 } else {
   // Fallback to default behavior (will do nothing if no .env present)
-  config(optionsBase as any)
+  config(optionsBase)
 }

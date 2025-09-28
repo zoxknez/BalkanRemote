@@ -1,8 +1,7 @@
 #!/usr/bin/env tsx
 
 // Load environment (same loader used by other scripts)
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('./env.cjs');
+import './env';
 
 async function main() {
   const t0 = Date.now();

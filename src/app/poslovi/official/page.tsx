@@ -1,6 +1,7 @@
 "use client";
 
 import { useJobs } from '@/lib/hooks/useJobs';
+import type { JobRow } from '@/lib/hooks/useJobs';
 import { useEffect, useMemo, useState } from 'react';
 
 const COUNTRIES = ['', 'RS', 'HR', 'BA', 'SI', 'ME', 'MK', 'AL', 'RO', 'BG', 'HU', 'PL', 'DE', 'AT', 'CH', 'IT'];
@@ -14,13 +15,21 @@ export default function OfficialJobsPage() {
 
   const [sort, setSort] = useState<SortKey>('posted_desc');
 
-  const canPrev = page > 1 && !loading;
-  const canNext = !loading && page * pageSize < total;
+  // Local state to support fetching and showing all pages
+  const [allItems, setAllItems] = useState<JobRow[] | null>(null);
+  const [loadingAll, setLoadingAll] = useState(false);
+
+  // Simple keys to satisfy exhaustive-deps without complex expressions
+  const stackKey = useMemo(() => (filters.stack ?? []).join(','), [filters.stack]);
+  const levelKey = useMemo(() => (filters.level ?? []).join(','), [filters.level]);
+
+  const canPrev = !allItems && page > 1 && !loading;
+  const canNext = !allItems && !loading && page * pageSize < total;
 
   const csvHref = useMemo(() => {
     const p = new URLSearchParams({
-      page: String(page),
-      pageSize: String(pageSize),
+      page: String(allItems ? 1 : page),
+      pageSize: String(allItems ? Math.min(Math.max(total, 50), 1000) : pageSize),
       sinceDays: String(filters.sinceDays ?? 30),
     });
     if (filters.q) p.set('q', filters.q);
@@ -30,7 +39,58 @@ export default function OfficialJobsPage() {
     if (filters.level?.length) p.set('level', filters.level.join(','));
     if (sort) p.set('sort', sort);
     return `/api/jobs/export?${p.toString()}`;
-  }, [filters, sort, page, pageSize]);
+  }, [filters, sort, page, pageSize, allItems, total]);
+
+  // Reset aggregated results if filters or sorting change
+  useEffect(() => {
+    setAllItems(null);
+  }, [filters.q, filters.country, filters.remote, filters.sinceDays, sort, stackKey, levelKey]);
+
+  async function loadAllJobs() {
+    try {
+      setLoadingAll(true);
+      setAllItems(null);
+      const acc: JobRow[] = [];
+      const pageSizeAll = 50; // API max
+      let currentPage = 1;
+      let totalCount = 0;
+      // Helper to build params based on current filters/sort
+      const buildParams = (p: number) => {
+        const sp = new URLSearchParams();
+        if (filters.q) sp.set('q', filters.q);
+        if (filters.country) sp.set('country', (filters.country || '').toUpperCase());
+        if (filters.remote) sp.set('remote', 'true');
+        sp.set('page', String(p));
+        sp.set('pageSize', String(pageSizeAll));
+        sp.set('sinceDays', String(filters.sinceDays ?? 30));
+        if (filters.stack?.length) sp.set('stack', filters.stack.join(','));
+        if (filters.level?.length) sp.set('level', filters.level.join(','));
+        if (sort) sp.set('sort', sort);
+        return sp.toString();
+      };
+      // First page to determine total
+      {
+        const res = await fetch(`/api/jobs?${buildParams(currentPage)}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (!json?.ok) throw new Error(json?.error || 'Neuspešan upit');
+        acc.push(...(json.items as JobRow[]));
+        totalCount = Number(json.total || 0);
+      }
+      const pages = Math.ceil(totalCount / pageSizeAll);
+      for (currentPage = 2; currentPage <= pages; currentPage++) {
+        const res = await fetch(`/api/jobs?${buildParams(currentPage)}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (!json?.ok) throw new Error(json?.error || `Greška pri učitavanju stranice ${currentPage}`);
+        acc.push(...(json.items as JobRow[]));
+      }
+      setAllItems(acc);
+    } catch (e) {
+      console.error('Load all failed:', e);
+      alert('Greška pri učitavanju svih oglasa. Pokušaj ponovo.');
+    } finally {
+      setLoadingAll(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -94,6 +154,23 @@ export default function OfficialJobsPage() {
             );
           })}
         </div>
+                    <button
+                      className="rounded px-3 py-2 border"
+                      onClick={loadAllJobs}
+                      disabled={loadingAll || loading}
+                      title="Učitaj sve stranice (može potrajati)"
+                    >
+                      {loadingAll ? 'Učitavam sve…' : 'Učitaj sve'}
+                    </button>
+                    {allItems && (
+                      <button
+                        className="rounded px-3 py-2 border"
+                        onClick={() => setAllItems(null)}
+                        title="Vrati se na paginaciju"
+                      >
+                        Vrati paginaciju
+                      </button>
+                    )}
         <label className="inline-flex items-center gap-2 text-sm">
           Od poslednjih:
           <select
@@ -170,7 +247,7 @@ export default function OfficialJobsPage() {
         </div>
       )}
 
-      <SavedSearches onLoad={(p) => {
+      <SavedSearches onLoad={(p: SavedSearchParams) => {
         setFilters(f => ({
           ...f,
           q: p.q ?? '',
@@ -178,15 +255,18 @@ export default function OfficialJobsPage() {
           remote: !!p.remote,
           sinceDays: p.sinceDays ?? 30,
           stack: Array.isArray(p.stack) ? p.stack : [],
-          level: Array.isArray(p.level) ? p.level : [],
+          level: Array.isArray(p.level) ? (p.level as (typeof LEVELS[number])[]) : [],
           page: 1,
         }));
-        setSort(p.sort ?? 'posted_desc');
+        setSort((p.sort as SortKey) ?? 'posted_desc');
         void refetch();
       }} />
 
+      <div className="text-sm text-gray-600 mb-2">
+        Prikazano: { (allItems ? allItems.length : items.length) } / { total }
+      </div>
       <ul className="space-y-3">
-        {items.map(j => (
+        {(allItems ?? items).map(j => (
           <li key={j.stable_key} className="border rounded p-4">
             <div className="text-xs text-gray-500">{j.source_name}</div>
             <a href={j.apply_url} target="_blank" rel="noreferrer" className="text-lg font-medium hover:underline">
@@ -203,6 +283,7 @@ export default function OfficialJobsPage() {
         ))}
       </ul>
 
+      {!allItems && (
       <div className="flex items-center gap-3 mt-6">
         <button
           className="border rounded px-3 py-1"
@@ -222,6 +303,7 @@ export default function OfficialJobsPage() {
           Sledeća →
         </button>
       </div>
+      )}
     </div>
   );
 }
@@ -234,9 +316,18 @@ function renderSalary(min?: number | null, max?: number | null, cur?: string | n
   return <span> • {range}{eur}</span>;
 }
 
-type Saved = { id: string; name: string; params: any; created_at: string };
+type SavedSearchParams = {
+  q?: string;
+  country?: string;
+  remote?: boolean;
+  sinceDays?: number;
+  stack?: string[];
+  level?: string[];
+  sort?: string;
+};
+type Saved = { id: string; name: string; params: SavedSearchParams; created_at: string };
 
-function SavedSearches({ onLoad }: { onLoad: (p: any) => void }) {
+function SavedSearches({ onLoad }: { onLoad: (p: SavedSearchParams) => void }) {
   const [items, setItems] = useState<Saved[]>([]);
   const [err, setErr] = useState<string|null>(null);
 

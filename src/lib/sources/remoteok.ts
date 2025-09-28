@@ -16,7 +16,12 @@ type RemoteOkJob = {
 };
 
 export async function fetchRemoteOK(query = 'developer'): Promise<NormalizedJob[]> {
-  const res = await fetch('https://remoteok.com/api', { headers: { accept: 'application/json' } });
+  const res = await fetch('https://remoteok.com/api', {
+    headers: {
+      accept: 'application/json',
+      'user-agent': 'Mozilla/5.0 (compatible; RemoteBalkanBot/1.0; +https://remotebalkan.com)'
+    }
+  });
   if (!res.ok) throw new Error(`RemoteOK ${res.status}`);
   const arr = (await res.json()) as unknown;
   const jobs = (Array.isArray(arr) ? (arr as RemoteOkJob[]) : []).filter((x: RemoteOkJob) => x && x.id && x.position);

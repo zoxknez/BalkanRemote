@@ -19,7 +19,12 @@ type RemotiveResponse = {
 
 export async function fetchRemotive(query = 'developer'): Promise<NormalizedJob[]> {
   const url = `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}&limit=200`;
-  const res = await fetch(url, { headers: { accept: 'application/json' } });
+  const res = await fetch(url, {
+    headers: {
+      accept: 'application/json',
+      'user-agent': 'Mozilla/5.0 (compatible; RemoteBalkanBot/1.0; +https://remotebalkan.com)'
+    }
+  });
   if (!res.ok) throw new Error(`Remotive ${res.status}`);
   const json = (await res.json()) as RemotiveResponse;
   return (json.jobs || []).map((j: RemotiveJob) => {

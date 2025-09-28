@@ -1,15 +1,13 @@
 #!/usr/bin/env tsx
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('./env.cjs');
-
-import { ingestOfficialFeeds } from '../src/lib/ingest/runOfficial';
+import './env';
 
 async function main() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Missing Supabase env: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
   }
   console.log('[prod-ingest] Triggering official feeds ingestion against production Supabase…');
-  await ingestOfficialFeeds();
+  const mod = await import('../src/lib/ingest/runOfficial');
+  await mod.ingestOfficialFeeds();
   console.log('[prod-ingest] Done');
 }
 

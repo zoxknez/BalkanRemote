@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 // Load env vars
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('./env.cjs')
+import './env'
 import fs from 'node:fs'
 import path from 'node:path'
-// Use dynamic require to avoid type dependency
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Client } = require('pg') as { Client: new (config: unknown) => any }
+// Minimal client typing to avoid bringing in @types/pg for scripts
+type PgClient = { connect: () => Promise<void>; query: (sql: string) => Promise<unknown>; end: () => Promise<void> }
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Client } = require('pg') as { Client: new (config: unknown) => PgClient }
 
 async function main() {
   const dbUrl = process.env.SUPABASE_DB_URL

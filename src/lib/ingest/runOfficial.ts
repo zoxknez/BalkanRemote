@@ -8,8 +8,6 @@ import { getRatesToEUR, toEUR } from '@/lib/fx/batchRates';
 
 type Task = { id: string; run: () => Promise<NormalizedJob[]> };
 
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
 const remotiveQueries = ['developer', 'engineer', 'designer', 'marketing'] as const;
 const remoteOkQueries = ['developer', 'engineer', 'devops', 'frontend', 'backend'] as const;
 const wwrCategories = ['programming', 'design', 'marketing'] as const;
@@ -35,7 +33,8 @@ export async function ingestOfficialFeeds() {
     let active = 0;
     const next = () => {
       active--;
-      q.shift()?.();
+      const fn = q.shift();
+      if (fn) fn();
     };
     return <T>(fn: () => Promise<T>) =>
       new Promise<T>((resolve, reject) => {
@@ -51,22 +50,26 @@ export async function ingestOfficialFeeds() {
               next();
             });
         };
-        active < concurrency ? run() : q.push(run);
+        if (active < concurrency) {
+          run();
+        } else {
+          q.push(run);
+        }
       });
   }
 
   async function withRetry<T>(op: () => Promise<T>, tries = 3) {
-    let err: unknown;
+    let lastErr: unknown;
     for (let i = 0; i < tries; i++) {
       try {
         return await op();
       } catch (e) {
-        err = e;
+        lastErr = e;
         // exponential backoff: 0.5s, 1s, 2s
         await new Promise((r) => setTimeout(r, 500 * 2 ** i));
       }
     }
-    throw err;
+    throw lastErr;
   }
 
   const limit = pLimit(3);
@@ -99,8 +102,20 @@ export async function ingestOfficialFeeds() {
           console.log(`[ingest] ${t.id} inserted=${res.inserted} in ${Date.now() - t0}ms`);
           return res.inserted;
         } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : String(e);
+          let msg = 'Unknown error';
+          let stack: string | undefined;
+          try {
+            if (e instanceof Error) {
+              msg = `${e.name}: ${e.message}`;
+              stack = e.stack;
+            } else if (typeof e === 'object') {
+              msg = JSON.stringify(e);
+            } else {
+              msg = String(e);
+            }
+          } catch {}
           console.error(`[ingest] ${t.id} ERROR: ${msg}`);
+          if (stack) console.error(stack);
           await finishRun(run.id, { status: 'error', errors: 1, notes: msg });
           return 0;
         }

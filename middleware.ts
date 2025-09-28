@@ -37,9 +37,11 @@ export function middleware(req: NextRequest) {
       return Number.isFinite(v) && v > 0 ? v : 60
     })()
 
-    type RL = { c: number; reset: number }
-    const store = (globalThis as any).__RB_RATE_LIMIT as Map<string, RL> || new Map<string, RL>()
-    ;(globalThis as any).__RB_RATE_LIMIT = store
+  type RL = { c: number; reset: number }
+  // augment globalThis with a typed cache property
+  const g = globalThis as unknown as { __RB_RATE_LIMIT?: Map<string, RL> }
+  const store: Map<string, RL> = g.__RB_RATE_LIMIT ?? new Map<string, RL>()
+  g.__RB_RATE_LIMIT = store
 
     const now = Date.now()
     const key = `${clientIp}:${pathname}`

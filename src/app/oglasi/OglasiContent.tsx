@@ -74,6 +74,7 @@ export default function OglasiContent() {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Agregirani oglasi (testni tab)</h1>
             <p className="text-center text-blue-100 text-lg max-w-3xl mx-auto">Eksperimentalni prikaz najnovijih remote / EU‑timezone poslova iz više izvora. Podaci se osvežavaju jednom dnevno.</p>
+            <p className="text-center text-blue-100 text-xs max-w-2xl mx-auto mt-2 opacity-90">Napomena: u lokalnom okruženju bez Supabase varijabli prikazaće se prazna lista radi razvoja UI-a. Na produkciji će prikazivati sveže oglase iz baze.</p>
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20"><Layers className="w-4 h-4" /> {total} oglasa</div>
               {jobs.length>0 && activeFilterCount>0 && (
@@ -107,6 +108,15 @@ export default function OglasiContent() {
             />
           </div>
           <div className="flex gap-2">
+            <select
+              aria-label="Sortiraj"
+              value={filters.order || 'posted'}
+              onChange={(e) => updateFilters({ order: e.target.value as 'posted' | 'created', offset: 0 })}
+              className="rounded-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:border-blue-300"
+            >
+              <option value="posted">Najnovije objave</option>
+              <option value="created">Najskorije dodato</option>
+            </select>
             <button
               onClick={() => resetFilters()}
               className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700"
@@ -190,6 +200,12 @@ export default function OglasiContent() {
         {error && (
           <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             Greška pri učitavanju oglasa: {error}
+            <div className="mt-3">
+              <button
+                onClick={() => updateFilters({ offset: 0 })}
+                className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-white px-4 py-2 text-xs font-medium text-red-700 hover:border-red-400"
+              >Pokušaj ponovo</button>
+            </div>
           </div>
         )}
 
@@ -199,7 +215,15 @@ export default function OglasiContent() {
             <PortalJobCard key={job.id} job={job} />
           ))}
           {loading && jobs.length === 0 && Array.from({ length: 6 }).map((_,i) => (
-            <div key={i} className="animate-pulse h-60 rounded-xl border border-gray-200 bg-gray-50" />
+            <div key={i} className="animate-pulse h-60 rounded-xl border border-gray-200 bg-gray-50">
+              <div className="h-8 bg-gray-200/60 rounded-t-xl" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="h-3 bg-gray-200 rounded w-5/6" />
+                <div className="h-3 bg-gray-200 rounded w-3/5" />
+              </div>
+            </div>
           ))}
         </div>
 

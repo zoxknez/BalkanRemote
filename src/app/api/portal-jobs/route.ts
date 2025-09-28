@@ -44,6 +44,25 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
 
+    // Graceful fallback if Supabase credentials are not available (e.g., local dev without envs)
+    const hasSupabaseCreds = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    if (!hasSupabaseCreds) {
+      const res = NextResponse.json({
+        success: true,
+        data: {
+          total: 0,
+          limit: 0,
+          offset: 0,
+          hasMore: false,
+          jobs: [],
+          facets: { contractType: {}, experienceLevel: {}, category: {} },
+        },
+      })
+      res.headers.set('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60')
+      res.headers.set('X-Notice', 'Supabase credentials missing; returning empty listings')
+      return res
+    }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null
     if (rateLimit(ip)) {
       return NextResponse.json({ success: false, error: 'Rate limit exceeded' }, { status: 429, headers: {
@@ -59,6 +78,9 @@ export async function GET(request: NextRequest) {
     const experienceLevel = parseList(searchParams.getAll('experience'))
     const search = searchParams.get('search') || undefined
 
+    const orderParam = (searchParams.get('order') || '').toLowerCase()
+    const orderBy = orderParam === 'created' ? 'created_at' : 'posted_at'
+
     const { rows, total, globalFacets } = await fetchPortalJobs({
       limit,
       offset,
@@ -67,6 +89,7 @@ export async function GET(request: NextRequest) {
       category: category ?? null,
       experienceLevel,
       search,
+      orderBy,
       withGlobalFacets: true,
     })
 

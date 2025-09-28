@@ -11,6 +11,7 @@ export interface PortalJobFilters {
   category?: string | null
   experience?: string[]
   search?: string | null
+  order?: 'posted' | 'created'
 }
 
 export interface PortalJobFacets {

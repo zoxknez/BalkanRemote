@@ -22,6 +22,19 @@ do $$ begin
   end if;
 end $$;
 
+-- Utility: function to reload PostgREST schema cache (callable via RPC)
+create or replace function public.reload_postgrest_schema()
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  perform pg_notify('pgrst', 'reload schema');
+end;
+$$;
+
+grant execute on function public.reload_postgrest_schema() to authenticated, anon, service_role;
+
 -- Insert: only authenticated users can insert
 do $$ begin
   if not exists (
@@ -66,6 +79,39 @@ create unique index if not exists job_portal_unique_source_external on public.jo
 create index if not exists job_portal_posted_at_idx on public.job_portal_listings (posted_at desc);
 create index if not exists job_portal_category_idx on public.job_portal_listings (category);
 create index if not exists job_portal_type_idx on public.job_portal_listings (type);
+create index if not exists job_portal_experience_level_idx on public.job_portal_listings (experience_level);
+create index if not exists job_portal_is_remote_idx on public.job_portal_listings (is_remote);
+
+-- Full‑text search support (safe to re-run)
+alter table public.job_portal_listings add column if not exists search_vector tsvector;
+
+-- Improved weighted full-text vector (A highest → D lowest):
+--  A: title
+--  B: company name + tags
+--  C: category
+--  D: description (long form)
+-- We keep 'simple' config for now; can be switched to 'english' or custom dictionary later.
+-- Prefix matching is enabled in queries via ':*' (handled application-side when building plainto_tsquery/phraseto_tsquery if needed).
+
+create or replace function public.job_portal_listings_update_search_vector()
+returns trigger as $$
+begin
+  new.search_vector :=
+    setweight(to_tsvector('simple', coalesce(new.title, '')), 'A') ||
+    setweight(to_tsvector('simple', coalesce(new.company,'') || ' ' || coalesce(array_to_string(new.tags,' '),'')), 'B') ||
+    setweight(to_tsvector('simple', coalesce(new.category,'')), 'C') ||
+    setweight(to_tsvector('simple', coalesce(new.description,'')), 'D');
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists job_portal_listings_search_vector on public.job_portal_listings;
+create trigger job_portal_listings_search_vector
+before insert or update on public.job_portal_listings
+for each row execute function public.job_portal_listings_update_search_vector();
+
+create index if not exists job_portal_listings_search_idx on public.job_portal_listings using GIN (search_vector);
+create index if not exists job_portal_listings_tags_gin on public.job_portal_listings using GIN (tags);
 
 -- trigger to keep updated_at fresh
 create or replace function public.set_job_portal_updated_at()
@@ -90,6 +136,16 @@ do $$ begin
     create policy "read job portal listings" on public.job_portal_listings for select using (true);
   end if;
 end $$;
+
+-- Grants: make sure roles have the right privileges
+-- Allow API roles to use the public schema
+grant usage on schema public to anon, authenticated, service_role;
+
+-- Public read of listings (via anon/authenticated) through RLS policy above
+grant select on table public.job_portal_listings to anon, authenticated;
+
+-- Service role full DML on listings (bypasses RLS)
+grant select, insert, update, delete on table public.job_portal_listings to service_role;
 
 -- Feed stats (observability for job feed sync)
 create table if not exists public.job_feed_stats (
@@ -126,3 +182,45 @@ do $$ begin
     create policy "read job feed stats" on public.job_feed_stats for select using (true);
   end if;
 end $$;
+
+-- Service role full DML on feed stats (observability writes from server)
+grant select, insert, update, delete on table public.job_feed_stats to service_role;
+
+-- User bookmarks for listings
+create table if not exists public.job_portal_bookmarks (
+  user_id uuid not null,
+  listing_id uuid not null references public.job_portal_listings(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, listing_id)
+);
+
+alter table public.job_portal_bookmarks enable row level security;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where schemaname='public' and tablename='job_portal_bookmarks' and policyname='select own bookmarks'
+  ) then
+    create policy "select own bookmarks" on public.job_portal_bookmarks for select using (auth.uid() = user_id);
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where schemaname='public' and tablename='job_portal_bookmarks' and policyname='insert own bookmarks'
+  ) then
+    create policy "insert own bookmarks" on public.job_portal_bookmarks for insert with check (auth.uid() = user_id);
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where schemaname='public' and tablename='job_portal_bookmarks' and policyname='delete own bookmarks'
+  ) then
+    create policy "delete own bookmarks" on public.job_portal_bookmarks for delete using (auth.uid() = user_id);
+  end if;
+end $$;
+
+grant select, insert, delete on table public.job_portal_bookmarks to authenticated;
+grant select on table public.job_portal_bookmarks to service_role; -- service_role inherently bypasses RLS
+
+create index if not exists job_portal_bookmarks_listing_idx on public.job_portal_bookmarks(listing_id);

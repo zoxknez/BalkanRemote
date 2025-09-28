@@ -12,6 +12,7 @@ export interface PortalJobFilters {
   experience?: string[]
   search?: string | null
   order?: 'posted' | 'created'
+  mode?: 'all' | 'bookmarks'
 }
 
 export interface PortalJobFacets {
@@ -29,6 +30,7 @@ interface PortalJobResponse {
     hasMore: boolean
     jobs: PortalJobRecord[]
     facets: PortalJobFacets
+    summary?: { newToday: number; remotePct: number | null; totalRemote: number | null; sources?: { id: string; name: string; count: number; pct: number }[] }
   }
   error?: string
 }
@@ -40,6 +42,8 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<PortalJobFilters>(initialFilters)
   const [facets, setFacets] = useState<PortalJobFacets | null>(null)
+  const [meta, setMeta] = useState<{ notice?: string; supabaseEnv?: string } | null>(null)
+  const [summary, setSummary] = useState<{ newToday: number; remotePct: number | null; totalRemote: number | null; sources?: { id: string; name: string; count: number; pct: number }[] } | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
   const initialFiltersRef = useRef(initialFilters)
@@ -75,17 +79,29 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     const query = params.toString()
 
     try {
-      const response = await fetch(`/api/portal-jobs${query ? `?${query}` : ''}`, { signal: controller.signal })
+  const basePath = nextFilters.mode === 'bookmarks' ? '/api/portal-jobs/bookmarks' : '/api/portal-jobs'
+  const response = await fetch(`${basePath}${query ? `?${query}` : ''}`, { signal: controller.signal })
+  const notice = response.headers.get('x-notice') || undefined
+  const supabaseEnv = response.headers.get('x-supabase-env') || undefined
+  setMeta({ notice, supabaseEnv })
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`)
       }
 
       const payload = (await response.json()) as PortalJobResponse
+      // Dev debug logging – only when ?debug=1 present in URL (cheap check) and not in production
+      if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        const sp = new URLSearchParams(window.location.search)
+        if (sp.get('debug') === '1') {
+          // eslint-disable-next-line no-console
+            console.log('[usePortalJobs] raw payload', { payload, notice, supabaseEnv, filters: nextFilters })
+        }
+      }
       if (!payload.success) {
         throw new Error(payload.error || 'Failed to fetch portal jobs')
       }
 
-      const shouldAppend = append || ((nextFilters.offset ?? 0) > 0)
+  const shouldAppend = nextFilters.mode === 'bookmarks' ? false : (append || ((nextFilters.offset ?? 0) > 0))
 
       setJobs((prev) => {
         if (!shouldAppend) {
@@ -95,8 +111,9 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
         const incoming = payload.data.jobs.filter((job) => !existingIds.has(job.id))
         return [...prev, ...incoming]
       })
-      setTotal(payload.data.total)
-      setFacets(payload.data.facets)
+  setTotal(payload.data.total)
+  if (payload.data.summary) setSummary(payload.data.summary)
+  if ('facets' in payload.data) setFacets(payload.data.facets)
     } catch (err) {
       if ((err as DOMException)?.name === 'AbortError') {
         return
@@ -106,6 +123,8 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
       setJobs([])
       setFacets(null)
       setTotal(0)
+      setMeta(null)
+  setSummary(null)
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null
@@ -160,6 +179,8 @@ export const usePortalJobs = (initialFilters: PortalJobFilters = {}) => {
     error,
     filters,
     facets,
+    meta,
+  summary,
     updateFilters,
     resetFilters,
     refreshJobs,

@@ -1,4 +1,6 @@
 #!/usr/bin/env tsx
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require('./env.cjs')
 import { createSupabaseServer } from '@/lib/supabaseClient'
 import { logger } from '@/lib/logger'
 

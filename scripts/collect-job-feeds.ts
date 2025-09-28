@@ -1,5 +1,7 @@
 #!/usr/bin/env tsx
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require('./env.cjs')
 import Parser from 'rss-parser'
 import crypto from 'node:crypto'
 
@@ -17,6 +19,7 @@ const parser = new Parser({
 
 const FEED_TIMEOUT_MS = parseInt(process.env.FEED_TIMEOUT_MS || '15000', 10)
 const FEED_MAX_RETRIES = parseInt(process.env.FEED_MAX_RETRIES || '2', 10)
+const SKIP_STATS = (process.env.JOB_SYNC_SKIP_STATS === '1' || process.env.JOB_SYNC_SKIP_STATS === 'true')
 
 const MAX_ITEMS_PER_FEED = 50 // hard ceiling
 const JOB_MAX_AGE_DAYS = parseInt(process.env.JOB_MAX_AGE_DAYS || '45', 10)
@@ -232,8 +235,10 @@ async function main() {
         dedupe_ratio: dedupeRatio,
         dryRun,
       })
-      if (!dryRun) {
+      if (!dryRun && !SKIP_STATS) {
         await markFeedSuccess(source.id)
+      } else if (!dryRun && SKIP_STATS) {
+        logger.event('job_source_stats_skipped', { source: source.id })
       }
     } catch (error) {
       const message = (error as Error).message
@@ -247,8 +252,10 @@ async function main() {
         error: message,
       }
       logger.event('job_source_error', { source: source.id, error: message, dryRun })
-      if (!dryRun) {
+      if (!dryRun && !SKIP_STATS) {
         try { await markFeedError(source.id, message) } catch (err) { logger.event('job_source_error_mark_failed', { source: source.id, error: (err as Error).message }) }
+      } else if (!dryRun && SKIP_STATS) {
+        logger.event('job_source_stats_skipped', { source: source.id, reason: 'SKIP_STATS' })
       }
     }
   }

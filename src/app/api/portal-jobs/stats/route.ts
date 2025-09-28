@@ -38,10 +38,10 @@ export async function GET(request: Request) {
   const res = NextResponse.json({ success: true, data })
   res.headers.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=120')
   return res
-  } catch (err) {
-    const anyErr = err as any
-    const message = typeof anyErr?.message === 'string' ? anyErr.message : String(err)
-    const code = typeof anyErr?.code === 'string' ? anyErr.code : undefined
+  } catch (err: unknown) {
+    const errObj = err as { message?: string; code?: string } | undefined
+    const message = typeof errObj?.message === 'string' ? errObj.message : String(err)
+    const code = typeof errObj?.code === 'string' ? errObj.code : undefined
     // Graceful fallback if table doesn't exist yet
     if (
       /relation\s+"?job_feed_stats"?\s+does not exist/i.test(message)

@@ -11,6 +11,8 @@ describe('GET /api/portal-jobs/stats (token gated)', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     process.env.FEED_STATS_TOKEN = 'secret-token'
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key'
   })
 
   afterEach(() => {

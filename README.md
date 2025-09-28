@@ -111,6 +111,23 @@ Specifično za agregator oglasa (`Oglasi`):
  - (opciono) `FEED_STATS_TOKEN` – ako je postavljen, `/api/portal-jobs/stats` zahteva header `Authorization: Bearer <token>` i UI strana prosleđuje token server-side; bez ovoga endpoint je public.
  - `SUPABASE_SERVICE_ROLE_KEY` – neophodan za API/stats stranicu (server-only). Ako nije postavljen, `/oglasi/stats` prikazuje poruku i API vraća grešku.
 
+### Caching & Ranking (Portal Jobs)
+
+- Conditional GET: `/api/portal-jobs` uključuje `ETag` header. Klijent koji pošalje `If-None-Match` sa istom vrednošću dobija `304 Not Modified` (štedi bandwidth / CPU).
+- Cache-Control: `public, s-maxage=60, stale-while-revalidate=120` (Vercel/CDN i SWR strategija). Edge/CDN headeri duplirani (`CDN-Cache-Control`, `Vercel-CDN-Cache-Control`).
+- Dodatni dijagnostički headeri:
+  - `X-Total` – ukupan broj rezultata (pre paginacije)
+  - `X-Result-Count` – broj rezultata u ovoj strani
+  - `X-Supabase-Env` – koji Supabase env varovi su prisutni (`pub-url,srv-url,service`)
+  - `X-Cache-Hit: etag` – vraća se samo uz 304
+- Full-text search (FTS): aktivira se kada `FTS_RANK=1` u env + korisnik ukuca > 2 karaktera.
+  - Weighted vektor (setweight): A=title, B=company+tags, C=category, D=description.
+  - Prefix matching: tokeni se konvertuju u `to_tsquery('simple', 'token:* & drugi:*')` – omogućava pronalaženje početaka reči.
+  - Rank: `ts_rank_cd` – kombinacija pokrivenosti i pozicije; fallback redosled `posted_at`.
+  - Snippet: `ts_headline` sa `<mark>` wrapper-ima (sanitizovano pre prikaza).
+- Fallback (kad FTS isključen ili termini kratki): koristi se `ILIKE` OR (title/company/location/tags).
+- Sledeća evolucija (ideje): trigram fuzzy fallback, varijabilno ponderisanje preko custom config-a, session-based reordering (klik signali).
+
 ## 📚 Korisne skripte (package.json)
 
 - `dev` – start dev server (Turbopack)

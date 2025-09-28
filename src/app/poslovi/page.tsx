@@ -3,6 +3,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 
 import PosloviContent from './PosloviContent';
+import { buildOgImageUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Remote poslovi i prečice | Remote Balkan',
@@ -15,12 +16,21 @@ export const metadata: Metadata = {
     title: 'Remote poslovi i prečice | Remote Balkan',
     description: 'Aktuelni remote oglasi i platforme za talente sa Balkana.',
     url: '/poslovi',
+    images: [
+      {
+        url: buildOgImageUrl('Remote poslovi i prečice', 'Agregirani oglasi i platforme'),
+        width: 1200,
+        height: 630,
+        alt: 'Remote poslovi i prečice',
+      },
+    ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Remote poslovi i prečice | Remote Balkan',
     description: 'Aktuelni remote oglasi i platforme za talente sa Balkana.',
+    images: [buildOgImageUrl('Remote poslovi i prečice')],
   },
 };
 

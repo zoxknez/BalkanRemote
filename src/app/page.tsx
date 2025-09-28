@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import HomeView from './(home)/HomeView';
+import { buildOgImageUrl, getPublicBaseUrl } from '@/lib/site';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://remotebalkan.com';
-const ogImage = `${siteUrl}/api/og?title=Remote%20Balkan`;
+const siteUrl = getPublicBaseUrl();
+const ogImage = buildOgImageUrl('Remote Balkan', 'Career hub za remote profesionalce sa Balkana');
 
 export const metadata: Metadata = {
   title: 'Remote Balkan | Career hub za remote profesionalce sa Balkana',

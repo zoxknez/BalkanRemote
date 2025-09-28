@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 
 import SavetiContent from './SavetiContent'
+import { buildOgImageUrl } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Remote work saveti za Balkan | Remote Balkan',
@@ -14,7 +15,15 @@ export const metadata: Metadata = {
     title: 'Remote work saveti za Balkan | Remote Balkan',
     description:
       'Praktični saveti, checkliste i resursi za freelancere i remote profesionalce iz Srbije, Hrvatske, BiH, CG i regiona.',
-    url: 'https://remotebalkan.com/saveti',
+    url: '/saveti',
+    images: [
+      {
+        url: buildOgImageUrl('Remote work saveti za Balkan', 'Checkliste, alati i pravni koraci'),
+        width: 1200,
+        height: 630,
+        alt: 'Remote work saveti za Balkan',
+      },
+    ],
   },
 }
 

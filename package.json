@@ -18,7 +18,8 @@
     "prune:jobs": "tsx scripts/prune-old-portal-jobs.ts",
     "db:check": "tsx scripts/check-supabase-tables.ts",
     "db:reload-schema": "tsx scripts/reload-postgrest-schema.ts",
-    "db:apply-sql": "tsx scripts/run-sql.ts",
+  "db:apply-sql": "tsx scripts/run-sql.ts",
+  "db:migrate": "tsx scripts/apply-migrations.ts",
     "db:notify-reload": "tsx scripts/notify-postgrest.ts",
     "ingest:official": "tsx scripts/run-official-ingest.ts"
   },

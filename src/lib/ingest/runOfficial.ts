@@ -96,19 +96,23 @@ export async function ingestOfficialFeeds() {
             mean_latency_ms: Date.now() - t0,
             meta: { expanded: true },
           });
+          console.log(`[ingest] ${t.id} inserted=${res.inserted} in ${Date.now() - t0}ms`);
+          return res.inserted;
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : String(e);
+          console.error(`[ingest] ${t.id} ERROR: ${msg}`);
           await finishRun(run.id, { status: 'error', errors: 1, notes: msg });
+          return 0;
         }
       })
     )
   );
 
   const results = await Promise.allSettled(jobsPromises);
+  let totalInserted = 0;
   results.forEach((r) => {
-    if (r.status === 'rejected') {
-      // Optionally log or track telemetry here
-      // console.warn('Task rejected in ingestOfficialFeeds', r.reason);
-    }
+    if (r.status === 'fulfilled') totalInserted += r.value ?? 0;
+    else console.error('[ingest] Task rejected:', r.reason);
   });
+  console.log(`[ingest] Summary: inserted total=${totalInserted}`);
 }

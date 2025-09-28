@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// Admin page should be dynamic to avoid build-time prerender hitting internal APIs
+export const dynamic = 'force-dynamic'
+
 async function fetchStats() {
   // Relative fetch radi u server komponenti i koristi internu Next fetch logiku + revalidate.
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {

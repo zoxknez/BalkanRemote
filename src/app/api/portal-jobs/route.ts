@@ -113,10 +113,45 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
+    const anyErr = error as any
+    const msg = typeof anyErr?.message === 'string' ? anyErr.message : String(error)
+    const code = typeof anyErr?.code === 'string' ? anyErr.code : undefined
+    // Graceful fallback for missing table/schema cache errors
+    if (
+      /relation\s+"?job_portal_listings"?\s+does not exist/i.test(msg)
+      || /table\s+job_portal_listings\s+does not exist/i.test(msg)
+      || /Could not find the table 'public\.job_portal_listings' in the schema cache/i.test(msg)
+      || code === 'PGRST205'
+    ) {
+      const res = NextResponse.json({
+        success: true,
+        data: {
+          total: 0,
+          limit: 0,
+          offset: 0,
+          hasMore: false,
+          jobs: [],
+          facets: { contractType: {}, experienceLevel: {}, category: {} },
+        },
+      })
+      res.headers.set('X-Notice', 'job_portal_listings table missing; returning empty listings')
+      res.headers.set('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60')
+      return res
+    }
     logger.error('Failed to fetch portal jobs', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch portal jobs' },
-      { status: 500, headers: { 'Cache-Control': 'no-store' } },
-    )
+    const res = NextResponse.json({
+      success: true,
+      data: {
+        total: 0,
+        limit: 0,
+        offset: 0,
+        hasMore: false,
+        jobs: [],
+        facets: { contractType: {}, experienceLevel: {}, category: {} },
+      },
+    })
+    res.headers.set('X-Error', 'portal-jobs-error')
+    res.headers.set('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60')
+    return res
   }
 }

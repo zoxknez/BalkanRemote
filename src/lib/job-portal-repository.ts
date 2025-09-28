@@ -117,6 +117,11 @@ export async function fetchPortalJobs(params: {
   const { data, error, count } = await query
 
   if (error) {
+    const msg = error.message || ''
+    // Graceful fallback if table doesn't exist yet
+    if (/relation\s+"?job_portal_listings"?\s+does not exist/i.test(msg) || /table\s+job_portal_listings\s+does not exist/i.test(msg)) {
+      return { rows: [], total: 0, ...(withGlobalFacets ? { globalFacets: { contractType: {}, experienceLevel: {}, category: {} } } : {}) }
+    }
     throw new Error(`Failed to fetch job portal listings: ${error.message}`)
   }
 

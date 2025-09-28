@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 const publicBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
-  || (typeof process !== 'undefined' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://remotebalkan.com');
+  || (typeof process !== 'undefined' && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.balkan-remote.com');
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicBaseUrl),

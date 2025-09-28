@@ -10,6 +10,12 @@
   },
   "redirects": [
     {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "balkan-remote.com" }],
+      "destination": "https://www.balkan-remote.com/:path*",
+      "permanent": true
+    },
+    {
       "source": "/tax-guide",
       "destination": "/poreski-vodic",
       "permanent": true

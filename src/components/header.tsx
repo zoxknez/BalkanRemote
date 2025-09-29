@@ -95,17 +95,11 @@ export function Header() {
       </a>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* grid: [side auto side] gde su side kolone JEDNAKE (po state-u) */}
-        <div
-          className="items-center gap-4 md:gap-6 md:grid min-h-[4rem] py-2"
-          style={{
-            gridTemplateColumns: sidePx
-              ? `minmax(${sidePx}px,1fr) auto minmax(${sidePx}px,1fr)`
-              : undefined, // na prvi SSR fallback, odmah se ažurira u effect-u
-          }}
-        >
+        {/* FLEX: [left nav right] - simetrično centrirano */}
+  <div className="items-center min-h-[4rem] py-2 md:flex md:gap-0 md:justify-between">
+          // ...existing code...
           {/* LEVO (logo) */}
-          <div ref={leftRef} className="hidden md:flex items-center justify-self-start">
+          <div ref={leftRef} className="hidden md:flex items-center flex-none">
             <Link href="/" className="flex items-center gap-3 group">
               <span className="relative inline-flex">
                 <span
@@ -125,9 +119,9 @@ export function Header() {
             </Link>
           </div>
 
-          {/* NAV (uvek tačno u centru) */}
+          {/* NAV (centar) */}
           <nav
-            className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 flex-wrap xl:flex-nowrap justify-self-center"
+            className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 flex-wrap xl:flex-nowrap mx-auto"
             role="navigation"
             aria-label="Glavna navigacija"
           >
@@ -171,7 +165,8 @@ export function Header() {
           </nav>
 
           {/* DESNO (CTA) */}
-          <div ref={rightRef} className="hidden md:flex items-center gap-3 justify-self-end">
+          <div ref={rightRef} className="hidden md:flex items-center gap-3 flex-none">
+          // ...existing code...
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"

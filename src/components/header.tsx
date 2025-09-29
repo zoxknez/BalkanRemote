@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -68,8 +68,8 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* FLEX: [left nav right] - simetrično centrirano */}
   <div className="items-center min-h-[4rem] py-2 md:flex md:gap-0 md:justify-between">
-          // ...existing code...
-    {/* LEVO (logo) */}
+          {/* ...existing code... */}
+  {/* LEVO (logo) */}
           <div ref={leftRef} className="hidden md:flex items-center flex-none">
             <Link href="/" className="flex items-center gap-3 group">
               <span className="relative inline-flex">

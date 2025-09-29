@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -25,13 +25,13 @@ type NavItem = {
   name: string;
   short?: string; // kraći label za uže širine (opciono)
   href: string;
-  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   match?: string;
 };
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const navigation: NavItem[] = [
     { name: "Početna", short: "Početna", href: "/", icon: Home },
@@ -47,6 +47,43 @@ export function Header() {
     { name: "Registracija", short: "Registruj se", href: "/nalog?view=register", match: "/nalog", icon: UserPlus },
   ];
 
+  // --- centriranje: izmeri širinu leve/desne zone i izjednači ih ---
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const [sidePx, setSidePx] = useState(0);
+
+  const updateSides = () => {
+    const l = leftRef.current?.offsetWidth ?? 0;
+    const r = rightRef.current?.offsetWidth ?? 0;
+    setSidePx(Math.max(l, r));
+  };
+
+  // koristimo layout effect da prvi render ne "trepne" pogrešno
+  useLayoutEffect(() => {
+    updateSides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    updateSides();
+    const onResize = () => updateSides();
+
+    // reaktivno na promene sadržaja (CTA/tekst/logo)
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(updateSides);
+      if (leftRef.current) ro.observe(leftRef.current);
+      if (rightRef.current) ro.observe(rightRef.current);
+    }
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      ro?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       {/* Skip to content */}
@@ -58,30 +95,39 @@ export function Header() {
       </a>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="items-center gap-4 md:gap-6 md:grid md:grid-cols-[auto_1fr_auto] min-h-[4rem] py-2">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group flex-none">
-            <span className="relative inline-flex">
-              <span
-                aria-hidden
-                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm transition duration-300 group-hover:opacity-95"
-              />
-              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">
-                RB
+        {/* grid: [side auto side] gde su side kolone JEDNAKE (po state-u) */}
+        <div
+          className="items-center gap-4 md:gap-6 md:grid min-h-[4rem] py-2"
+          style={{
+            gridTemplateColumns: sidePx
+              ? `minmax(${sidePx}px,1fr) auto minmax(${sidePx}px,1fr)`
+              : undefined, // na prvi SSR fallback, odmah se ažurira u effect-u
+          }}
+        >
+          {/* LEVO (logo) */}
+          <div ref={leftRef} className="hidden md:flex items-center justify-self-start">
+            <Link href="/" className="flex items-center gap-3 group">
+              <span className="relative inline-flex">
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm transition duration-300 group-hover:opacity-95"
+                />
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">
+                  RB
+                </span>
               </span>
-            </span>
-            <span className="flex items-baseline gap-1 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-700">
-              <span>Remote</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
-                Balkan
+              <span className="flex items-baseline gap-1 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-700">
+                <span>Remote</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
+                  Balkan
+                </span>
               </span>
-            </span>
-          </Link>
+            </Link>
+          </div>
 
-          {/* Desktop Navigation */}
+          {/* NAV (uvek tačno u centru) */}
           <nav
-            // ⬇️ Dozvoli prelamanje (2 reda) ispod xl; na xl zadrži jedan red
-            className="hidden md:flex w-full items-center justify-center gap-1.5 xl:gap-2 flex-wrap xl:flex-nowrap"
+            className="hidden md:flex items-center justify-center gap-1.5 xl:gap-2 flex-wrap xl:flex-nowrap justify-self-center"
             role="navigation"
             aria-label="Glavna navigacija"
           >
@@ -94,10 +140,9 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  // ⬇️ dozvoli shrink ali ne ispod razumnog minimuma
                   className={`group relative inline-flex items-center gap-1 rounded-full border px-2 py-1
-                              text-[11px] md:text-xs font-semibold transition-all duration-200 shrink
-                              min-w-[6.5rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+                              text-[11px] md:text-xs font-semibold transition-all duration-200
+                              shrink min-w-[6.5rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
                                 active
                                   ? "text-blue-700 border-blue-100"
                                   : "text-gray-700 border-transparent hover:border-blue-100 hover:text-blue-600"
@@ -111,15 +156,11 @@ export function Header() {
                       transition={{ type: "spring", bounce: 0.25, duration: 0.4 }}
                     />
                   )}
-
-                  {/* Ikonica ne sme da se sabija */}
                   <Icon
                     className="w-4 h-4 shrink-0 relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5"
                     strokeWidth={2}
                     aria-hidden
                   />
-
-                  {/* Tekst: truncate uz normalne max širine; na xl pun naziv */}
                   <span className="relative z-10 truncate max-w-[8.5rem] sm:max-w-[10rem] xl:max-w-none">
                     <span className="hidden xl:inline">{item.name}</span>
                     <span className="xl:hidden">{item.short ?? item.name}</span>
@@ -129,8 +170,8 @@ export function Header() {
             })}
           </nav>
 
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3 flex-none pl-4 shrink-0">
+          {/* DESNO (CTA) */}
+          <div ref={rightRef} className="hidden md:flex items-center gap-3 justify-self-end">
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
@@ -149,32 +190,45 @@ export function Header() {
             </a>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden ml-auto">
-            <motion.button
-              onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-              aria-label={isOpen ? "Zatvori meni" : "Otvori meni"}
-              aria-expanded={isOpen}
-              aria-controls="mobile-nav"
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="relative flex h-9 w-9 items-center justify-center">
-                {!isOpen && <span className="absolute inset-0 rounded-full bg-blue-500/30 animate-ping" aria-hidden />}
-                <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/40">
-                  {isOpen ? <X className="w-5 h-5" aria-hidden /> : <Menu className="w-5 h-5" aria-hidden />}
+          {/* MOBILE: logo + burger (ispod md se slažu normalno) */}
+          <div className="md:hidden flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3 group">
+              <span className="relative inline-flex">
+                <span aria-hidden className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm" />
+                <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-base font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">
+                  RB
                 </span>
               </span>
-              <span className={`text-xs font-semibold uppercase tracking-wide ${isOpen ? "text-blue-600" : "text-gray-700"}`}>
-                Meni
-                {!isOpen && <span className="ml-2 inline-flex h-2 w-2 animate-pulse rounded-full bg-rose-500/80" aria-hidden />}
+              <span className="text-base font-bold text-gray-900">
+                Remote <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Balkan</span>
               </span>
-            </motion.button>
+            </Link>
+
+            <div className="ml-auto">
+              <motion.button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                aria-label={isOpen ? "Zatvori meni" : "Otvori meni"}
+                aria-expanded={isOpen}
+                aria-controls="mobile-nav"
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="relative flex h-9 w-9 items-center justify-center">
+                  {!isOpen && <span className="absolute inset-0 rounded-full bg-blue-500/30 animate-ping" aria-hidden />}
+                  <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/40">
+                    {isOpen ? <X className="w-5 h-5" aria-hidden /> : <Menu className="w-5 h-5" aria-hidden />}
+                  </span>
+                </span>
+                <span className={`text-xs font-semibold uppercase tracking-wide ${isOpen ? "text-blue-600" : "text-gray-700"}`}>
+                  Meni
+                </span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* MOBILE NAV */}
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}

@@ -50,39 +50,10 @@ export function Header() {
   // --- centriranje: izmeri širinu leve/desne zone i izjednači ih ---
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
-  const [sidePx, setSidePx] = useState(0);
-
-  const updateSides = () => {
-    const l = leftRef.current?.offsetWidth ?? 0;
-    const r = rightRef.current?.offsetWidth ?? 0;
-    setSidePx(Math.max(l, r));
-  };
+  // ...existing code...
 
   // koristimo layout effect da prvi render ne "trepne" pogrešno
-  useLayoutEffect(() => {
-    updateSides();
   // ...existing code...
-  }, []);
-
-  useEffect(() => {
-    updateSides();
-    const onResize = () => updateSides();
-
-    // reaktivno na promene sadržaja (CTA/tekst/logo)
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(updateSides);
-      if (leftRef.current) ro.observe(leftRef.current);
-      if (rightRef.current) ro.observe(rightRef.current);
-    }
-
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      ro?.disconnect();
-    };
-  // ...existing code...
-  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -98,7 +69,7 @@ export function Header() {
         {/* FLEX: [left nav right] - simetrično centrirano */}
   <div className="items-center min-h-[4rem] py-2 md:flex md:gap-0 md:justify-between">
           // ...existing code...
-          {/* LEVO (logo) */}
+    {/* LEVO (logo) */}
           <div ref={leftRef} className="hidden md:flex items-center flex-none">
             <Link href="/" className="flex items-center gap-3 group">
               <span className="relative inline-flex">
@@ -166,7 +137,7 @@ export function Header() {
 
           {/* DESNO (CTA) */}
           <div ref={rightRef} className="hidden md:flex items-center gap-3 flex-none">
-          // ...existing code...
+          {/* ...existing code... */}
             <Link
               href="/poslovi"
               className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"

@@ -61,7 +61,7 @@ export function Header() {
   // koristimo layout effect da prvi render ne "trepne" pogrešno
   useLayoutEffect(() => {
     updateSides();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ...existing code...
   }, []);
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export function Header() {
       window.removeEventListener("resize", onResize);
       ro?.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ...existing code...
   }, []);
 
   return (

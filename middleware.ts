@@ -119,8 +119,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow any /api/scraper/* when a valid webhook secret is provided (bypass Basic Auth if enabled)
-  if (pathname.startsWith('/api/scraper')) {
+  // Allow any /api/* when a valid webhook secret is provided (bypass Basic Auth if enabled).
+  // This lets us trigger protected operations from alternate API paths if needed.
+  if (pathname.startsWith('/api/')) {
     const expected = (process.env.SCRAPER_WEBHOOK_SECRET || '').trim()
     const provided = (req.headers.get('x-webhook-secret') || req.nextUrl.searchParams.get('secret') || '').trim()
     if (expected && provided && expected === provided) {

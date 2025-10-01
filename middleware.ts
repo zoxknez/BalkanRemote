@@ -24,6 +24,15 @@ export function middleware(req: NextRequest) {
   // Config via env: RATE_LIMIT_MAX (default 60/min), RATE_LIMIT_WINDOW_SEC (default 60s)
   // Special lower cap for /api/scraper/* via RATE_LIMIT_SCRAPER_MAX (default 10/min)
   if (!isIpAllowed && pathname.startsWith('/api')) {
+    // Exempt /api/scraper/run when a valid webhook secret is provided (supports header or query param)
+    if (pathname === '/api/scraper/run') {
+      const expected = (process.env.SCRAPER_WEBHOOK_SECRET || '').trim()
+      const provided = (req.headers.get('x-webhook-secret') || req.nextUrl.searchParams.get('secret') || '').trim()
+      if (expected && provided && expected === provided) {
+        return NextResponse.next()
+      }
+    }
+
     const max = (() => {
       if (pathname.startsWith('/api/scraper')) {
         const v = parseInt(process.env.RATE_LIMIT_SCRAPER_MAX || '', 10)
@@ -108,6 +117,15 @@ export function middleware(req: NextRequest) {
       if (basic) return basic
     }
     return NextResponse.next()
+  }
+
+  // Allow /api/scraper/run when a valid webhook secret is provided (bypass Basic Auth if enabled)
+  if (pathname === '/api/scraper/run') {
+    const expected = (process.env.SCRAPER_WEBHOOK_SECRET || '').trim()
+    const provided = (req.headers.get('x-webhook-secret') || req.nextUrl.searchParams.get('secret') || '').trim()
+    if (expected && provided && expected === provided) {
+      return NextResponse.next()
+    }
   }
 
   // For all other matched routes, enforce Basic Auth if enabled

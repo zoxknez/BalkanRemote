@@ -82,6 +82,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const analyticsEnabled = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === 'true'
+  const speedInsightsEnabled = process.env.NEXT_PUBLIC_ENABLE_VERCEL_SPEED_INSIGHTS === 'true'
   return (
     <html lang="sr">
       <body className={`${inter.variable} font-sans antialiased`}>
@@ -101,8 +103,8 @@ export default function RootLayout({
         <main className="min-h-screen" id="main-content">
           {children}
         </main>
-        <Analytics />
-        <SpeedInsights />
+        {analyticsEnabled && <Analytics />}
+        {speedInsightsEnabled && <SpeedInsights />}
         <Footer />
       </body>
     </html>

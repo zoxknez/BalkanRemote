@@ -31,6 +31,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Optional protection: require a shared secret when configured
+    const expected = (process.env.SCRAPER_WEBHOOK_SECRET || '').trim()
+    if (expected) {
+      const provided = (req.headers.get('x-webhook-secret') || new URL(req.url).searchParams.get('secret') || '').trim()
+      if (!provided || provided !== expected) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const url = new URL(req.url)
     const sourceId = url.searchParams.get('sourceId') || undefined
 

@@ -1,0 +1,14 @@
+### Manual scraper run (local)
+### Replace <secret>
+POST http://localhost:3000/api/scraper/run
+X-Webhook-Secret: <secret>
+
+### Manual scraper run (production - all sources)
+### Replace <secret> and domain if needed
+POST https://www.balkan-remote.com/api/scraper/run
+X-Webhook-Secret: <secret>
+
+### Manual scraper run for a single source (production)
+### Replace <secret> and sourceId
+POST https://www.balkan-remote.com/api/scraper/run?sourceId=remoteok
+X-Webhook-Secret: <secret>

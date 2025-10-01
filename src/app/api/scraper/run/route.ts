@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jobScraperEngine } from '@/lib/job-scraper-engine'
 import { logger } from '@/lib/logger'
+import { ensureScrapedTable } from '@/lib/ensure-scraped-table'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,10 +18,12 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url)
     const sourceId = url.searchParams.get('sourceId') || undefined
     if (sourceId) {
+      await ensureScrapedTable().catch(() => {})
       const job = await jobScraperEngine.manualScrapeSource(sourceId)
       if (!job) return NextResponse.json({ success: false, error: 'Source not found' }, { status: 404 })
       return NextResponse.json({ success: true, data: job })
     }
+    await ensureScrapedTable().catch(() => {})
     await jobScraperEngine.scrapeAllSources()
     return NextResponse.json({ success: true, message: 'Scrape started for all active sources' })
   } catch (error) {
@@ -44,11 +47,13 @@ export async function POST(req: NextRequest) {
     const sourceId = url.searchParams.get('sourceId') || undefined
 
     if (sourceId) {
+      await ensureScrapedTable().catch(() => {})
       const job = await jobScraperEngine.manualScrapeSource(sourceId)
       if (!job) return NextResponse.json({ success: false, error: 'Source not found' }, { status: 404 })
       return NextResponse.json({ success: true, data: job })
     }
 
+    await ensureScrapedTable().catch(() => {})
     await jobScraperEngine.scrapeAllSources()
     return NextResponse.json({ success: true, message: 'Scrape started for all active sources' })
   } catch (error) {

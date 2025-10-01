@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import {
   ExternalLink,
   Linkedin,
@@ -42,6 +43,7 @@ function OutLink({ href, label, sub }: OutLinkProps) {
 }
 
 export default function PosloviContent() {
+  useEffect(() => { /* zadržan kao stub – nema scraped preview ovde */ }, [])
 
   return (
     <div className="min-h-screen bg-white">
@@ -59,23 +61,25 @@ export default function PosloviContent() {
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
             <Link href="/api/jobs/rss" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm ring-1 ring-white/20 hover:bg-white/20">
-              RSS
+              RSS (portal)
               <ExternalLink className="w-3 h-3" />
             </Link>
             <Link href="/api/jobs/feed.json" className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm ring-1 ring-white/20 hover:bg-white/20">
-              JSON
+              JSON (portal)
               <ExternalLink className="w-3 h-3" />
             </Link>
+            {/* Scraped feedovi i prikaz su premešteni u /oglasi */}
           </div>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Scraped preview uklonjen – centralizovano u /oglasi */}
 
         {/* Sections */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* LinkedIn */}
-            <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <section id="jobs" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 ring-1 ring-blue-600/20">
                   <Linkedin className="w-5 h-5" />

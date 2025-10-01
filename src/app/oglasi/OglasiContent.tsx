@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { usePortalJobs } from '@/hooks/usePortalJobs'
+import { useCombinedJobs } from '@/hooks/useCombinedJobs'
 import { PortalJobContractType } from '@/types/jobs'
 import { PortalJobCard } from '@/components/portal-job-card'
 import {
@@ -53,9 +53,8 @@ export default function OglasiContent() {
     updateFilters,
     resetFilters,
     hasMore,
-    meta,
     summary,
-  } = usePortalJobs({
+  } = useCombinedJobs({
     limit: 6,
     // Inicijalni offset prema ?page parametru i potencijalno ?limit parametru
     offset: (() => {
@@ -80,6 +79,25 @@ export default function OglasiContent() {
         : (searchParams?.get('remote') === 'true' ? true : undefined),
     order: (searchParams?.get('order') === 'created' ? 'created' : 'posted'),
   })
+
+  // Sačuvani (bookmarked) poslovi – učitavaju se kada je tab "saved"
+  const [savedJobs, setSavedJobs] = useState<import('@/types/jobs').PortalJobRecord[]>([])
+  const [savedLoading, setSavedLoading] = useState(false)
+  const fetchSavedJobs = useCallback(async () => {
+    setSavedLoading(true)
+    try {
+      const res = await fetch('/api/portal-jobs/bookmarks')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      setSavedJobs(json?.data?.jobs ?? [])
+      if (typeof json?.data?.total === 'number') setBookmarkCount(json.data.total)
+    } catch {
+      setSavedJobs([])
+    } finally {
+      setSavedLoading(false)
+    }
+  }, [])
+
 
   const contractFacets = useMemo(() => facets?.contractType || {}, [facets])
   const experienceFacets = useMemo(() => facets?.experienceLevel || {}, [facets])
@@ -234,32 +252,20 @@ export default function OglasiContent() {
         return next < 0 ? 0 : next
       })
       if (tab === 'saved') {
-        // simple strategy: refetch full list to reflect removal/addition ordering
-        updateFilters({ mode: 'bookmarks', offset: 0 })
+        // refresh saved list
+        fetchSavedJobs().catch(() => {})
       }
     }
     window.addEventListener('job-bookmark-changed', handler as EventListener)
     return () => window.removeEventListener('job-bookmark-changed', handler as EventListener)
-  }, [tab, updateFilters])
+  }, [tab, fetchSavedJobs])
 
-  // Switch hook mode based on tab
-  const previousExploreFiltersRef = useRef<ReturnType<typeof usePortalJobs> extends infer R
-    ? R extends { filters: infer F }
-      ? F
-      : Record<string, unknown>
-    : Record<string, unknown> | null>(null)
+  // When switching to saved tab, load saved jobs once
   useEffect(() => {
     if (tab === 'saved') {
-      // store current explore filters to restore later
-      previousExploreFiltersRef.current = filters
-      updateFilters({ mode: 'bookmarks', offset: 0, limit: 200 })
-    } else if (tab === 'explore' && filters.mode === 'bookmarks') {
-      const restore = previousExploreFiltersRef.current ? { ...(previousExploreFiltersRef.current as Record<string, unknown>) } : {}
-      delete restore.mode
-      updateFilters({ ...restore, offset: 0, limit: 20, mode: 'all' })
+      fetchSavedJobs().catch(() => {})
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab])
+  }, [tab, fetchSavedJobs])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -273,8 +279,7 @@ export default function OglasiContent() {
             filters,
             hasMore,
             error,
-            firstIds: jobs.slice(0, 5).map(j => j.id),
-            meta,
+            firstIds: jobs.slice(0, 5).map(j => j.id)
           }, null, 2)}</pre>
           <p className="text-[10px] text-gray-400">Ukloni ?debug=1 iz URL-a da sakriješ panel.</p>
         </div>
@@ -315,7 +320,7 @@ export default function OglasiContent() {
               </div>
             </div>
 
-            <div className="mt-10 flex justify-center gap-4 text-xs" role="tablist" aria-label="Oglasi sekcije">
+            <div className="mt-10 flex flex-wrap justify-center gap-3 text-xs" role="tablist" aria-label="Oglasi sekcije">
               {(['explore', 'saved', 'stats'] as const).map(t => {
                 const label = t === 'explore' ? 'Pretraga' : (t === 'saved' ? 'Sačuvano' : 'Statistika')
                 return (
@@ -343,6 +348,7 @@ export default function OglasiContent() {
                   </button>
                 )
               })}
+              {/* Izbor izvora uklonjen – lista je spojena (portal + scraped) */}
             </div>
           </motion.div>
         </div>
@@ -606,20 +612,20 @@ export default function OglasiContent() {
                     Prijavi se da bi sačuvao oglase. Klik na zvezdicu (★) pored oglasa nakon prijave.
                   </div>
                 )}
-                {loading && jobs.length === 0 && (
+                {savedLoading && savedJobs.length === 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="animate-pulse h-56 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100" />
                     ))}
                   </div>
                 )}
-                {!loading && jobs.length === 0 && isLoggedIn && (
+                {!savedLoading && savedJobs.length === 0 && isLoggedIn && (
                   <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-600">
                     Još nema sačuvanih oglasa.
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {jobs.map(job => (
+                  {savedJobs.map(job => (
                     <PortalJobCard key={job.id} job={job} searchTerm={undefined} />
                   ))}
                 </div>
@@ -643,7 +649,10 @@ export default function OglasiContent() {
                     <p className="text-2xl font-semibold mt-1">{summary?.remotePct ?? 0}%</p>
                   </div>
                 </div>
-                {summary?.sources && summary.sources.length > 0 && (
+                {(() => {
+                  const topSources: { id: string; name: string; count: number; pct: number }[] | undefined = summary && 'sources' in summary ? (summary as { sources?: { id: string; name: string; count: number; pct: number }[] }).sources : undefined
+                  return Array.isArray(topSources) && topSources.length > 0
+                })() && (
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold mb-3">Top izvori</h3>
                     <div className="overflow-hidden rounded-xl border border-gray-200">
@@ -656,7 +665,12 @@ export default function OglasiContent() {
                           </tr>
                         </thead>
                         <tbody>
-                          {summary.sources.map(s => (
+                          {(() => {
+                            const list: { id: string; name: string; count: number; pct: number }[] = summary && 'sources' in summary && Array.isArray((summary as { sources?: { id: string; name: string; count: number; pct: number }[] }).sources)
+                              ? (summary as { sources: { id: string; name: string; count: number; pct: number }[] }).sources
+                              : []
+                            return list
+                          })().map((s) => (
                             <tr key={s.id} className="border-t border-gray-100 hover:bg-gray-50">
                               <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
                               <td className="px-3 py-2 text-right text-gray-600">{s.count}</td>

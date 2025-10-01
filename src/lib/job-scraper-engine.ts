@@ -19,6 +19,7 @@ const JOB_CATEGORIES: JobCategory[] = [
 import { allScraperSources } from '@/data/scraper-sources';
 import crypto from 'crypto';
 import { logger } from './logger';
+import { upsertScrapedJobs } from './scraped-jobs-repository';
 
 export class JobScraperEngine {
   private activeScrapeJobs: Map<string, ScrapeJob> = new Map();
@@ -263,6 +264,42 @@ export class JobScraperEngine {
         this.scrapedJobs.push(job);
         inserted++;
       }
+    }
+
+    // Persist to Supabase if envs are present
+    try {
+      const hasSupabase = Boolean((process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY)
+      if (hasSupabase && jobs.length) {
+        const rows = jobs.map(j => ({
+          source_id: j.sourceSite,
+          source_name: j.sourceSite,
+          external_id: j.fingerprint,
+          title: j.title,
+          company: j.company,
+          location: j.location,
+          type: j.contractType,
+          category: j.category,
+          description: j.description,
+          requirements: j.requirements,
+          benefits: j.benefits,
+          salary_min: j.salary?.min ?? null,
+          salary_max: j.salary?.max ?? null,
+          currency: j.salary?.currency ?? null,
+          is_remote: !!j.remote,
+          remote_type: j.remoteType,
+          experience_level: j.seniority,
+          posted_at: j.postedDate.toISOString(),
+          deadline: j.applicationDeadline ? j.applicationDeadline.toISOString() : null,
+          url: j.applicationUrl,
+          source_url: j.sourceUrl,
+          featured: false,
+          tags: j.tags,
+          metadata: { skills: j.skills, languages: j.languages },
+        }))
+        await upsertScrapedJobs(rows)
+      }
+    } catch (e) {
+      logger.warn('Persist scraped jobs failed (non-fatal):', e)
     }
 
     return { inserted, updated, duplicates };

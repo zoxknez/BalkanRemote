@@ -36,4 +36,11 @@
       "permanent": false
     }
   ]
+  ,
+  "crons": [
+    {
+      "path": "/api/scraper/run",
+      "schedule": "0 */12 * * *" 
+    }
+  ]
 }

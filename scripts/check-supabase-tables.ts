@@ -15,7 +15,7 @@ async function checkTable(name: string) {
 }
 
 async function main() {
-  const tables = ['job_portal_listings', 'job_feed_stats']
+  const tables = ['job_portal_listings', 'job_feed_stats', 'job_scraped_listings']
   for (const t of tables) {
     try {
       const res = await checkTable(t)

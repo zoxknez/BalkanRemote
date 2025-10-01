@@ -9,10 +9,13 @@ export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
-    // In production, restrict GET to Vercel Cron
+    // In production, allow either Vercel Cron header OR a valid shared secret
     const isVercel = !!process.env.VERCEL
     const hasCronHeader = !!req.headers.get('x-vercel-cron')
-    if (isVercel && !hasCronHeader) {
+    const expected = (process.env.SCRAPER_WEBHOOK_SECRET || '').trim()
+    const provided = (req.headers.get('x-webhook-secret') || new URL(req.url).searchParams.get('secret') || '').trim()
+    const hasValidSecret = expected && provided && expected === provided
+    if (isVercel && !hasCronHeader && !hasValidSecret) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     const url = new URL(req.url)

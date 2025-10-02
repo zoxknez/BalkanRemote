@@ -504,7 +504,7 @@ export default function OglasiContent() {
                         <p className="font-medium text-amber-900 mb-1">💡 Kako da pronađeš oglas:</p>
                         <p>Kopiraj <strong>naziv pozicije + kompaniju</strong> i pretraži na Google-u ili job board sajtu</p>
                         <div className="mt-2 font-mono text-sm bg-amber-100 px-2 py-1 rounded text-amber-800">
-                          Primer: "React Developer Microsoft"
+                          Primer: &quot;React Developer Microsoft&quot;
                         </div>
                       </div>
                     </div>
@@ -723,7 +723,7 @@ export default function OglasiContent() {
                     <p className="text-2xl font-semibold mt-1">{remotePctRounded}%</p>
                   </div>
                 </div>
-                {Array.isArray((summary as any)?.sources) && (summary as any).sources.length > 0 && (
+                {Array.isArray((summary as {sources?: unknown[]})?.sources) && (summary as {sources: unknown[]}).sources.length > 0 && (
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold mb-3">Top izvori</h3>
                     <div className="overflow-hidden rounded-xl border border-gray-200">

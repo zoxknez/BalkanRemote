@@ -36,11 +36,4 @@
       "permanent": false
     }
   ]
-  ,
-  "crons": [
-    {
-      "path": "/api/scrape-all",
-      "schedule": "0 */12 * * *" 
-    }
-  ]
 }

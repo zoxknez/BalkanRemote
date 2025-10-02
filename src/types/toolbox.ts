@@ -1,4 +1,4 @@
-// Remote Balkan Toolbox Types
+// Balkan Remote Toolbox Types
 export interface ToolboxLink {
   id: string;
   category: string;

@@ -40,7 +40,7 @@ function getTheme(theme?: string): ThemeDef {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const title = searchParams.get('title') || 'Remote Balkan'
+    const title = searchParams.get('title') || 'Balkan Remote'
     const subtitle = searchParams.get('subtitle') || 'Career hub za remote profesionalce sa Balkana'
     const theme = getTheme(searchParams.get('theme') || undefined)
 
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
             >
               RB
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, opacity: 0.95 }}>Remote Balkan</div>
+            <div style={{ fontSize: 24, fontWeight: 700, opacity: 0.95 }}>Balkan Remote</div>
           </div>
 
           {/* Title */}

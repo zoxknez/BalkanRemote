@@ -53,10 +53,10 @@ export function Footer() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">RB</span>
               </div>
-              <span className="text-xl font-bold">Remote Balkan</span>
+              <span className="text-xl font-bold">Balkan Remote</span>
             </Link>
             <p className="text-gray-400 text-sm mb-4">
-              Remote Balkan career hub okuplja vodiče, alate i kompanije koje zapošljavaju iz regiona.
+              Balkan Remote career hub okuplja vodiče, alate i kompanije koje zapošljavaju iz regiona.
             </p>
             <div className="flex space-x-4">
               <a 
@@ -132,7 +132,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between">
           <div className="text-gray-400 text-sm">
-            © {currentYear} Remote Balkan. Sva prava zadržana.
+            © {currentYear} Balkan Remote. Sva prava zadržana.
           </div>
           <a
             href="https://x.com/KoronVirus"

@@ -19,16 +19,16 @@ const publicBaseUrl = process.env.NEXT_PUBLIC_SITE_URL
 export const metadata: Metadata = {
   metadataBase: new URL(publicBaseUrl),
   title: {
-    default: 'Remote Balkan – Career Hub',
-    template: '%s | Remote Balkan',
+    default: 'Balkan Remote – Career Hub',
+    template: '%s | Balkan Remote',
   },
   description:
     'Sve za remote rad iz Balkana: kalkulatori plata i poreza, vodiči za poreze i banke, IT kompanije, resursi i alati.',
-  applicationName: 'Remote Balkan',
+  applicationName: 'Balkan Remote',
   generator: 'Next.js',
-  authors: [{ name: 'Remote Balkan' }],
-  creator: 'Remote Balkan',
-  publisher: 'Remote Balkan',
+  authors: [{ name: 'Balkan Remote' }],
+  creator: 'Balkan Remote',
+  publisher: 'Balkan Remote',
   keywords: [
     'remote rad', 'Balkan', 'Srbija', 'Hrvatska', 'BiH', 'Crna Gora', 'Albanija', 'Severna Makedonija',
     'IT kompanije', 'porezi', 'banke', 'resursi', 'alati', 'poslovi'
@@ -44,28 +44,28 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Remote Balkan – Career Hub',
+    title: 'Balkan Remote – Career Hub',
     description:
       'Kalkulatori, vodiči, kompanije i alati za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije.',
     url: '/',
-    siteName: 'Remote Balkan',
+    siteName: 'Balkan Remote',
     locale: 'sr_RS',
     type: 'website',
     images: [
       {
-        url: buildOgImageUrl('Remote Balkan – Career Hub', 'Sve za remote rad iz Balkana'),
+        url: buildOgImageUrl('Balkan Remote – Career Hub', 'Sve za remote rad iz Balkana'),
         width: 1200,
         height: 630,
-        alt: 'Remote Balkan – Career Hub',
+        alt: 'Balkan Remote – Career Hub',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Remote Balkan – Career Hub',
+    title: 'Balkan Remote – Career Hub',
     description:
       'Praktični alati i vodiči za remote rad iz Balkana: porezi, banke, kompanije i resursi.',
-    images: [buildOgImageUrl('Remote Balkan – Career Hub')]
+    images: [buildOgImageUrl('Balkan Remote – Career Hub')]
   },
 };
 
@@ -90,11 +90,34 @@ export default function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-3 focus:left-3 focus:rounded-md focus:bg-black focus:text-white focus:px-3 focus:py-2">
           Preskoči na sadržaj
         </a>
+        
+        {/* Google Analytics */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+                  page_title: document.title,
+                  page_location: window.location.href,
+                  anonymize_ip: true,
+                });
+              `}
+            </Script>
+          </>
+        )}
+        
         <Script id="ld-org" type="application/ld+json" strategy="afterInteractive">
           {JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: 'Remote Balkan',
+            name: 'Balkan Remote',
             url: publicBaseUrl,
             logo: '/favicon.svg'
           })}

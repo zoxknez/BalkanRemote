@@ -87,7 +87,7 @@ export default function PitanjaPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">Pitanja i sugestije</h1>
           <p className="text-center text-blue-100 text-lg max-w-2xl mx-auto">
-            Postavite pitanje timu Remote Balkan zajednice ili pročitajte iskustva drugih.
+            Postavite pitanje timu Balkan Remote zajednice ili pročitajte iskustva drugih.
           </p>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">

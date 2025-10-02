@@ -79,11 +79,11 @@ export function Header() {
             <Link href="/" className="flex items-center gap-3 group">
               <span className="relative inline-flex">
                 <span aria-hidden className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm transition duration-300 group-hover:opacity-95" />
-                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">RB</span>
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">BR</span>
               </span>
               <span className="flex items-baseline gap-1 text-lg font-bold text-gray-900 transition-colors group-hover:text-blue-700">
-                <span>Remote</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Balkan</span>
+                <span>Balkan</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Remote</span>
               </span>
             </Link>
           </div>
@@ -131,9 +131,9 @@ export function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <span className="relative inline-flex">
               <span aria-hidden className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm" />
-              <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-base font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">RB</span>
+              <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-base font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">BR</span>
             </span>
-            <span className="text-base font-bold text-gray-900">Remote <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Balkan</span></span>
+            <span className="text-base font-bold text-gray-900">Balkan <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Remote</span></span>
           </Link>
           <div className="ml-auto">
             <motion.button

@@ -1,4 +1,4 @@
-# OAuth provider setup for Remote Balkan
+# OAuth provider setup for Balkan Remote
 
 Use this checklist to enable Google and GitHub sign-in for the production deployment.
 
@@ -49,3 +49,4 @@ On Vercel, add the same key under **Project Settings → Environment Variables**
 4. Confirm that the provider consent screen appears and you are returned to `/nalog` after authorizing.
 
 If you still see `"Unsupported provider"`, double-check that the provider is enabled in Supabase and that the client credentials are valid.
+

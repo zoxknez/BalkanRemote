@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const xml = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>Remote Balkan — Poslovi</title>
+    <title>Balkan Remote — Poslovi</title>
     <link>${site}/poslovi</link>
     <description>Najnoviji remote poslovi agregirani sa različitih izvora</description>
     <language>sr-RS</language>

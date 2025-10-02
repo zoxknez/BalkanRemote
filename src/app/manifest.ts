@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Remote Balkan',
+    name: 'Balkan Remote',
     short_name: 'RBalkan',
     description: 'Sve za remote rad iz Balkana: kalkulatori, vodiči, kompanije i alati.',
     start_url: '/',

@@ -5,14 +5,14 @@ import SavetiContent from './SavetiContent'
 import { buildOgImageUrl } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'Remote work saveti za Balkan | Remote Balkan',
+  title: 'Remote work saveti za Balkan | Balkan Remote',
   description:
     'Kompletan vodič za remote rad na Balkanu: pravni koraci, banke, alati, klijenti i balans za Srbiju, Hrvatsku, BiH i region.',
   alternates: {
     canonical: '/saveti',
   },
   openGraph: {
-    title: 'Remote work saveti za Balkan | Remote Balkan',
+    title: 'Remote work saveti za Balkan | Balkan Remote',
     description:
       'Praktični saveti, checkliste i resursi za freelancere i remote profesionalce iz Srbije, Hrvatske, BiH, CG i regiona.',
     url: '/saveti',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Remote work saveti za Balkan | Remote Balkan',
+    title: 'Remote work saveti za Balkan | Balkan Remote',
     description: 'Praktični saveti, checkliste i resursi za freelance i remote rad.',
     images: [buildOgImageUrl('Remote work saveti za Balkan')],
   },

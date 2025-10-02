@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 
 import type { PortalJobRecord, PortalJobContractType } from '@/types/jobs'
 import { logger } from '@/lib/logger'
+import { trackSearch } from '@/lib/telemetry/analytics'
 
 export interface CombinedJobFilters {
   limit?: number
@@ -203,6 +204,17 @@ export const useCombinedJobs = (initialFilters: CombinedJobFilters = {}) => {
       if (partial.limit && (prev.limit ?? 0) !== partial.limit) {
         next.offset = 0
       }
+      
+      // Track search events
+      if (partial.search !== undefined && partial.search !== prev.search) {
+        trackSearch(partial.search || '', {
+          category: next.category,
+          contractType: next.contractType,
+          experience: next.experience,
+          remote: next.remote,
+        });
+      }
+      
       fetchJobs(next).catch(e => logger.error(e))
       return next
     })

@@ -1,6 +1,6 @@
 import { ToolboxLink, FeatureModule } from '@/types/toolbox';
 
-// Complete Remote Balkan Toolbox with 140+ curated links
+// Complete Balkan Remote Toolbox with 140+ curated links
 export const remoteBalkanToolbox: ToolboxLink[] = [
   // Job Boards - Global
   {

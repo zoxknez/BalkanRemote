@@ -9,7 +9,7 @@ import { NalogClient } from './Client'
 const faqStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'QAPage',
-  name: 'Remote Balkan nalozi',
+  name: 'Balkan Remote nalozi',
   mainEntity: [
     {
       '@type': 'Question',
@@ -39,27 +39,27 @@ const faqStructuredData = {
 }
 
 export const metadata: Metadata = {
-  title: 'Nalog | Remote Balkan',
+  title: 'Nalog | Balkan Remote',
   description:
-    'Registrujte se ili se prijavite na Remote Balkan da biste pratili napredne alate, personalizovane kalkulatore i poseban sadržaj zajednice.',
+    'Registrujte se ili se prijavite na Balkan Remote da biste pratili napredne alate, personalizovane kalkulatore i poseban sadržaj zajednice.',
   alternates: {
     canonical: '/nalog',
   },
   openGraph: {
-    title: 'Remote Balkan nalog',
-    description: 'Jedinstveno mesto za vaše kalkulatore, alate i resurse iz Remote Balkan zajednice.',
+    title: 'Balkan Remote nalog',
+    description: 'Jedinstveno mesto za vaše kalkulatore, alate i resurse iz Balkan Remote zajednice.',
     url: '/nalog',
-    siteName: 'Remote Balkan',
+    siteName: 'Balkan Remote',
     type: 'website',
     images: [
-      { url: buildOgImageUrl('Nalog | Remote Balkan', 'Prijava i registracija'), width: 1200, height: 630 },
+      { url: buildOgImageUrl('Nalog | Balkan Remote', 'Prijava i registracija'), width: 1200, height: 630 },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nalog | Remote Balkan',
-    description: 'Prijava i registracija za ekskluzivne Remote Balkan alatke i sadržaj.',
-    images: [buildOgImageUrl('Nalog | Remote Balkan')],
+    title: 'Nalog | Balkan Remote',
+    description: 'Prijava i registracija za ekskluzivne Balkan Remote alatke i sadržaj.',
+    images: [buildOgImageUrl('Nalog | Balkan Remote')],
   },
 }
 
@@ -137,7 +137,7 @@ export default function NalogPage() {
         <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="text-center">
             <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100">
-              Remote Balkan nalog
+              Balkan Remote nalog
             </span>
             <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">Registrujte se i otključajte zajednicu</h1>
             <p className="mt-4 text-base text-blue-100 sm:text-lg">

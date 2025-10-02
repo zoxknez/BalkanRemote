@@ -9,6 +9,7 @@ import { ClipboardButton } from '@/components/clipboard-button'
 import { COPY_LINK_TEXT } from '@/data/ui-copy'
 import { formatDate, formatSalary } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { trackJobView, trackJobApply } from '@/lib/telemetry/analytics'
 
 interface JobCardProps {
   job: Job
@@ -178,6 +179,9 @@ export function JobCard({ job, className }: JobCardProps) {
                 className="mt-1 inline-block rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:text-blue-700 hover:border-blue-300"
                 aria-label={`Otvori izvor: ${sourceLabel}`}
                 title={`Otvori izvor: ${sourceLabel}`}
+                onClick={() => {
+                  trackJobView(job.id, sourceHost || 'unknown');
+                }}
               >
                 {sourceLabel}
               </a>
@@ -256,12 +260,13 @@ export function JobCard({ job, className }: JobCardProps) {
                 visited ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-blue-600 text-white hover:bg-blue-700"
               )}
               aria-label={`Otvori oglas: ${job.title} — ${job.company}`}
-              title={`Otvori izvor: ${(() => { try { return new URL(job.url).host } catch { return job.url } })()}`}
+              title={`💡 TIP: Kopiraj naziv pozicije i kompaniju u Google pretragu za najbolje rezultate. Primer: "${job.title} ${job.company}"`}
               aria-describedby={`job-cta-host-${job.id}`}
               onClick={() => {
                 try {
                   localStorage.setItem(`visited:${job.id}`, JSON.stringify({ ts: Date.now() }))
                   setVisited(true)
+                  trackJobApply(job.id, sourceHost || 'unknown', job.url);
                 } catch {}
               }}
             >

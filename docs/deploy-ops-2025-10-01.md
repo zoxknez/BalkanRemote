@@ -7,3 +7,4 @@ This file exists to trigger a redeploy on Vercel via Git push.
   - GET https://www.balkan-remote.com/api/scraper/run?secret=***
   - Then check https://www.balkan-remote.com/api/scraper/jobs?limit=3
   - And the Oglasi page shows new listings.
+

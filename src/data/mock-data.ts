@@ -677,7 +677,7 @@ export const mockCompanies: Company[] = [
     linkedin: 'https://linkedin.com/company/logate',
     size: '220+ employees',
     industry: 'Cybersecurity',
-    location: 'Montenegro (Podgorica) • Remote Balkans',
+    location: 'Montenegro (Podgorica) • Balkan Remotes',
     foundedYear: 2006,
     isHiring: true,
     openPositions: 10,

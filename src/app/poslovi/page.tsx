@@ -6,7 +6,7 @@ import PosloviContent from './PosloviContent';
 import { buildOgImageUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Remote poslovi i prečice | Remote Balkan',
+  title: 'Remote poslovi i prečice | Balkan Remote',
   description:
     'Kurirana lista remote poslova, freelance platformi i direktorijuma kompanija prilagođena talentima sa Balkana.',
   alternates: {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Remote poslovi i prečice | Remote Balkan',
+    title: 'Remote poslovi i prečice | Balkan Remote',
     description: 'Aktuelni remote oglasi i platforme za talente sa Balkana.',
     url: '/poslovi',
     images: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Remote poslovi i prečice | Remote Balkan',
+    title: 'Remote poslovi i prečice | Balkan Remote',
     description: 'Aktuelni remote oglasi i platforme za talente sa Balkana.',
     images: [buildOgImageUrl('Remote poslovi i prečice') + '&theme=jobs'],
   },
@@ -45,7 +45,7 @@ export default function PosloviPage() {
         {JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: 'Remote poslovi | Remote Balkan',
+          name: 'Remote poslovi | Balkan Remote',
           description: 'Agregirani remote oglasi prilagođeni regionu Balkana',
           url: '/poslovi',
           mainEntity: {

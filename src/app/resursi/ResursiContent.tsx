@@ -283,7 +283,7 @@ function ResursiContent() {
         {/* Featured Resources Banner */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white mb-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">⭐ Preporučeni resursi od Remote Balkan tima</h2>
+            <h2 className="text-2xl font-bold mb-4">⭐ Preporučeni resursi od Balkan Remote tima</h2>
             <p className="text-purple-100 mb-6">Ovi resursi su lično testirani i preporučeni od strane našeg tima</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white/10 rounded-lg p-4">

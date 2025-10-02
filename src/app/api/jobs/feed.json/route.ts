@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   const feed = {
     version: 'https://jsonfeed.org/version/1.1',
-    title: 'Remote Balkan — Poslovi',
+    title: 'Balkan Remote — Poslovi',
     home_page_url: `${site}/poslovi`,
     feed_url: `${site}/api/jobs/feed.json`,
     description: 'Najnoviji remote poslovi agregirani sa različitih izvora',

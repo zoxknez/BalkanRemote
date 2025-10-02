@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import React from 'react';
 
 export const metadata: Metadata = {
-  title: 'Resursi za remote karijeru | Remote Balkan',
+  title: 'Resursi za remote karijeru | Balkan Remote',
   description: 'Kolekcija vodiča, predloga i primera iz prakse za razvoj remote karijere na Balkanu.',
 };
 

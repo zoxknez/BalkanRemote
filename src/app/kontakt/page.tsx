@@ -5,7 +5,7 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml'
 import { buildOgImageUrl } from '@/lib/site'
 
 const CONTACT_EMAIL = 'zoxknez@hotmail.com'
-const MAILTO_SUBJECT = 'Remote Balkan — upit'
+const MAILTO_SUBJECT = 'Balkan Remote — upit'
 const MAILTO_BODY = 'Zdravo,\n\nPovod: '
 
 const contactMethods = [
@@ -50,7 +50,7 @@ const contactMethods = [
 const contactJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Remote Balkan',
+  name: 'Balkan Remote',
   url: 'https://remotebalkan.com',
   email: `mailto:${CONTACT_EMAIL}`,
   sameAs: [
@@ -69,16 +69,16 @@ const contactJsonLd = {
 }
 
 export const metadata: Metadata = {
-  title: 'Kontakt | Remote Balkan',
-  description: 'Javite se preko X (Twitter), emaila ili GitHub issue-a i uključite se u Remote Balkan zajednicu.',
+  title: 'Kontakt | Balkan Remote',
+  description: 'Javite se preko X (Twitter), emaila ili GitHub issue-a i uključite se u Balkan Remote zajednicu.',
   alternates: {
     canonical: '/kontakt',
   },
   openGraph: {
-    title: 'Kontakt | Remote Balkan',
-    description: 'Najbrže do Remote Balkan tima preko javnih kanala, emaila ili GitHub diskusija.',
+    title: 'Kontakt | Balkan Remote',
+    description: 'Najbrže do Balkan Remote tima preko javnih kanala, emaila ili GitHub diskusija.',
     url: '/kontakt',
-    siteName: 'Remote Balkan',
+    siteName: 'Balkan Remote',
     type: 'website',
     images: [
       { url: buildOgImageUrl('Kontakt', 'Javni kanali i email'), width: 1200, height: 630, alt: 'Kontakt' },
@@ -86,8 +86,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kontakt | Remote Balkan',
-    description: 'Najbrži načini da se javite Remote Balkan zajednici.',
+    title: 'Kontakt | Balkan Remote',
+    description: 'Najbrži načini da se javite Balkan Remote zajednici.',
     images: [buildOgImageUrl('Kontakt')],
   },
 }
@@ -97,11 +97,11 @@ export default function KontaktPage() {
   const vcard = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    'FN:Remote Balkan',
+    'FN:Balkan Remote',
     `EMAIL;TYPE=INTERNET:${CONTACT_EMAIL}`,
-    'ORG:Remote Balkan',
+    'ORG:Balkan Remote',
     'URL:https://remotebalkan.com',
-    'NOTE:Kontakt podaci za Remote Balkan',
+    'NOTE:Kontakt podaci za Balkan Remote',
     'END:VCARD',
   ].join('\n')
   const vcardDataUri = `data:text/vcard;base64,${Buffer.from(vcard, 'utf-8').toString('base64')}`

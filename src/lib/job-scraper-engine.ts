@@ -20,6 +20,9 @@ import { allScraperSources } from '@/data/scraper-sources';
 import crypto from 'crypto';
 import { logger } from './logger';
 import { upsertScrapedJobs } from './scraped-jobs-repository';
+import { fetchWWR } from './sources/wwr';
+import { fetchRemoteOK } from './sources/remoteok';
+import { fetchRemotive } from './sources/remotive';
 
 export class JobScraperEngine {
   private activeScrapeJobs: Map<string, ScrapeJob> = new Map();

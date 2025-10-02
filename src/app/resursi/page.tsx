@@ -5,14 +5,14 @@ import ResursiContent from './ResursiContent';
 import { buildOgImageUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Resursi za remote karijeru | Remote Balkan',
+  title: 'Resursi za remote karijeru | Balkan Remote',
   description:
     'Kurirani resursi za remote rad: job board-ovi, alati, kursevi, produktivnost i zajednice na jednom mestu.',
   alternates: {
     canonical: '/resursi',
   },
   openGraph: {
-    title: 'Resursi za remote karijeru | Remote Balkan',
+    title: 'Resursi za remote karijeru | Balkan Remote',
     description:
       'Istraži najbolje sajtove, alate i sadržaje koji pomažu profesionalcima sa Balkana da uspešno rade remote.',
     url: '/resursi',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Resursi za remote karijeru | Remote Balkan',
+    title: 'Resursi za remote karijeru | Balkan Remote',
     description: 'Istraži najbolje sajtove, alate i sadržaje koji pomažu profesionalcima sa Balkana da uspešno rade remote.',
     images: [buildOgImageUrl('Resursi za remote karijeru')],
   },

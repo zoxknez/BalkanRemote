@@ -12,7 +12,7 @@ import {
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useCombinedJobs } from '@/hooks/useCombinedJobs'
-import { PortalJobContractType } from '@/types/jobs'
+import { PortalJobContractType, type PortalJobRecord, type ScraperSource } from '@/types/jobs'
 import { PortalJobCard } from '@/components/portal-job-card'
 import {
   RefreshCcw,
@@ -28,6 +28,7 @@ import {
   Tag as TagIcon,
   X,
   RotateCcw,
+  Info,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
@@ -36,6 +37,9 @@ import {
 } from 'lucide-react'
 import { getSupabaseClientBrowser } from '@/lib/job-bookmarks'
 import { cn } from '@/lib/utils'
+import { trackSourceClick } from '@/lib/telemetry/analytics'
+
+type TimeoutHandle = ReturnType<typeof setTimeout>
 
 const CONTRACT_ORDER: PortalJobContractType[] = ['full-time', 'part-time', 'contract', 'freelance', 'internship']
 const CONTRACT_SET = new Set(CONTRACT_ORDER)
@@ -58,7 +62,7 @@ export default function OglasiContent() {
     summary,
   } = useCombinedJobs({
     limit: 6,
-    // Inicijalni offset prema ?page parametru i potencijalno ?limit parametru
+    // Inicijalni offset prema ?page i ?limit
     offset: (() => {
       const p = parseInt(searchParams?.get('page') || '1', 10)
       const l = parseInt(searchParams?.get('limit') || '6', 10)
@@ -85,12 +89,13 @@ export default function OglasiContent() {
   })
 
   // Sačuvani (bookmarked) poslovi – učitavaju se kada je tab "saved"
-  const [savedJobs, setSavedJobs] = useState<import('@/types/jobs').PortalJobRecord[]>([])
+  const [savedJobs, setSavedJobs] = useState<PortalJobRecord[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
 
   // Izvori (sources) – učitavaju se kada je tab "sources"
-  const [sources, setSources] = useState<import('@/types/jobs').ScraperSource[]>([])
+  const [sources, setSources] = useState<ScraperSource[]>([])
   const [sourcesLoading, setSourcesLoading] = useState(false)
+
   const fetchSavedJobs = useCallback(async () => {
     setSavedLoading(true)
     try {
@@ -98,7 +103,7 @@ export default function OglasiContent() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setSavedJobs(json?.data?.jobs ?? [])
-      if (typeof json?.data?.total === 'number') setBookmarkCount(json.data.total)
+      if (typeof json?.data?.total === 'number') setBookmarkCount(Math.max(0, json.data.total))
     } catch {
       setSavedJobs([])
     } finally {
@@ -112,7 +117,7 @@ export default function OglasiContent() {
       const res = await fetch('/api/scraper/sources')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
-      setSources(json?.data ?? [])
+      setSources(Array.isArray(json?.data) ? json.data : [])
     } catch {
       setSources([])
     } finally {
@@ -120,11 +125,10 @@ export default function OglasiContent() {
     }
   }, [])
 
-
+  // Facets memoi
   const contractFacets = useMemo(() => facets?.contractType || {}, [facets])
   const experienceFacets = useMemo(() => facets?.experienceLevel || {}, [facets])
   const categoryFacets = useMemo(() => facets?.category || {}, [facets])
-
   const orderedContractKeys: PortalJobContractType[] = useMemo(() => {
     const allKeys = Object.keys(contractFacets) as PortalJobContractType[]
     const primary = CONTRACT_ORDER.filter((k) => Number((contractFacets as Record<string, number>)[k] || 0) > 0)
@@ -132,35 +136,39 @@ export default function OglasiContent() {
     return [...primary, ...rest]
   }, [contractFacets])
 
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const suggestDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Pretraga i sugestije
+  const searchDebounceRef = useRef<TimeoutHandle | null>(null)
+  const suggestDebounceRef = useRef<TimeoutHandle | null>(null)
+  const activeFetchRef = useRef<AbortController | null>(null)
 
-  // Autocomplete state
   const [searchInput, setSearchInput] = useState(filters.search || '')
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1)
-  const activeFetchRef = useRef<AbortController | null>(null)
 
-  // Sync external filter change -> input (e.g. reset)
+  // Sync eksternih izmena filtera -> input (npr. reset)
   useEffect(() => {
     setSearchInput(filters.search || '')
   }, [filters.search])
 
   const fetchSuggestions = useCallback((term: string) => {
-    if (activeFetchRef.current) activeFetchRef.current.abort()
-    if (term.trim().length < 2) {
+    // Abort prethodni upit
+    activeFetchRef.current?.abort()
+
+    const clean = term.trim()
+    if (clean.length < 2) {
       setSuggestions([])
       setHighlightedIndex(-1)
       return
     }
+
     const ctrl = new AbortController()
     activeFetchRef.current = ctrl
-    fetch(`/api/portal-jobs/suggest?q=${encodeURIComponent(term)}`, { signal: ctrl.signal })
+    fetch(`/api/portal-jobs/suggest?q=${encodeURIComponent(clean)}`, { signal: ctrl.signal })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('bad response'))))
       .then(json => {
         if (!ctrl.signal.aborted) {
-          setSuggestions(Array.isArray(json.suggestions) ? json.suggestions : [])
+          setSuggestions(Array.isArray(json?.suggestions) ? json.suggestions : [])
           setShowSuggestions(true)
           setHighlightedIndex(-1)
         }
@@ -175,12 +183,11 @@ export default function OglasiContent() {
     updateFilters({ search: value || null, offset: 0 })
   }, [updateFilters])
 
-  // Paginacija umesto auto infinite scroll-a
+  // Paginacija (bez infinite scroll)
   const limit = filters.limit || 6
   const currentPage = Math.floor((filters.offset || 0) / limit) + 1
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
-  // Helper za konstrukciju liste stranica sa elipsama
   const paginationPages = useMemo(() => {
     const pages: (number | '…')[] = []
     if (totalPages <= 9) {
@@ -197,7 +204,7 @@ export default function OglasiContent() {
     return pages
   }, [currentPage, totalPages])
 
-  const activeFilterCount = (() => {
+  const activeFilterCount = useMemo(() => {
     let c = 0
     if (filters.search) c++
     if (filters.contractType && filters.contractType.length) c++
@@ -206,10 +213,10 @@ export default function OglasiContent() {
     // remote je aktivan filter samo kad je true (podrazumevano je "svi" = undefined)
     if (filters.remote) c++
     return c
-  })()
+  }, [filters])
 
-  // Sync filters -> URL (debounced) excluding offset & internal fields
-  const urlSyncRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Sync filters -> URL (debounced), bez internih polja
+  const urlSyncRef = useRef<TimeoutHandle | null>(null)
   useEffect(() => {
     if (urlSyncRef.current) clearTimeout(urlSyncRef.current)
     urlSyncRef.current = setTimeout(() => {
@@ -225,7 +232,6 @@ export default function OglasiContent() {
       if (limit !== 6) params.set('limit', String(limit))
       const qs = params.toString()
       const target = qs ? `/oglasi?${qs}` : '/oglasi'
-      // Only replace if different (avoid history pollution)
       if (typeof window !== 'undefined' && window.location.pathname === '/oglasi' && window.location.search !== (qs ? `?${qs}` : '')) {
         router.replace(target, { scroll: false })
       }
@@ -233,20 +239,20 @@ export default function OglasiContent() {
     return () => { if (urlSyncRef.current) clearTimeout(urlSyncRef.current) }
   }, [filters.search, filters.category, filters.contractType, filters.experience, filters.remote, filters.order, filters.offset, router, currentPage, limit])
 
-  // Simple tab concept (client side)
+  // Tabovi
   const [tab, setTab] = useState<'explore' | 'saved' | 'stats' | 'sources'>('explore')
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null)
   const supabase = getSupabaseClientBrowser()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // Load session once
+  // Učitaj session jednom
   useEffect(() => {
     let mounted = true
     async function loadSession() {
       if (!supabase) return
       const { data } = await supabase.auth.getSession()
       if (!mounted) return
-      setIsLoggedIn(!!data.session)
+      setIsLoggedIn(!!data?.session)
     }
     loadSession().catch(() => {})
     return () => { mounted = false }
@@ -257,16 +263,15 @@ export default function OglasiContent() {
       const res = await fetch('/api/portal-jobs/bookmarks')
       if (!res.ok) return
       const json = await res.json()
-      if (json?.data?.total !== undefined) setBookmarkCount(json.data.total)
+      if (typeof json?.data?.total === 'number') setBookmarkCount(Math.max(0, json.data.total))
     } catch { /* ignore */ }
   }, [])
 
-  // Initial bookmark count (only once)
   useEffect(() => { fetchBookmarkCount().catch(() => {}) }, [fetchBookmarkCount])
 
-  // Respond to bookmark events to keep KPI in sync
+  // Event: sinhronizuj KPI i saved listu
   useEffect(() => {
-    function handler(e: Event) {
+    const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ id?: string; added?: boolean }>).detail
       setBookmarkCount(prev => {
         if (prev == null) return prev
@@ -275,7 +280,6 @@ export default function OglasiContent() {
         return next < 0 ? 0 : next
       })
       if (tab === 'saved') {
-        // refresh saved list
         fetchSavedJobs().catch(() => {})
       }
     }
@@ -283,12 +287,33 @@ export default function OglasiContent() {
     return () => window.removeEventListener('job-bookmark-changed', handler as EventListener)
   }, [tab, fetchSavedJobs])
 
-  // When switching to saved tab, load saved jobs once
+  // Učitaj saved listu pri ulasku u tab
   useEffect(() => {
     if (tab === 'saved') {
       fetchSavedJobs().catch(() => {})
+    } else if (tab === 'sources' && sources.length === 0) {
+      fetchSources().catch(() => {})
     }
-  }, [tab, fetchSavedJobs])
+  }, [tab, fetchSavedJobs, fetchSources, sources.length])
+
+  // Globalni cleanup: timere + abort kontroler + zatvaranje sugestija
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+      if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current)
+      if (urlSyncRef.current) clearTimeout(urlSyncRef.current)
+      activeFetchRef.current?.abort()
+      setShowSuggestions(false)
+    }
+  }, [])
+
+  // Memo: maksimum za top kategorije (za progress bar)
+  const topCategoryMax = useMemo(() => {
+    const values = Object.values(categoryFacets) as number[]
+    return values.length ? Math.max(1, ...values) : 1
+  }, [categoryFacets])
+
+  const remotePctRounded = summary?.remotePct != null ? Math.round(summary.remotePct) : 0
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -324,7 +349,7 @@ export default function OglasiContent() {
               Kurirani agregator EU timezone / remote friendly pozicija. Ažuriranje svakog jutra.
             </p>
 
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto" aria-live="polite">
               <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
                 <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Ukupno</span>
                 <span className="text-2xl font-semibold flex items-center gap-2"><Layers className="w-5 h-5" /> {total}</span>
@@ -335,7 +360,7 @@ export default function OglasiContent() {
               </div>
               <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
                 <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Remote %</span>
-                <span className="text-2xl font-semibold flex items-center gap-2"><Globe2 className="w-5 h-5" /> {summary?.remotePct != null ? Math.round(summary.remotePct) : 0}%</span>
+                <span className="text-2xl font-semibold flex items-center gap-2"><Globe2 className="w-5 h-5" /> {remotePctRounded}%</span>
               </div>
               <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
                 <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Sačuvano</span>
@@ -346,22 +371,18 @@ export default function OglasiContent() {
             <div className="mt-10 flex flex-wrap justify-center gap-3 text-xs" role="tablist" aria-label="Oglasi sekcije">
               {(['explore', 'saved', 'stats', 'sources'] as const).map(t => {
                 const label = t === 'explore' ? 'Pretraga' : (t === 'saved' ? 'Sačuvano' : (t === 'stats' ? 'Statistika' : 'Izvori'))
+                const selected = tab === t
                 return (
                   <button
                     key={t}
                     role="tab"
-                    aria-selected={tab === t}
+                    aria-selected={selected}
                     aria-controls={`panel-${t}`}
                     id={`tab-${t}`}
-                    onClick={() => {
-                      setTab(t)
-                      if (t === 'sources' && sources.length === 0) {
-                        fetchSources()
-                      }
-                    }}
+                    onClick={() => setTab(t)}
                     className={cn(
                       'px-5 py-2 rounded-full border backdrop-blur-sm transition font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50',
-                      tab === t ? 'bg-white text-blue-700 border-white shadow' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                      selected ? 'bg-white text-blue-700 border-white shadow' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
                     )}
                   >
                     {t === 'explore' && <Search className="w-4 h-4" />}
@@ -377,7 +398,6 @@ export default function OglasiContent() {
                   </button>
                 )
               })}
-              {/* Izbor izvora uklonjen – lista je spojena (portal + scraped) */}
             </div>
           </motion.div>
         </div>
@@ -391,83 +411,108 @@ export default function OglasiContent() {
               <div className="flex flex-col md:flex-row gap-3 md:items-center p-3 md:p-4 rounded-2xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[240px]">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    id="jobs-search"
-                    name="jobs-search"
-                    type="text"
-                    value={searchInput}
-                    placeholder="Pretraga po nazivu ili kompaniji..."
-                    onChange={(e) => {
-                      const raw = e.target.value
-                      setSearchInput(raw)
-                      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
-                      searchDebounceRef.current = setTimeout(() => {
-                        updateFilters({ search: raw.trim() || null, offset: 0 })
-                      }, 400)
-                      if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current)
-                      suggestDebounceRef.current = setTimeout(() => {
-                        fetchSuggestions(raw)
-                      }, 250)
-                    }}
-                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
-                    onKeyDown={(e) => {
-                      if (!showSuggestions) return
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault()
-                        setHighlightedIndex(i => (i + 1 >= suggestions.length ? 0 : i + 1))
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault()
-                        setHighlightedIndex(i => (i - 1 < 0 ? suggestions.length - 1 : i - 1))
-                      } else if (e.key === 'Enter') {
-                        if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+                    <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      id="jobs-search"
+                      name="jobs-search"
+                      type="text"
+                      value={searchInput}
+                      placeholder="Pretraga po nazivu ili kompaniji..."
+                      onChange={(e) => {
+                        const raw = e.target.value
+                        setSearchInput(raw)
+                        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+                        searchDebounceRef.current = setTimeout(() => {
+                          updateFilters({ search: raw.trim() || null, offset: 0 })
+                        }, 400)
+                        if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current)
+                        suggestDebounceRef.current = setTimeout(() => {
+                          fetchSuggestions(raw)
+                        }, 250)
+                      }}
+                      onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+                      onKeyDown={(e) => {
+                        if (!showSuggestions) return
+                        if (e.key === 'ArrowDown') {
                           e.preventDefault()
-                          applySuggestion(suggestions[highlightedIndex])
+                          setHighlightedIndex(i => (i + 1 >= suggestions.length ? 0 : i + 1))
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault()
+                          setHighlightedIndex(i => (i - 1 < 0 ? suggestions.length - 1 : i - 1))
+                        } else if (e.key === 'Enter') {
+                          if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+                            e.preventDefault()
+                            applySuggestion(suggestions[highlightedIndex])
+                          }
+                        } else if (e.key === 'Escape') {
+                          setShowSuggestions(false)
                         }
-                      } else if (e.key === 'Escape') {
-                        setShowSuggestions(false)
-                      }
-                    }}
-                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 120) }}
-                    className="w-full h-11 md:h-12 rounded-xl border border-gray-300 bg-white pl-12 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
-                    aria-autocomplete="list"
-                    aria-controls={showSuggestions ? 'search-suggest-list' : undefined}
-                    aria-activedescendant={highlightedIndex >= 0 ? `suggest-${highlightedIndex}` : undefined}
-                  />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <ul
-                      role="listbox"
-                      id="search-suggest-list"
-                      className="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg text-sm"
-                    >
-                      {suggestions.map((s, i) => {
-                        const idx = s.toLowerCase().indexOf(searchInput.trim().toLowerCase())
-                        let content: ReactNode = s
-                        if (idx >= 0 && searchInput.trim().length > 0) {
-                          const before = s.slice(0, idx)
-                          const match = s.slice(idx, idx + searchInput.trim().length)
-                          const after = s.slice(idx + searchInput.trim().length)
-                          content = <>{before}<mark className="bg-yellow-200 rounded px-0.5">{match}</mark>{after}</>
-                        }
-                        return (
-                          <li
-                            id={`suggest-${i}`}
-                            key={s + i}
-                            role="option"
-                            aria-selected={highlightedIndex === i}
-                            onMouseDown={(e) => { e.preventDefault(); applySuggestion(s) }}
-                            onMouseEnter={() => setHighlightedIndex(i)}
-                            className={cn('cursor-pointer px-3 py-2 flex items-center gap-2', highlightedIndex === i ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50')}
-                          >
-                            <Search className="w-3 h-3 text-gray-400" />
-                            <span className="truncate" title={s}>{content}</span>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
+                      }}
+                      onBlur={() => { setTimeout(() => setShowSuggestions(false), 120) }}
+                      className="w-full h-11 md:h-12 rounded-xl border border-gray-300 bg-white pl-12 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
+                      aria-autocomplete="list"
+                      aria-controls={showSuggestions ? 'search-suggest-list' : undefined}
+                      aria-activedescendant={highlightedIndex >= 0 ? `suggest-${highlightedIndex}` : undefined}
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <ul
+                        role="listbox"
+                        id="search-suggest-list"
+                        className="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg text-sm"
+                      >
+                        {suggestions.map((s, i) => {
+                          const term = searchInput.trim().toLowerCase()
+                          const idx = term ? s.toLowerCase().indexOf(term) : -1
+                          let content: ReactNode = s
+                          if (idx >= 0 && term.length > 0) {
+                            const before = s.slice(0, idx)
+                            const match = s.slice(idx, idx + term.length)
+                            const after = s.slice(idx + term.length)
+                            content = <>{before}<mark className="bg-yellow-200 rounded px-0.5">{match}</mark>{after}</>
+                          }
+                          return (
+                            <li
+                              id={`suggest-${i}`}
+                              key={s + i}
+                              role="option"
+                              aria-selected={highlightedIndex === i}
+                              onMouseDown={(e) => { e.preventDefault(); applySuggestion(s) }}
+                              onMouseEnter={() => setHighlightedIndex(i)}
+                              className={cn('cursor-pointer px-3 py-2 flex items-center gap-2', highlightedIndex === i ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50')}
+                            >
+                              <Search className="w-3 h-3 text-gray-400" />
+                              <span className="truncate" title={s}>{content}</span>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
                 </div>
+              </div>
+              
+              {/* Important Notice Box */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 md:p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Info className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-amber-900 mb-2">Važno obaveštenje o linkovima oglasa</h3>
+                    <div className="text-amber-800 space-y-2">
+                      <p>Zbog tehničkih ograničenja job board sajtova, linkovi vode na glavne stranice umesto direktno na oglase.</p>
+                      <div className="bg-white/60 rounded-lg p-3 border border-amber-200">
+                        <p className="font-medium text-amber-900 mb-1">💡 Kako da pronađeš oglas:</p>
+                        <p>Kopiraj <strong>naziv pozicije + kompaniju</strong> i pretraži na Google-u ili job board sajtu</p>
+                        <div className="mt-2 font-mono text-sm bg-amber-100 px-2 py-1 rounded text-amber-800">
+                          Primer: "React Developer Microsoft"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              <div className="flex flex-col md:flex-row gap-3 md:items-center p-3 md:p-4 rounded-2xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm">
                 {/* Controls */}
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
                   <SelectWrapper label="Broj" name="jobs-page-size" value={String(limit)} onChange={(v) => updateFilters({ limit: parseInt(v, 10) || 6, offset: 0 })}>
@@ -538,7 +583,7 @@ export default function OglasiContent() {
                             className={filterPillClass('experience', active)}
                           >
                             <span className="md:text-[12px]">{lvl}</span>
-                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{count}</span>
+                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{count as number}</span>
                           </button>
                         )
                       })}
@@ -558,7 +603,7 @@ export default function OglasiContent() {
                             className={filterPillClass('category', active)}
                           >
                             <span className="truncate max-w-[120px] md:max-w-[140px] md:text-[12px]" title={cat}>{cat}</span>
-                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{count}</span>
+                            <span className="ml-1 text-[9px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/10 text-current">{count as number}</span>
                           </button>
                         )
                       })}
@@ -580,7 +625,7 @@ export default function OglasiContent() {
                   onRemove={(type, value) => {
                     if (type === 'contractType') {
                       const curr = (filters.contractType || []) as PortalJobContractType[]
-                      const next = curr.filter(c => c !== value)
+                      const next = curr.filter(c => c !== (value as PortalJobContractType))
                       updateFilters({ contractType: next.length ? next : undefined, offset: 0 })
                     } else if (type === 'experience') {
                       const curr = (filters.experience || [])
@@ -600,7 +645,7 @@ export default function OglasiContent() {
             )}
 
             {error && (
-              <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert" aria-live="assertive">
                 Greška pri učitavanju oglasa: {error}
                 <div className="mt-3">
                   <button
@@ -612,7 +657,7 @@ export default function OglasiContent() {
             )}
 
             {tab === 'explore' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-live="polite">
                 {jobs.map(job => (
                   <PortalJobCard key={job.id} job={job} searchTerm={filters.search || undefined} />
                 ))}
@@ -675,13 +720,10 @@ export default function OglasiContent() {
                   </div>
                   <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
                     <p className="text-xs uppercase tracking-wide text-gray-500">Remote (%)</p>
-                    <p className="text-2xl font-semibold mt-1">{summary?.remotePct ?? 0}%</p>
+                    <p className="text-2xl font-semibold mt-1">{remotePctRounded}%</p>
                   </div>
                 </div>
-                {(() => {
-                  const topSources: { id: string; name: string; count: number; pct: number }[] | undefined = summary && 'sources' in summary ? (summary as { sources?: { id: string; name: string; count: number; pct: number }[] }).sources : undefined
-                  return Array.isArray(topSources) && topSources.length > 0
-                })() && (
+                {Array.isArray((summary as any)?.sources) && (summary as any).sources.length > 0 && (
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold mb-3">Top izvori</h3>
                     <div className="overflow-hidden rounded-xl border border-gray-200">
@@ -694,12 +736,7 @@ export default function OglasiContent() {
                           </tr>
                         </thead>
                         <tbody>
-                          {(() => {
-                            const list: { id: string; name: string; count: number; pct: number }[] = summary && 'sources' in summary && Array.isArray((summary as { sources?: { id: string; name: string; count: number; pct: number }[] }).sources)
-                              ? (summary as { sources: { id: string; name: string; count: number; pct: number }[] }).sources
-                              : []
-                            return list
-                          })().map((s) => (
+                          {((summary as { sources?: { id: string; name: string; count: number; pct: number }[] }).sources || []).map((s) => (
                             <tr key={s.id} className="border-t border-gray-100 hover:bg-gray-50">
                               <td className="px-3 py-2 font-medium text-gray-800">{s.name}</td>
                               <td className="px-3 py-2 text-right text-gray-600">{s.count}</td>
@@ -719,15 +756,15 @@ export default function OglasiContent() {
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <LinkIcon className="w-5 h-5 text-blue-600" /> 
-                  Job Board Källor ({sources.length})
+                  Job board izvori ({sources.length})
                 </h2>
                 <p className="text-sm text-gray-600 mb-6">
-                  Oglasi se automatski prikupljaju sa sledećih job board sajtova svake noći. Kliknite na bilo koji sajt da ga otvorite u novom tabu.
+                  Oglasi se automatski prikupljaju sa sledećih job board sajtova svake noći. Klikni na bilo koji sajt da ga otvoriš u novom tabu.
                 </p>
                 
                 {sourcesLoading && (
-                  <div className="text-center py-8">
-                    <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="text-center py-8" aria-live="polite">
+                    <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                     <p className="text-sm text-gray-600 mt-2">Učitavam izvore...</p>
                   </div>
                 )}
@@ -762,10 +799,10 @@ export default function OglasiContent() {
                         
                         <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
                           <span>Prioritet: {source.priority}/10</span>
-                          <span>Uspešnost: {source.successRate?.toFixed(1) || 0}%</span>
+                          <span>Uspešnost: {typeof source.successRate === 'number' ? source.successRate.toFixed(1) : 0}%</span>
                         </div>
 
-                        {source.tags && source.tags.length > 0 && (
+                        {Array.isArray(source.tags) && source.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-3">
                             {source.tags.slice(0, 3).map((tag: string) => (
                               <span key={tag} className="inline-flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
@@ -780,6 +817,7 @@ export default function OglasiContent() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                          onClick={() => { trackSourceClick(source.name, source.website) }}
                         >
                           Otvori sajt
                           <ExternalLink className="w-3 h-3" />
@@ -873,30 +911,30 @@ export default function OglasiContent() {
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><TagIcon className="w-4 h-4 text-blue-600" /> Top kategorije</h3>
               <div className="space-y-2">
-                {Object.entries(categoryFacets).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 8).map(([c, count]) => {
-                  const max = Math.max(1, ...(Object.values(categoryFacets) as number[]))
-                  const pct = Math.round(((count as number) / max) * 100)
-                  const active = filters.category === c
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => updateFilters({ category: active ? null : c, offset: 0 })}
-                      className={cn('group w-full text-left rounded-lg border px-3 py-2 transition relative overflow-hidden', active ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40')}
-                    >
-                      <span className="flex items-center justify-between text-[11px] font-medium mb-1">
-                        <span className={cn('truncate max-w-[140px]', active ? 'text-blue-700' : 'text-gray-700')} title={c}>{c}</span>
-                        <span className={cn('tabular-nums', active ? 'text-blue-700' : 'text-gray-500')}>{count as number}</span>
-                      </span>
-                      <span className="block h-1.5 rounded bg-gray-100">
-                        <span style={{ width: pct + '%' }} className={cn('h-full block rounded', active ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-blue-300 to-purple-300 group-hover:from-blue-400 group-hover:to-purple-400')} />
-                      </span>
-                    </button>
-                  )
-                })}
+                {Object.entries(categoryFacets)
+                  .sort((a, b) => (b[1] as number) - (a[1] as number))
+                  .slice(0, 8)
+                  .map(([c, count]) => {
+                    const pct = Math.round(((count as number) / topCategoryMax) * 100)
+                    const active = filters.category === c
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => updateFilters({ category: active ? null : c, offset: 0 })}
+                        className={cn('group w-full text-left rounded-lg border px-3 py-2 transition relative overflow-hidden', active ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40')}
+                      >
+                        <span className="flex items-center justify-between text-[11px] font-medium mb-1">
+                          <span className={cn('truncate max-w-[140px]', active ? 'text-blue-700' : 'text-gray-700')} title={c}>{c}</span>
+                          <span className={cn('tabular-nums', active ? 'text-blue-700' : 'text-gray-500')}>{count as number}</span>
+                        </span>
+                        <span className="block h-1.5 rounded bg-gray-100">
+                          <span style={{ width: pct + '%' }} className={cn('h-full block rounded', active ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-blue-300 to-purple-300 group-hover:from-blue-400 group-hover:to-purple-400')} />
+                        </span>
+                      </button>
+                    )
+                  })}
               </div>
             </div>
-
-            {/* Removed eksperimentalno card */}
           </aside>
         </div>
       </main>

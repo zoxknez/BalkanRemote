@@ -5,14 +5,14 @@ import KompanijeContent from '@/app/kompanije/KompanijeContent'
 import { buildOgImageUrl } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'IT kompanije koje zapošljavaju remote | Remote Balkan',
+  title: 'IT kompanije koje zapošljavaju remote | Balkan Remote',
   description:
     'Filtriraj i istraži IT kompanije sa Balkana i globalne timove koji zapošljavaju remote talente iz regiona.',
   alternates: {
     canonical: '/kompanije',
   },
   openGraph: {
-    title: 'IT kompanije koje zapošljavaju remote | Remote Balkan',
+    title: 'IT kompanije koje zapošljavaju remote | Balkan Remote',
     description: 'Istraži timove koji rade remote i zapošljavaju na Balkanu.',
     url: '/kompanije',
     images: [

@@ -17,3 +17,4 @@ Notes:
 - The API route sets runtime = 'nodejs' to allow rss-parser and crypto usage.
 - Stable dedupe key prevents duplicates across runs (title+company+host+location hash).
 - Minimal salary parsing is included; extend later as needed.
+

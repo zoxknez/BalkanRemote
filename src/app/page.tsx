@@ -3,27 +3,27 @@ import HomeView from './(home)/HomeView';
 import { buildOgImageUrl, getPublicBaseUrl } from '@/lib/site';
 
 const siteUrl = getPublicBaseUrl();
-const ogImage = buildOgImageUrl('Remote Balkan', 'Career hub za remote profesionalce sa Balkana');
+const ogImage = buildOgImageUrl('Balkan Remote', 'Career hub za remote profesionalce sa Balkana');
 
 export const metadata: Metadata = {
-  title: 'Remote Balkan | Career hub za remote profesionalce sa Balkana',
+  title: 'Balkan Remote | Career hub za remote profesionalce sa Balkana',
   description:
     'Kompletan vodič za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije – saveti, poreske optimizacije i IT kompanije.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Remote Balkan | Career hub za remote profesionalce sa Balkana',
+    title: 'Balkan Remote | Career hub za remote profesionalce sa Balkana',
     description:
-      'Remote Balkan donosi praktične savete, poreske optimizacije i resurse za remote rad na Balkanu.',
+      'Balkan Remote donosi praktične savete, poreske optimizacije i resurse za remote rad na Balkanu.',
     url: siteUrl,
-    siteName: 'Remote Balkan',
+    siteName: 'Balkan Remote',
     images: [
       {
         url: ogImage,
         width: 1200,
         height: 630,
-        alt: 'Remote Balkan – Career Hub',
+        alt: 'Balkan Remote – Career Hub',
       },
     ],
     locale: 'sr_RS',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Remote Balkan | Career hub za remote profesionalce sa Balkana',
+    title: 'Balkan Remote | Career hub za remote profesionalce sa Balkana',
     description:
       'Pronađi remote poslove, poreske vodiče i praktične resurse prilagođene Balkanu.',
     images: [ogImage],

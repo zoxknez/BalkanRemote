@@ -74,7 +74,7 @@ function HomeInner() {
             </motion.div>
 
             <h1 className="bg-gradient-to-r from-white via-green-200 to-blue-300 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-7xl">
-              Remote Balkan
+              Balkan Remote
               <br />
               <span className="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
                 Career hub

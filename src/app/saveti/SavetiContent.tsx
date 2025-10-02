@@ -104,7 +104,7 @@ const balkanTips: BalkanTip[] = [
     ],
     resources: [
       { name: 'Deel Global Hiring', url: 'https://www.deel.com' },
-      { name: 'Freelance platforme – Remote Balkan', url: '/poslovi' },
+      { name: 'Freelance platforme – Balkan Remote', url: '/poslovi' },
     ],
   },
   {

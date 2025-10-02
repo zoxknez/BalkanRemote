@@ -5,14 +5,14 @@ import TaxGuideClient from './Client';
 import { buildOgImageUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
+  title: 'Poreski vodič za remote rad na Balkanu | Balkan Remote',
   description:
     'Uporedi paušal, stvarni prihod i DOO modele za Srbiju, Hrvatsku, BiH i Crnu Goru. Kalkulatori, linkovi i najvažniji koraci za freelance i remote rad.',
   alternates: {
     canonical: '/poreski-vodic',
   },
   openGraph: {
-    title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
+    title: 'Poreski vodič za remote rad na Balkanu | Balkan Remote',
     description:
       'Detaljan poreski vodič: modeli oporezivanja, kalkulatori i zvanični linkovi za freelancere i kompanije iz regiona.',
     url: '/poreski-vodic',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Poreski vodič za remote rad na Balkanu | Remote Balkan',
+    title: 'Poreski vodič za remote rad na Balkanu | Balkan Remote',
     description: 'Modeli oporezivanja, kalkulatori i zvanični linkovi.',
     images: [buildOgImageUrl('Poreski vodič za remote rad') + '&theme=guide'],
   },

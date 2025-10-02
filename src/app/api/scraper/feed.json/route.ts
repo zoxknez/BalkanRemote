@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 
   const feed = {
     version: 'https://jsonfeed.org/version/1.1',
-    title: 'Remote Balkan — Scraped poslovi',
+    title: 'Balkan Remote — Scraped poslovi',
     home_page_url: `${site}/poslovi/scraped`,
     feed_url: `${site}/api/scraper/feed.json`,
     description: 'Najnoviji scraped oglasi',

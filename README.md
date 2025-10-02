@@ -1,4 +1,4 @@
-# 🚀 Remote Balkan – Career Hub
+# 🚀 Balkan Remote – Career Hub
 
 [![CI](https://github.com/zoxknez/BalkanRemote/actions/workflows/ci.yml/badge.svg)](https://github.com/zoxknez/BalkanRemote/actions/workflows/ci.yml)
 
@@ -234,4 +234,4 @@ Predlozi i prijave problema: https://github.com/zoxknez/BalkanRemote/issues
 
 ---
 
-Remote Balkan – zajednica i alati za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije.
+Balkan Remote – zajednica i alati za remote rad iz Srbije, Hrvatske, BiH, Crne Gore, Albanije i Severne Makedonije.

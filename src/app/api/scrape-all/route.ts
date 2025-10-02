@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // Updated: Oct 2, 2025 - Fixed Vercel deployment with proper env vars
+// Force redeploy: middleware fix applied
 
 export async function GET(req: NextRequest) {
   try {

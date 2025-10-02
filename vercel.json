@@ -39,7 +39,7 @@
   "crons": [
     {
       "path": "/api/scrape-all",
-      "schedule": "0 */12 * * *" 
+      "schedule": "0 6 * * *"
     }
   ]
 }

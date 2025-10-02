@@ -89,7 +89,7 @@ export default function OglasiContent() {
   const [savedLoading, setSavedLoading] = useState(false)
 
   // Izvori (sources) – učitavaju se kada je tab "sources"
-  const [sources, setSources] = useState<any[]>([])
+  const [sources, setSources] = useState<import('@/types/jobs').ScraperSource[]>([])
   const [sourcesLoading, setSourcesLoading] = useState(false)
   const fetchSavedJobs = useCallback(async () => {
     setSavedLoading(true)

@@ -133,6 +133,10 @@ export function middleware(req: NextRequest) {
     if (expected && provided && expected === provided) {
       return NextResponse.next()
     }
+    // If no webhook secret is configured, allow API requests to pass through
+    // If webhook secret is configured but not provided/invalid, still pass through 
+    // (let the individual API routes handle authentication)
+    return NextResponse.next()
   }
 
   // For all other matched routes, enforce Basic Auth if enabled

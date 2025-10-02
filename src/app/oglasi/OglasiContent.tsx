@@ -109,10 +109,10 @@ export default function OglasiContent() {
   const fetchSources = useCallback(async () => {
     setSourcesLoading(true)
     try {
-      const res = await fetch('/api/scraper/sources/list')
+      const res = await fetch('/api/scraper/sources')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
-      setSources(json?.data?.sources ?? [])
+      setSources(json?.data ?? [])
     } catch {
       setSources([])
     } finally {

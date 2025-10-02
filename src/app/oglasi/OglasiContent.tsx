@@ -73,10 +73,12 @@ export default function OglasiContent() {
       const values = searchParams?.getAll('experience') || []
       return values.length ? values : undefined
     })(),
-    remote:
-      searchParams?.get('remote') === 'false'
-        ? undefined
-        : (searchParams?.get('remote') === 'true' ? true : undefined),
+    remote: (() => {
+      const remoteParam = searchParams?.get('remote')
+      if (remoteParam === 'true') return true
+      if (remoteParam === 'false') return false
+      return undefined
+    })(),
     order: (searchParams?.get('order') === 'created' ? 'created' : 'posted'),
   })
 
@@ -196,7 +198,8 @@ export default function OglasiContent() {
       if (filters.category) params.set('category', filters.category)
       if (filters.contractType && filters.contractType.length) (filters.contractType as string[]).forEach(ct => params.append('contractType', ct))
       if (filters.experience && filters.experience.length) (filters.experience as string[]).forEach(exp => params.append('experience', exp))
-      if (filters.remote === undefined) params.set('remote', 'false')
+      if (filters.remote === true) params.set('remote', 'true')
+      if (filters.remote === false) params.set('remote', 'false')
       if (filters.order && filters.order !== 'posted') params.set('order', filters.order)
       if ((filters.offset || 0) > 0) params.set('page', String(currentPage))
       if (limit !== 6) params.set('limit', String(limit))

@@ -31,6 +31,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  ExternalLink,
+  Link as LinkIcon,
 } from 'lucide-react'
 import { getSupabaseClientBrowser } from '@/lib/job-bookmarks'
 import { cn } from '@/lib/utils'
@@ -85,6 +87,10 @@ export default function OglasiContent() {
   // Sačuvani (bookmarked) poslovi – učitavaju se kada je tab "saved"
   const [savedJobs, setSavedJobs] = useState<import('@/types/jobs').PortalJobRecord[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
+
+  // Izvori (sources) – učitavaju se kada je tab "sources"
+  const [sources, setSources] = useState<any[]>([])
+  const [sourcesLoading, setSourcesLoading] = useState(false)
   const fetchSavedJobs = useCallback(async () => {
     setSavedLoading(true)
     try {
@@ -97,6 +103,20 @@ export default function OglasiContent() {
       setSavedJobs([])
     } finally {
       setSavedLoading(false)
+    }
+  }, [])
+
+  const fetchSources = useCallback(async () => {
+    setSourcesLoading(true)
+    try {
+      const res = await fetch('/api/scraper/sources/list')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      setSources(json?.data?.sources ?? [])
+    } catch {
+      setSources([])
+    } finally {
+      setSourcesLoading(false)
     }
   }, [])
 
@@ -214,7 +234,7 @@ export default function OglasiContent() {
   }, [filters.search, filters.category, filters.contractType, filters.experience, filters.remote, filters.order, filters.offset, router, currentPage, limit])
 
   // Simple tab concept (client side)
-  const [tab, setTab] = useState<'explore' | 'saved' | 'stats'>('explore')
+  const [tab, setTab] = useState<'explore' | 'saved' | 'stats' | 'sources'>('explore')
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null)
   const supabase = getSupabaseClientBrowser()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -324,8 +344,8 @@ export default function OglasiContent() {
             </div>
 
             <div className="mt-10 flex flex-wrap justify-center gap-3 text-xs" role="tablist" aria-label="Oglasi sekcije">
-              {(['explore', 'saved', 'stats'] as const).map(t => {
-                const label = t === 'explore' ? 'Pretraga' : (t === 'saved' ? 'Sačuvano' : 'Statistika')
+              {(['explore', 'saved', 'stats', 'sources'] as const).map(t => {
+                const label = t === 'explore' ? 'Pretraga' : (t === 'saved' ? 'Sačuvano' : (t === 'stats' ? 'Statistika' : 'Izvori'))
                 return (
                   <button
                     key={t}
@@ -333,7 +353,12 @@ export default function OglasiContent() {
                     aria-selected={tab === t}
                     aria-controls={`panel-${t}`}
                     id={`tab-${t}`}
-                    onClick={() => setTab(t)}
+                    onClick={() => {
+                      setTab(t)
+                      if (t === 'sources' && sources.length === 0) {
+                        fetchSources()
+                      }
+                    }}
                     className={cn(
                       'px-5 py-2 rounded-full border backdrop-blur-sm transition font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50',
                       tab === t ? 'bg-white text-blue-700 border-white shadow' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
@@ -342,6 +367,7 @@ export default function OglasiContent() {
                     {t === 'explore' && <Search className="w-4 h-4" />}
                     {t === 'saved' && <Star className="w-4 h-4" />}
                     {t === 'stats' && <BarChart2 className="w-4 h-4" />}
+                    {t === 'sources' && <LinkIcon className="w-4 h-4" />}
                     {label}
                     {t === 'explore' && activeFilterCount > 0 && (
                       <span className="ml-1 inline-flex items-center justify-center text-[10px] bg-blue-600 text-white rounded-full h-5 px-2">
@@ -686,6 +712,90 @@ export default function OglasiContent() {
                   </div>
                 )}
                 <p className="text-[11px] text-gray-500 mt-4">Plan sledeće: CTR po izvoru, vreme do prvog klika, distribucija po iskustvu.</p>
+              </div>
+            )}
+
+            {tab === 'sources' && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <LinkIcon className="w-5 h-5 text-blue-600" /> 
+                  Job Board Källor ({sources.length})
+                </h2>
+                <p className="text-sm text-gray-600 mb-6">
+                  Oglasi se automatski prikupljaju sa sledećih job board sajtova svake noći. Kliknite na bilo koji sajt da ga otvorite u novom tabu.
+                </p>
+                
+                {sourcesLoading && (
+                  <div className="text-center py-8">
+                    <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm text-gray-600 mt-2">Učitavam izvore...</p>
+                  </div>
+                )}
+
+                {!sourcesLoading && sources.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-600">
+                    Nema dostupnih izvora.
+                  </div>
+                )}
+
+                {!sourcesLoading && sources.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sources.map((source) => (
+                      <div key={source.id} className="rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">{source.name}</h3>
+                            <p className="text-xs text-gray-500 mt-1">{source.website}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {source.isActive ? (
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                Aktivan
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                Neaktivan
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
+                          <span>Prioritet: {source.priority}/10</span>
+                          <span>Uspešnost: {source.successRate?.toFixed(1) || 0}%</span>
+                        </div>
+
+                        {source.tags && source.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {source.tags.slice(0, 3).map((tag: string) => (
+                              <span key={tag} className="inline-flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <a
+                          href={source.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          Otvori sajt
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">Kako funkcioniše?</h3>
+                  <p className="text-xs text-blue-800">
+                    Naš scraper automatski posećuje ove sajtove svake noći i prikuplja najnovije remote IT oglase. 
+                    Oglasi se filtriraju, standardizuju i dodaju u našu bazu ako nisu duplikati.
+                  </p>
+                </div>
               </div>
             )}
 

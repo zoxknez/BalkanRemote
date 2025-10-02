@@ -1158,6 +1158,232 @@ export const additionalScraperSources: ScraperSource[] = [
     tags: ['remote', 'tech'],
     errorCount: 0,
     successRate: 88.0
+  },
+
+  // Dodatni popularni remote job board sajtovi
+  {
+    id: 'remoteco-programming',
+    name: 'Remote.co Programming',
+    website: 'https://remote.co',
+    baseUrl: 'https://remote.co/remote-jobs',
+    searchEndpoints: ['/programming/', '/software-development/', '/web-development/'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { requestsPerMinute: 25, delayBetweenRequests: 2500 },
+    selectors: {
+      jobList: '.job_listing',
+      jobTitle: '.job_listing-clickbox h4',
+      company: '.job_listing-clickbox .company',
+      location: '.job_listing-clickbox .location',
+      description: '.job_description',
+      applicationUrl: '.job_listing-clickbox a'
+    },
+    searchTerms: ['javascript', 'python', 'react', 'nodejs'],
+    maxPages: 4,
+    country: ['GLOBAL'],
+    tags: ['remote', 'programming'],
+    errorCount: 0,
+    successRate: 89.0
+  },
+
+  {
+    id: 'remote-io',
+    name: 'Remote.io',
+    website: 'https://remote.io',
+    baseUrl: 'https://remote.io',
+    searchEndpoints: ['/remote-jobs', '/remote-developer-jobs', '/remote-design-jobs'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { requestsPerMinute: 20, delayBetweenRequests: 3000 },
+    selectors: {
+      jobList: '.job-listing',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.job-location',
+      description: '.job-description',
+      applicationUrl: '.apply-link'
+    },
+    searchTerms: ['remote', 'developer', 'designer'],
+    maxPages: 3,
+    country: ['GLOBAL'],
+    tags: ['remote', 'curated'],
+    errorCount: 0,
+    successRate: 82.0
+  },
+
+  {
+    id: 'working-nomads',
+    name: 'Working Nomads',
+    website: 'https://www.workingnomads.co',
+    baseUrl: 'https://www.workingnomads.co',
+    searchEndpoints: ['/jobs', '/programming', '/design'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { requestsPerMinute: 15, delayBetweenRequests: 4000 },
+    selectors: {
+      jobList: '.job-list-item',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.location',
+      description: '.job-description',
+      applicationUrl: '.job-link'
+    },
+    searchTerms: ['programming', 'design', 'marketing'],
+    maxPages: 3,
+    country: ['GLOBAL'],
+    tags: ['nomad', 'remote'],
+    errorCount: 0,
+    successRate: 80.0
+  },
+
+  {
+    id: 'himalayas',
+    name: 'Himalayas',
+    website: 'https://himalayas.app',
+    baseUrl: 'https://himalayas.app/jobs',
+    searchEndpoints: ['?remote=true', '/engineering', '/design'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { requestsPerMinute: 25, delayBetweenRequests: 2400 },
+    selectors: {
+      jobList: 'a[href*="/jobs/"]',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.location',
+      description: '.job-description',
+      applicationUrl: 'a[href*="/jobs/"]'
+    },
+    searchTerms: ['engineering', 'design', 'product'],
+    maxPages: 4,
+    country: ['GLOBAL'],
+    tags: ['remote', 'modern'],
+    errorCount: 0,
+    successRate: 86.0
+  },
+
+  {
+    id: 'remotehub',
+    name: 'RemoteHub',
+    website: 'https://remotehub.io',
+    baseUrl: 'https://remotehub.io',
+    searchEndpoints: ['/remote-jobs', '/remote-developer-jobs'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { requestsPerMinute: 20, delayBetweenRequests: 3000 },
+    selectors: {
+      jobList: '.job-card',
+      jobTitle: '.job-title',
+      company: '.company',
+      location: '.location',
+      description: '.description',
+      applicationUrl: '.apply-btn'
+    },
+    searchTerms: ['developer', 'remote', 'tech'],
+    maxPages: 3,
+    country: ['GLOBAL'],
+    tags: ['remote', 'tech'],
+    errorCount: 0,
+    successRate: 79.0
+  },
+
+  {
+    id: 'nodesk',
+    name: 'NoDesk',
+    website: 'https://nodesk.co',
+    baseUrl: 'https://nodesk.co/remote-jobs',
+    searchEndpoints: ['/', '/category/programming', '/category/design'],
+    isActive: true,
+    priority: 6,
+    rateLimit: { requestsPerMinute: 15, delayBetweenRequests: 4000 },
+    selectors: {
+      jobList: '.job-listing',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.remote-location',
+      description: '.job-summary',
+      applicationUrl: '.apply-link'
+    },
+    searchTerms: ['programming', 'design', 'remote'],
+    maxPages: 3,
+    country: ['GLOBAL'],
+    tags: ['remote', 'lifestyle'],
+    errorCount: 0,
+    successRate: 75.0
+  },
+
+  {
+    id: 'remotive',
+    name: 'Remotive',
+    website: 'https://remotive.io',
+    baseUrl: 'https://remotive.io/remote-jobs',
+    searchEndpoints: ['/software-dev', '/design', '/marketing'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { requestsPerMinute: 20, delayBetweenRequests: 3000 },
+    selectors: {
+      jobList: '.job-tile',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.location',
+      description: '.job-description',
+      applicationUrl: '.apply-button'
+    },
+    searchTerms: ['software', 'design', 'marketing'],
+    maxPages: 4,
+    country: ['GLOBAL'],
+    tags: ['remote', 'curated'],
+    errorCount: 0,
+    successRate: 88.0
+  },
+
+  {
+    id: 'remote-year',
+    name: 'Remote Year Jobs',
+    website: 'https://remoteyear.com',
+    baseUrl: 'https://remoteyear.com/jobs',
+    searchEndpoints: ['?remote=true'],
+    isActive: true,
+    priority: 6,
+    rateLimit: { requestsPerMinute: 12, delayBetweenRequests: 5000 },
+    selectors: {
+      jobList: '.job-listing',
+      jobTitle: '.job-title',
+      company: '.company',
+      location: '.location',
+      description: '.description',
+      applicationUrl: '.apply-link'
+    },
+    searchTerms: ['remote', 'nomad'],
+    maxPages: 2,
+    country: ['GLOBAL'],
+    tags: ['nomad', 'travel'],
+    errorCount: 0,
+    successRate: 72.0
+  },
+
+  {
+    id: 'remoters-net',
+    name: 'Remoters.net',
+    website: 'https://remoters.net',
+    baseUrl: 'https://remoters.net/jobs',
+    searchEndpoints: ['/remote', '/programming', '/design'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { requestsPerMinute: 18, delayBetweenRequests: 3300 },
+    selectors: {
+      jobList: '.job-item',
+      jobTitle: '.job-title',
+      company: '.company-name',
+      location: '.job-location',
+      description: '.job-desc',
+      applicationUrl: '.apply-btn'
+    },
+    searchTerms: ['programming', 'design', 'remote'],
+    maxPages: 3,
+    country: ['GLOBAL'],
+    tags: ['remote', 'international'],
+    errorCount: 0,
+    successRate: 81.0
   }
 ];
 

@@ -113,14 +113,14 @@ export default function KompanijeContent() {
   useEffect(() => {
     if (!firstLoadRef.current) return
     firstLoadRef.current = false
-    const q = params.get('q') || ''
-    const industry = params.get('industry') || 'all'
-    let size = params.get('size') || 'all'
+    const q = params?.get('q') || ''
+    const industry = params?.get('industry') || 'all'
+    let size = params?.get('size') || 'all'
     // Accept aliases from Home tab (smb -> small, enterprise -> large)
     if (size === 'smb') size = 'small'
     if (size === 'enterprise') size = 'large'
-    const hiring = params.get('hiring')
-    const sort = params.get('sort') as 'rating' | 'openPositions' | 'founded' | 'name' | null
+    const hiring = params?.get('hiring')
+    const sort = params?.get('sort') as 'rating' | 'openPositions' | 'founded' | 'name' | null
     if (q) setSearchTerm(q)
     if (industry) setSelectedIndustry(industry)
     if (size) setSelectedSize(size)
@@ -133,7 +133,7 @@ export default function KompanijeContent() {
 
   // Reflect filters in URL; avoid loops by not depending on params
   useEffect(() => {
-    const p = new URLSearchParams(params.toString())
+    const p = new URLSearchParams(params?.toString() ?? '')
     const setOrDelete = (key: string, value: string | boolean) => {
       const v = typeof value === 'boolean' ? (value ? 'true' : '') : value
       if (v && v !== 'all' && v !== 'false') p.set(key, v)
@@ -444,7 +444,7 @@ export default function KompanijeContent() {
                     setSelectedSize('all')
                     setHiringOnly(false)
                     setSortBy('rating')
-                    router.replace(pathname, { scroll: false })
+                    router.replace(pathname || '/kompanije', { scroll: false })
                   }}
                   className="w-full sm:w-auto px-4 py-3 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
                 >

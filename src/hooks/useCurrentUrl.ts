@@ -9,9 +9,10 @@ export function useCurrentUrl(): string {
   const [href, setHref] = useState('')
 
   useEffect(() => {
-    const search = params.toString()
+    const search = params?.toString() ?? ''
+    const path = pathname || '/'
     const val = typeof window !== 'undefined'
-      ? `${window.location.origin}${pathname}${search ? `?${search}` : ''}`
+      ? `${window.location.origin}${path}${search ? `?${search}` : ''}`
       : ''
     setHref(val)
   }, [pathname, params])

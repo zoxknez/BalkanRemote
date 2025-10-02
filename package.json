@@ -23,7 +23,8 @@
     "db:notify-reload": "tsx scripts/notify-postgrest.ts",
     "ingest:official": "tsx scripts/run-official-ingest.ts",
   "ingest:verify": "tsx scripts/verify-ingest.ts",
-  "ingest:prod": "tsx scripts/run-prod-ingest.ts"
+  "ingest:prod": "tsx scripts/run-prod-ingest.ts",
+    "jobs:copy": "tsx scripts/copy-scraped-jobs.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

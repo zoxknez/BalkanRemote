@@ -93,7 +93,8 @@ export function Header() {
             {navigation.map((item) => {
               const Icon = item.icon;
               const matchPath = item.match ?? item.href;
-              const active = pathname === matchPath || pathname.startsWith(`${matchPath}/`);
+              const currentPath = pathname || '/'
+              const active = currentPath === matchPath || currentPath.startsWith(`${matchPath}/`);
               return (
                 <Link
                   key={item.name}
@@ -170,7 +171,8 @@ export function Header() {
             {navigation.map((item) => {
               const Icon = item.icon;
               const matchPath = item.match ?? item.href;
-              const active = pathname === matchPath || pathname.startsWith(`${matchPath}/`);
+              const currentPathM = pathname || '/'
+              const active = currentPathM === matchPath || currentPathM.startsWith(`${matchPath}/`);
               return (
                 <Link
                   key={item.name}

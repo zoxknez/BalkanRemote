@@ -629,8 +629,8 @@ export default function TaxGuideClient() {
 	useEffect(() => {
 		if (!initRef.current) return;
 		initRef.current = false;
-		const country = searchParams.get('country');
-		const opt = searchParams.get('opt');
+		const country = searchParams?.get('country');
+		const opt = searchParams?.get('opt');
 		if (country && balkanCountriesInfo.some((c) => c.country === country)) {
 			setSelectedCountry(country);
 		}
@@ -642,7 +642,7 @@ export default function TaxGuideClient() {
 
 	// If URL had opt, ensure it's applied after country filters resolve
 	useEffect(() => {
-		const opt = searchParams.get('opt');
+		const opt = searchParams?.get('opt');
 		if (opt && filteredOptions.some((o) => o.id === opt)) {
 			setSelectedOptionId(opt);
 		}
@@ -651,10 +651,10 @@ export default function TaxGuideClient() {
 
 	// Reflect selection to URL
 	useEffect(() => {
-		const p = new URLSearchParams(searchParams.toString());
+		const p = new URLSearchParams(searchParams?.toString() ?? '');
 		p.set('country', selectedCountry);
 		if (selectedOptionId) p.set('opt', selectedOptionId);
-		router.replace(`${pathname}?${p.toString()}`, { scroll: false });
+		router.replace(`${pathname || '/poreski-vodic'}?${p.toString()}`, { scroll: false });
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedCountry, selectedOptionId]);
 

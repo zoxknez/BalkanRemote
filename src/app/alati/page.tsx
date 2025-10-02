@@ -139,7 +139,7 @@ function AlatiContent() {
   // filtriranje + sortiranje
   const filteredTools = useMemo(() => {
     // dopusti ?cat=a,b,c (trim + lower)
-    const categoryQuery = params.get("cat") || params.get("category");
+    const categoryQuery = (params?.get("cat") || params?.get("category")) ?? undefined;
     const categoriesFilter = categoryQuery
       ? categoryQuery
           .split(",")
@@ -187,11 +187,11 @@ function AlatiContent() {
     if (!firstLoadRef.current) return;
     firstLoadRef.current = false;
 
-    const q = params.get("q") || "";
-    const cat = (params.get("cat") || params.get("category") || "") as CategoryValue;
-    const pricing = (params.get("pricing") || "all") as PricingValue;
-    const s = params.get("sort") as "rating" | "name" | null;
-    const page = parseInt(params.get("page") || "1", 10);
+  const q = params?.get("q") || "";
+  const cat = (params?.get("cat") || params?.get("category") || "") as CategoryValue;
+  const pricing = (params?.get("pricing") || "all") as PricingValue;
+  const s = (params?.get("sort") as "rating" | "name" | null) ?? null;
+  const page = parseInt(params?.get("page") || "1", 10);
 
     if (q) setSearchTerm(q);
     if (CATEGORY_VALUES.includes(cat)) setSelectedCategory(cat);
@@ -215,9 +215,10 @@ function AlatiContent() {
     setIf("sort", sortBy);
     setIf("page", safePage);
 
-    const qs = p.toString();
-    const nextUrl = qs ? `${pathname}?${qs}` : pathname;
-    const currUrl = `${pathname}${window.location.search}`;
+  const qs = p.toString();
+  const effectivePath = pathname || '/alati';
+  const nextUrl = qs ? `${effectivePath}?${qs}` : effectivePath;
+  const currUrl = `${effectivePath}${window.location.search}`;
 
     if (nextUrl !== currUrl) router.replace(nextUrl, { scroll: false });
   }, [searchTerm, selectedCategory, selectedPricing, sortBy, safePage, pathname, router]);
@@ -486,7 +487,7 @@ function AlatiContent() {
                 setSelectedPricing("all");
                 setSortBy("rating");
                 setCurrentPage(1);
-                router.replace(pathname, { scroll: false });
+                router.replace(pathname || '/alati', { scroll: false });
               }}
               className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >

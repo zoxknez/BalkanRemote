@@ -13,6 +13,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // Allow Vercel Cron invocations to reach API handlers without auth/rate limits
+  // Vercel adds header: x-vercel-cron: 1
+  if (pathname.startsWith('/api') && req.headers.get('x-vercel-cron') === '1') {
+    return NextResponse.next()
+  }
+
   // IP allowlist: bypass protection and limits for trusted IPs
   const clientIp = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() ||
                    (req.headers.get('x-real-ip') || '').trim() || 'unknown'

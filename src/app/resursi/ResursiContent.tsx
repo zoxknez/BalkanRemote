@@ -56,14 +56,14 @@ function ResursiContent() {
   useEffect(() => {
     if (!firstLoadRef.current) return;
     firstLoadRef.current = false;
-    const q = params.get('q') || '';
-    const cat = params.get('category') || 'all';
-    const typ = params.get('type') || 'all';
-    const lang = params.get('lang') || 'all';
-    const lvl = params.get('level');
-    const s = params.get('sort') as 'rating' | 'title' | null;
-    const length = params.get('length') as 'short' | 'medium' | 'long' | null;
-    const page = parseInt(params.get('page') || '1', 10);
+    const q = params?.get('q') || '';
+    const cat = params?.get('category') || 'all';
+    const typ = params?.get('type') || 'all';
+    const lang = params?.get('lang') || 'all';
+    const lvl = params?.get('level');
+    const s = params?.get('sort') as 'rating' | 'title' | null;
+    const length = params?.get('length') as 'short' | 'medium' | 'long' | null;
+    const page = parseInt(params?.get('page') || '1', 10);
     if (q) setSearchTerm(q);
     if (cat) setSelectedCategory(cat);
     if (typ) setSelectedType(typ);
@@ -121,8 +121,8 @@ function ResursiContent() {
       const matchesType = selectedType === 'all' || resource.type === selectedType;
       const matchesLanguage = selectedLanguage === 'all' || resource.language === selectedLanguage;
 
-      const matchesLevel = params.get('level')
-        ? (params.get('level') === 'beginner' ? resource.difficulty === 'beginner' : resource.difficulty === 'advanced')
+      const matchesLevel = params?.get('level')
+        ? (params?.get('level') === 'beginner' ? resource.difficulty === 'beginner' : resource.difficulty === 'advanced')
         : true;
 
       const matchesLength = (() => {
@@ -155,7 +155,7 @@ function ResursiContent() {
 
   // Reflect filters + pagination in URL
   useEffect(() => {
-    const p = new URLSearchParams(params.toString());
+    const p = new URLSearchParams(params?.toString() ?? '');
     const setOrDelete = (key: string, value: string | number) => {
       const v = String(value).trim();
       if (v && v !== 'all' && v !== '1') p.set(key, v);
@@ -168,7 +168,8 @@ function ResursiContent() {
     setOrDelete('sort', sortBy);
     setOrDelete('length', selectedLength);
     setOrDelete('page', currentPage);
-    router.replace(`${pathname}?${p.toString()}`, { scroll: false });
+    const effectivePath = pathname || '/resursi';
+    router.replace(`${effectivePath}?${p.toString()}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedCategory, selectedType, selectedLanguage, selectedLength, sortBy, currentPage, pathname, router]);
 
@@ -514,7 +515,7 @@ function ResursiContent() {
                 setSelectedLanguage('all');
                 setSortBy('rating');
                 setCurrentPage(1);
-                router.replace(pathname, { scroll: false });
+                router.replace(pathname || '/resursi', { scroll: false });
               }}
               className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >

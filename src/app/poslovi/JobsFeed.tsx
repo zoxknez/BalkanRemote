@@ -171,7 +171,7 @@ export function JobsFeed() {
   const [clearedPreferences, setClearedPreferences] = useState(false)
   const [hideVisited, setHideVisited] = useState<boolean>(() => {
     try {
-      const hv = params.get('hideVisited')
+  const hv = params?.get('hideVisited')
       if (hv === '1' || hv === 'true') return true
       if (hv === '0' || hv === 'false') return false
       const saved = typeof window !== 'undefined' ? localStorage.getItem('jobs:hideVisited') : null
@@ -191,7 +191,7 @@ export function JobsFeed() {
 
   // Build initial filters from URL (one-time for this component mount)
   const initialLimit = (() => {
-    const limitParam = params.get('limit')
+  const limitParam = params?.get('limit')
     if (limitParam) {
       const l = parseInt(limitParam, 10)
       if (Number.isFinite(l) && l > 0 && l <= 50) return l
@@ -204,16 +204,16 @@ export function JobsFeed() {
     return 12
   })()
   const initialPage = (() => {
-    const p = parseInt(params.get('page') || '1', 10)
+  const p = parseInt(params?.get('page') || '1', 10)
     return Number.isFinite(p) && p > 0 ? p : 1
   })()
   const initialOffset = (() => {
-    const off = parseInt(params.get('offset') || '', 10)
+  const off = parseInt(params?.get('offset') || '', 10)
     if (Number.isFinite(off) && off >= 0) return off
     return (initialPage - 1) * initialLimit
   })()
   const initialRemote = (() => {
-    const r = params.get('remote')
+  const r = params?.get('remote')
     if (r === 'false' || r === '0' || r === 'any') return undefined
     if (r === 'true' || r === '1') return true
     // Fallback to saved preference
@@ -225,23 +225,23 @@ export function JobsFeed() {
     return true // default to remote-only
   })()
   const initialContract = (() => {
-    const values = params.getAll('contractType') as PortalJobContractType[]
+    const values = (params?.getAll('contractType') as PortalJobContractType[]) ?? []
     const valid = values.filter((v) => (CONTRACT_OPTIONS as string[]).includes(v))
     return valid.length ? valid : undefined
   })()
   const initialExperience = (() => {
-    const values = params.getAll('experience')
+    const values = params?.getAll('experience') ?? []
     const valid = values.filter((v) => EXPERIENCE_OPTIONS.some((o) => o.value === v))
     return valid.length ? valid : undefined
   })()
   const initialCategory = (() => {
-    const c = params.get('category') || undefined
+  const c = params?.get('category') || undefined
     if (!c || c === 'all') return undefined
     const exists = CATEGORY_OPTIONS.some((o) => o.value === c)
     return exists ? (c as JobCategory) : undefined
   })()
   const initialSearch = (() => {
-    const q = params.get('q') || params.get('search')
+  const q = params?.get('q') || params?.get('search')
     return q && q.trim().length ? q.trim() : undefined
   })()
 
@@ -525,7 +525,7 @@ export function JobsFeed() {
 
   // Reflect filters to URL (page, limit, q, category, contractType[], experience[], remote)
   useEffect(() => {
-    const p = new URLSearchParams(params.toString())
+  const p = new URLSearchParams(params?.toString() ?? '')
     const setSingle = (key: string, value?: string | number | boolean | null) => {
       if (value === undefined || value === null || value === '' || value === 'all') {
         p.delete(key)

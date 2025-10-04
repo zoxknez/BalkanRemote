@@ -61,11 +61,11 @@ export default function FirmeContent() {
     hasMore,
     summary,
   } = useHybridJobs({
-    limit: 6,
+    limit: 12, // Više poslova po stranici za hybrid/onsite
     // Inicijalni offset prema ?page i ?limit
     offset: (() => {
       const p = parseInt(searchParams?.get('page') || '1', 10)
-      const l = parseInt(searchParams?.get('limit') || '6', 10)
+      const l = parseInt(searchParams?.get('limit') || '12', 10)
       return p > 1 ? (p - 1) * l : 0
     })(),
     search: searchParams?.get('search') || undefined,
@@ -80,7 +80,12 @@ export default function FirmeContent() {
       return values.length ? values : undefined
     })(),
     // FIRME/HYBRID: Prikaz samo hybrid/onsite pozicija (ne remote)
-    workType: ['hybrid', 'onsite', 'flexible'],
+    workType: (() => {
+      const values = searchParams?.getAll('workType') || []
+      // Ako nema filtera, prikaži hybrid i onsite (ne flexible po defaultu)
+      return values.length ? values : ['hybrid', 'onsite']
+    })(),
+    country: searchParams?.get('country') || undefined,
     order: (searchParams?.get('order') === 'created_at' ? 'created_at' : 'posted_date'),
   })
 

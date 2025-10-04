@@ -23,9 +23,11 @@ export async function GET(request: NextRequest) {
     const orderBy = searchParams.get('order') || 'posted_date';
     const order = searchParams.get('direction') || 'desc';
 
+    // TEMP: Using direct table instead of view until view is fixed in Supabase
     let query = supabase
-      .from('hybrid_jobs_public')
-      .select('*', { count: 'exact' });
+      .from('hybrid_jobs')
+      .select('*', { count: 'exact' })
+      .gte('quality_score', 50); // Apply view filter manually
 
     // Apply filters
     if (country) {
@@ -34,6 +36,9 @@ export async function GET(request: NextRequest) {
 
     if (workType) {
       query = query.eq('work_type', workType);
+    } else {
+      // Default: show only hybrid and onsite (NOT fully remote)
+      query = query.in('work_type', ['hybrid', 'onsite', 'flexible']);
     }
 
     if (category) {
@@ -63,25 +68,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate stats for response
-    const stats = {
-      total: count || 0,
-      limit,
-      offset,
-      hasMore: (count || 0) > offset + limit
-    };
-
+    // Return response matching useHybridJobs hook expectations
     return NextResponse.json({
       success: true,
-      data: data || [],
-      stats,
-      filters: {
-        country,
-        workType,
-        category,
-        search,
-        orderBy: orderColumn,
-        order
+      data: {
+        jobs: data || [],
+        total: count || 0,
+        limit,
+        offset,
+        hasMore: (count || 0) > offset + limit,
+        facets: {
+          workType: {},
+          contractType: {},
+          experienceLevel: {},
+          category: {},
+          country: {}
+        },
+        summary: {
+          newToday: 0,
+          totalHybrid: count || 0
+        }
       }
     });
 

@@ -111,10 +111,18 @@ export type JobCategory =
   | 'marketing'
   | 'sales'
   | 'customer-support'
-  | 'hr'
+  | 'hr-people'
   | 'finance'
   | 'operations'
   | 'management'
+  | 'writing'
+  | 'education'
+  | 'legal'
+  | 'healthcare'
+  | 'project-management'
+  | 'admin'
+  | 'startup'
+  | 'all'
   | 'other';
 
 export interface ScraperSource {

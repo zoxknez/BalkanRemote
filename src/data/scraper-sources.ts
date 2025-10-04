@@ -1384,6 +1384,392 @@ export const additionalScraperSources: ScraperSource[] = [
     tags: ['remote', 'international'],
     errorCount: 0,
     successRate: 81.0
+  },
+
+  // Balkanski scraper sources
+  {
+    id: 'halooglasi-rs',
+    name: 'Halo Oglasi Srbija',
+    website: 'https://www.halooglasi.com',
+    baseUrl: 'https://www.halooglasi.com',
+    searchEndpoints: ['/posao/ponuda-poslova-pretraga'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { 
+      requestsPerMinute: 15, 
+      delayBetweenRequests: 4000 
+    },
+    selectors: {
+      jobList: '.product-item, .job-listing, .ad-item',
+      jobTitle: '.product-title, .job-title, h3 a, .title-link',
+      company: '.company-name, .advertiser-name, .company',
+      location: '.location, .job-location, .place',
+      salary: '.price, .salary, .wage',
+      description: '.product-description, .job-description, .desc',
+      applicationUrl: 'a[href*="/posao/"]',
+      postedDate: '.date-posted, .published, .date'
+    },
+    searchTerms: ['posao', 'oglasi', 'zaposlenje'],
+    maxPages: 10,
+    country: ['RS', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['RS'],
+    tags: ['balkan', 'srbija', 'onsite', 'hybrid', 'svi-poslovi'],
+    errorCount: 0,
+    successRate: 95.0
+  },
+
+  {
+    id: 'nsz-gov-rs',
+    name: 'Nacionalna Služba za Zapošljavanje',
+    website: 'https://www.nsz.gov.rs',
+    baseUrl: 'https://www.nsz.gov.rs',
+    searchEndpoints: ['/sadrzaji/poslovi/279'],
+    isActive: true,
+    priority: 9,
+    rateLimit: { 
+      requestsPerMinute: 10, 
+      delayBetweenRequests: 6000 
+    },
+    selectors: {
+      jobList: '.job-item, .vacancy-item, .listing-item, .posao-item',
+      jobTitle: '.job-title, .vacancy-title, h3 a, .title',
+      company: '.company-name, .employer, .poslodavac',
+      location: '.location, .mesto, .grad',
+      salary: '.salary, .plata, .zarada',
+      description: '.job-description, .opis, .desc',
+      applicationUrl: 'a[href*="/posao"], a[href*="/vacancy"]',
+      postedDate: '.date-posted, .datum, .objavljeno'
+    },
+    searchTerms: ['posao', 'zaposlenje', 'konkurs'],
+    maxPages: 15,
+    country: ['RS', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['RS'],
+    tags: ['balkan', 'srbija', 'onsite', 'hybrid', 'javni-sektor', 'svi-poslovi'],
+    errorCount: 0,
+    successRate: 98.0
+  },
+
+  // ==================== DODATNI BALKANSKI SOURCES ====================
+  
+  // CRNA GORA
+  {
+    id: 'posao-me',
+    name: 'Posao.me - Crna Gora',
+    website: 'https://posao.me',
+    baseUrl: 'https://posao.me',
+    searchEndpoints: ['/pretraga-poslova', '/it-poslovi', '/remote-poslovi'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { 
+      requestsPerMinute: 12, 
+      delayBetweenRequests: 5000 
+    },
+    selectors: {
+      jobList: '.job-item, .posao-item, .oglas-item',
+      jobTitle: '.job-title, .naslov-posla, h3 a',
+      company: '.company-name, .firma, .poslodavac',
+      location: '.location, .lokacija, .mjesto',
+      salary: '.salary, .plata, .zarada',
+      description: '.job-description, .opis-posla, .sadrzaj',
+      applicationUrl: 'a[href*="/posao/"], .apply-link',
+      postedDate: '.date-posted, .datum, .objavljeno'
+    },
+    searchTerms: ['posao', 'IT', 'programer', 'marketing'],
+    maxPages: 8,
+    country: ['ME', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['ME'],
+    tags: ['balkan', 'crna-gora', 'montenegro', 'onsite', 'hybrid', 'lokalni-poslovi'],
+    errorCount: 0,
+    successRate: 85.0
+  },
+
+  {
+    id: 'mojposao-me',
+    name: 'MojPosao.me',
+    website: 'https://mojposao.me',
+    baseUrl: 'https://mojposao.me',
+    searchEndpoints: ['/oglasi-za-posao', '/pretraga'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { 
+      requestsPerMinute: 15, 
+      delayBetweenRequests: 4000 
+    },
+    selectors: {
+      jobList: '.job-ad, .oglas',
+      jobTitle: '.job-title, .naslov',
+      company: '.employer, .poslodavac',
+      location: '.location, .grad',
+      description: '.description, .opis',
+      applicationUrl: '.apply-btn, .prijavi-se',
+      postedDate: '.posted-date, .datum'
+    },
+    searchTerms: ['posao', 'karijera', 'zaposlenje'],
+    maxPages: 6,
+    country: ['ME', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['ME'],
+    tags: ['balkan', 'crna-gora', 'onsite', 'hybrid'],
+    errorCount: 0,
+    successRate: 82.0
+  },
+
+  // BOSNA I HERCEGOVINA
+  {
+    id: 'posao-ba',
+    name: 'Posao.ba - Bosna i Hercegovina',
+    website: 'https://posao.ba',
+    baseUrl: 'https://posao.ba',
+    searchEndpoints: ['/pretraga-poslova', '/it-tehnologija', '/remote-rad'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { 
+      requestsPerMinute: 12, 
+      delayBetweenRequests: 5000 
+    },
+    selectors: {
+      jobList: '.job-listing, .posao-oglas, .job-item',
+      jobTitle: '.job-title, .naslov-posla, h2 a',
+      company: '.company-name, .poslodavac, .firma',
+      location: '.location, .lokacija, .grad',
+      salary: '.salary, .plata',
+      description: '.job-description, .opis',
+      applicationUrl: 'a[href*="/posao/"], .apply-link',
+      postedDate: '.date-posted, .datum'
+    },
+    searchTerms: ['posao', 'IT', 'programiranje', 'development'],
+    maxPages: 10,
+    country: ['BA', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['BA'],
+    tags: ['balkan', 'bosna', 'hercegovina', 'onsite', 'hybrid', 'svi-poslovi'],
+    errorCount: 0,
+    successRate: 88.0
+  },
+
+  {
+    id: 'olx-ba',
+    name: 'OLX.ba - Poslovi',
+    website: 'https://www.olx.ba',
+    baseUrl: 'https://www.olx.ba',
+    searchEndpoints: ['/posao/it-telekomunikacije', '/posao/administrativni-poslovi'],
+    isActive: true,
+    priority: 6,
+    rateLimit: { 
+      requestsPerMinute: 10, 
+      delayBetweenRequests: 6000 
+    },
+    selectors: {
+      jobList: '.offer-item, .ad-item',
+      jobTitle: '.offer-title, .ad-title',
+      company: '.user-name, .advertiser',
+      location: '.location-name',
+      description: '.offer-description',
+      applicationUrl: '.offer-title a',
+      postedDate: '.offer-date'
+    },
+    searchTerms: ['posao', 'rad', 'zaposlenje'],
+    maxPages: 5,
+    country: ['BA', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['BA'],
+    tags: ['balkan', 'bosna', 'oglasi', 'onsite'],
+    errorCount: 0,
+    successRate: 75.0
+  },
+
+  // SLOVENIJA
+  {
+    id: 'mojedelo-si',
+    name: 'MojeDelo.si',
+    website: 'https://www.mojedelo.com',
+    baseUrl: 'https://www.mojedelo.com',
+    searchEndpoints: ['/prosta-delovna-mesta', '/it-jobs', '/remote-jobs'],
+    isActive: true,
+    priority: 9,
+    rateLimit: { 
+      requestsPerMinute: 20, 
+      delayBetweenRequests: 3000 
+    },
+    selectors: {
+      jobList: '.job-item, .delo-item',
+      jobTitle: '.job-title, .naslov-dela',
+      company: '.company-name, .podjetje',
+      location: '.location, .lokacija',
+      salary: '.salary, .placa',
+      description: '.job-description, .opis-dela',
+      applicationUrl: '.apply-link, .prijava-link',
+      postedDate: '.posted-date, .datum-objave'
+    },
+    searchTerms: ['delo', 'IT', 'programiranje', 'remote'],
+    maxPages: 8,
+    country: ['SI', 'BALKAN'],
+    regions: ['BALKAN', 'EU'],
+    countriesISO: ['SI'],
+    tags: ['balkan', 'slovenija', 'eu', 'onsite', 'hybrid', 'remote'],
+    errorCount: 0,
+    successRate: 92.0
+  },
+
+  {
+    id: 'zaposlitev-si',
+    name: 'Zaposlitev.net',
+    website: 'https://www.zaposlitev.net',
+    baseUrl: 'https://www.zaposlitev.net',
+    searchEndpoints: ['/prosta-delovna-mesta', '/isci-delo'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { 
+      requestsPerMinute: 15, 
+      delayBetweenRequests: 4000 
+    },
+    selectors: {
+      jobList: '.job-listing, .oglas-delo',
+      jobTitle: '.job-title, .naslov',
+      company: '.employer, .delodajalec',
+      location: '.location, .kraj',
+      description: '.description, .opis',
+      applicationUrl: '.apply-btn',
+      postedDate: '.date, .datum'
+    },
+    searchTerms: ['zaposlitev', 'delo', 'kariera'],
+    maxPages: 6,
+    country: ['SI', 'BALKAN'],
+    regions: ['BALKAN', 'EU'],
+    countriesISO: ['SI'],
+    tags: ['balkan', 'slovenija', 'eu', 'onsite', 'hybrid'],
+    errorCount: 0,
+    successRate: 87.0
+  },
+
+  // DODATNI HRVATSKI SOURCES
+  {
+    id: 'posao-hr',
+    name: 'Posao.hr',
+    website: 'https://www.posao.hr',
+    baseUrl: 'https://www.posao.hr',
+    searchEndpoints: ['/pretraga-poslova', '/it-poslovi', '/remote-rad'],
+    isActive: true,
+    priority: 8,
+    rateLimit: { 
+      requestsPerMinute: 18, 
+      delayBetweenRequests: 3500 
+    },
+    selectors: {
+      jobList: '.job-item, .posao-item',
+      jobTitle: '.job-title, .naslov-posla',
+      company: '.company-name, .tvrtka',
+      location: '.location, .lokacija',
+      salary: '.salary, .placa',
+      description: '.job-description, .opis-posla',
+      applicationUrl: '.apply-link, .prijava',
+      postedDate: '.posted-date, .datum'
+    },
+    searchTerms: ['posao', 'IT', 'programiranje', 'remote'],
+    maxPages: 10,
+    country: ['HR', 'BALKAN'],
+    regions: ['BALKAN', 'EU'],
+    countriesISO: ['HR'],
+    tags: ['balkan', 'hrvatska', 'eu', 'onsite', 'hybrid', 'remote', 'svi-poslovi'],
+    errorCount: 0,
+    successRate: 89.0
+  },
+
+  {
+    id: 'oglasnik-hr',
+    name: 'Oglasnik.hr - Poslovi',
+    website: 'https://www.oglasnik.hr',
+    baseUrl: 'https://www.oglasnik.hr',
+    searchEndpoints: ['/poslovi', '/it-poslovi'],
+    isActive: true,
+    priority: 6,
+    rateLimit: { 
+      requestsPerMinute: 12, 
+      delayBetweenRequests: 5000 
+    },
+    selectors: {
+      jobList: '.ad-item, .oglas-item',
+      jobTitle: '.ad-title, .naslov-oglasa',
+      company: '.advertiser, .oglasivac',
+      location: '.location, .mjesto',
+      description: '.ad-description, .opis',
+      applicationUrl: '.ad-link',
+      postedDate: '.ad-date, .datum'
+    },
+    searchTerms: ['posao', 'oglasi', 'zaposlenje'],
+    maxPages: 5,
+    country: ['HR', 'BALKAN'],
+    regions: ['BALKAN', 'EU'],
+    countriesISO: ['HR'],
+    tags: ['balkan', 'hrvatska', 'oglasi', 'onsite'],
+    errorCount: 0,
+    successRate: 78.0
+  },
+
+  // DODATNI SRPSKI SOURCES
+  {
+    id: 'beograd-rs',
+    name: 'Beograd.rs - Poslovi',
+    website: 'https://beograd.rs',
+    baseUrl: 'https://beograd.rs',
+    searchEndpoints: ['/poslovi', '/oglasi/posao'],
+    isActive: true,
+    priority: 7,
+    rateLimit: { 
+      requestsPerMinute: 15, 
+      delayBetweenRequests: 4000 
+    },
+    selectors: {
+      jobList: '.job-listing, .posao-oglas',
+      jobTitle: '.job-title, .naslov',
+      company: '.company, .firma',
+      location: '.location, .lokacija',
+      description: '.description, .opis',
+      applicationUrl: '.apply-link',
+      postedDate: '.date, .datum'
+    },
+    searchTerms: ['posao', 'beograd', 'oglasi'],
+    maxPages: 8,
+    country: ['RS', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['RS'],
+    tags: ['balkan', 'srbija', 'beograd', 'onsite', 'hybrid', 'lokalni'],
+    errorCount: 0,
+    successRate: 83.0
+  },
+
+  {
+    id: 'kupujem-prodajem-rs',
+    name: 'KupujemProdajem.com - Poslovi',
+    website: 'https://www.kupujemprodajem.com',
+    baseUrl: 'https://www.kupujemprodajem.com',
+    searchEndpoints: ['/poslovi', '/oglasi/posao-i-karijera'],
+    isActive: true,
+    priority: 6,
+    rateLimit: { 
+      requestsPerMinute: 10, 
+      delayBetweenRequests: 6000 
+    },
+    selectors: {
+      jobList: '.ad-item, .oglas',
+      jobTitle: '.ad-title, .naslov-oglasa',
+      company: '.seller-name, .prodavac',
+      location: '.ad-location, .lokacija',
+      description: '.ad-description, .opis-oglasa',
+      applicationUrl: '.ad-link',
+      postedDate: '.ad-date'
+    },
+    searchTerms: ['posao', 'karijera', 'zaposlenje'],
+    maxPages: 6,
+    country: ['RS', 'BALKAN'],
+    regions: ['BALKAN'],
+    countriesISO: ['RS'],
+    tags: ['balkan', 'srbija', 'oglasi', 'onsite', 'svi-poslovi'],
+    errorCount: 0,
+    successRate: 72.0
   }
 ];
 

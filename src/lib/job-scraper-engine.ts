@@ -10,11 +10,11 @@ const JOB_CATEGORIES: JobCategory[] = [
   'marketing',
   'sales',
   'customer-support',
-  'hr',
+  'hr-people',
   'finance',
   'operations',
   'management',
-  'other',
+  'all',
 ];
 import { allScraperSources } from '@/data/scraper-sources';
 import crypto from 'crypto';

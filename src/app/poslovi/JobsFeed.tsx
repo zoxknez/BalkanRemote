@@ -49,10 +49,18 @@ const CATEGORY_OPTIONS: { label: string; value: JobCategory }[] = [
   { label: 'Marketing', value: 'marketing' },
   { label: 'Prodaja', value: 'sales' },
   { label: 'Customer Support', value: 'customer-support' },
-  { label: 'Proizvod/PM', value: 'management' },
-  { label: 'HR & Talent', value: 'hr' },
+  { label: 'HR & Kadrovi', value: 'hr-people' },
   { label: 'Finansije', value: 'finance' },
   { label: 'Operacije', value: 'operations' },
+  { label: 'Proizvod/PM', value: 'management' },
+  { label: 'Pisanje/Sadržaj', value: 'writing' },
+  { label: 'Edukacija', value: 'education' },
+  { label: 'Pravni/Legal', value: 'legal' },
+  { label: 'Zdravstvo', value: 'healthcare' },
+  { label: 'Project Management', value: 'project-management' },
+  { label: 'Admin/VA', value: 'admin' },
+  { label: 'Startup/Sve', value: 'startup' },
+  { label: 'Sve kategorije', value: 'all' },
   { label: 'Ostalo', value: 'other' }
 ]
 

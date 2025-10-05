@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Briefcase, Calendar, MapPin, Globe2, ExternalLink, Building2, Tag, Star, LogIn } from 'lucide-react'
+import { Briefcase, Calendar, MapPin, Globe2, ExternalLink, Building2, Tag, Star } from 'lucide-react'
 import { HybridJob } from '@/hooks/useHybridJobs'
 import { cn, formatDate, formatSalary } from '@/lib/utils'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'

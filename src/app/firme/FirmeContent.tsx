@@ -618,7 +618,7 @@ export default function FirmeContent() {
                               const next = exists ? current.filter(t => t !== type) : [...current, type]
                               updateFilters({ workType: next.length > 0 ? next : undefined, offset: 0 })
                             }}
-                            className={filterPillClass('workType', filters.workType?.includes(type))}
+                            className={filterPillClass('workType', filters.workType?.includes(type) ?? false)}
                           >
                             {type === 'hybrid' ? 'Hibridno' : type === 'onsite' ? 'U kancelariji' : 'Fleksibilno'}
                           </button>
@@ -996,7 +996,7 @@ function ActiveFilterChips({ filters, onRemove }: { filters: ChipFilters; onRemo
 }
 
 // Utility za stilizaciju filter pill dugmadi
-function filterPillClass(kind: 'contract' | 'experience' | 'category' | 'remote', active: boolean) {
+function filterPillClass(kind: 'contract' | 'experience' | 'category' | 'remote' | 'workType', active: boolean) {
   const base = 'group inline-flex items-center rounded-full px-3 py-1.5 md:px-3.5 md:py-2 text-[11px] md:text-[12px] font-medium border transition shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1'
   const palette: Record<string, { on: string; off: string }> = {
     contract: {
@@ -1014,6 +1014,10 @@ function filterPillClass(kind: 'contract' | 'experience' | 'category' | 'remote'
     remote: {
       on: 'bg-amber-600 text-white border-amber-600 focus:ring-amber-500/40',
       off: 'bg-white text-gray-700 border-gray-300 hover:border-amber-300 hover:text-amber-700 focus:ring-amber-500/30'
+    },
+    workType: {
+      on: 'bg-teal-600 text-white border-teal-600 focus:ring-teal-500/40',
+      off: 'bg-white text-gray-700 border-gray-300 hover:border-teal-300 hover:text-teal-700 focus:ring-teal-500/30'
     }
   }
   const set = palette[kind]

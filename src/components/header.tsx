@@ -72,12 +72,12 @@ export function Header() {
       </a>
 
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Desktop header: flex layout */}
-        <div className="min-h-[4rem] py-2 hidden md:flex items-center w-full">
+        <div className="min-h-[4rem] py-2 hidden md:flex items-center justify-between w-full gap-6">
           {/* LEFT: Logo + Brand */}
-          <div ref={leftRef} className="flex items-center flex-none mr-6">
-            <Link href="/" className="flex items-center gap-3 group">
+          <div ref={leftRef} className="flex items-center flex-shrink-0">
+            <Link href="/" className="flex items-center gap-2.5 group">
               <span className="relative inline-flex">
                 <span aria-hidden className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-purple-600 opacity-75 blur-sm transition duration-300 group-hover:opacity-95" />
                 <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white text-lg font-semibold tracking-tight shadow-lg shadow-blue-500/30 ring-1 ring-white/40">BR</span>
@@ -90,7 +90,7 @@ export function Header() {
           </div>
 
           {/* CENTER: Navigation links */}
-          <nav className="flex-1 flex items-center justify-center gap-1.5 xl:gap-2 flex-wrap xl:flex-nowrap" role="navigation" aria-label="Glavna navigacija">
+          <nav className="flex-1 flex items-center justify-center gap-1.5 overflow-x-auto scrollbar-hide min-w-0" role="navigation" aria-label="Glavna navigacija">
             {navigation.map((item) => {
               const Icon = item.icon;
               const matchPath = item.match ?? item.href;
@@ -101,14 +101,14 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`group relative inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] md:text-xs leading-none font-semibold transition-all duration-200 shrink min-w-[6.5rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${active ? "text-blue-700 border-blue-100" : "text-gray-700 border-transparent hover:border-blue-100 hover:text-blue-600"}`}
+                  className={`group relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs leading-none font-semibold transition-all duration-200 shrink-0 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${active ? "text-blue-700 border-blue-100" : "text-gray-700 border-transparent hover:border-blue-100 hover:text-blue-600"}`}
                   title={item.name}
                 >
                   {active && (
                     <motion.span layoutId="nav-active" className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/10 via-blue-600/10 to-purple-500/10 ring-1 ring-blue-500/15" transition={{ type: "spring", bounce: 0.25, duration: 0.4 }} />
                   )}
-                  <Icon size={16} absoluteStrokeWidth className="shrink-0 align-middle relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden />
-                  <span className="relative z-10 truncate max-w-[8.5rem] sm:max-w-[10rem] xl:max-w-none">
+                  <Icon size={15} absoluteStrokeWidth className="shrink-0 align-middle relative z-10 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden />
+                  <span className="relative z-10">
                     <span className="hidden xl:inline">{item.name}</span>
                     <span className="xl:hidden">{item.short ?? item.name}</span>
                   </span>
@@ -118,9 +118,9 @@ export function Header() {
           </nav>
 
           {/* RIGHT: CTA buttons */}
-          <div ref={rightRef} className="flex items-center gap-3 flex-none ml-6">
-            <Link href="/poslovi" className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">Traži poslove</Link>
-            <a href="https://paypal.me/o0o0o0o0o0o0o" target="_blank" rel="noopener noreferrer" aria-label="Doniraj autoru preko PayPal" className="inline-flex items-center justify-center h-10 px-5 whitespace-nowrap gap-2 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40">
+          <div ref={rightRef} className="flex items-center gap-2.5 flex-shrink-0">
+            <Link href="/poslovi" className="inline-flex items-center justify-center h-10 px-4 whitespace-nowrap bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-full font-medium hover:shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">Traži poslove</Link>
+            <a href="https://paypal.me/o0o0o0o0o0o0o" target="_blank" rel="noopener noreferrer" aria-label="Doniraj autoru preko PayPal" className="inline-flex items-center justify-center h-10 px-4 whitespace-nowrap gap-2 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:scale-[1.02] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40">
               <Heart size={16} absoluteStrokeWidth className="shrink-0 align-middle" aria-hidden />
               <span>Doniraj</span>
             </a>

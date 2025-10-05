@@ -17,9 +17,15 @@ import {
   AlertCircle,
   Building2,
   Globe,
-  Sparkles
+  Sparkles,
+  Bookmark,
+  BarChart3,
+  Link as LinkIcon,
+  ExternalLink,
+  TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { HybridJob } from '@/hooks/useHybridJobs'
 
 const WORK_TYPES = [
   { value: 'hybrid', label: 'Hibridno', icon: '🏢', desc: 'Kombinacija remote i kancelarija' },
@@ -43,12 +49,17 @@ const EXPERIENCE_LEVELS = [
   { value: 'lead', label: 'Lead' },
 ] as const
 
+type TabType = 'explore' | 'saved' | 'stats' | 'sources'
+
 export default function FirmeContentSimplified() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const [searchInput, setSearchInput] = useState(searchParams?.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('explore')
+  const [savedJobs, setSavedJobs] = useState<HybridJob[]>([])
+  const [savedLoading, setSavedLoading] = useState(false)
 
   const {
     jobs,
@@ -150,6 +161,29 @@ export default function FirmeContentSimplified() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [totalPages, limit, updateFilters])
 
+  // Fetch saved jobs
+  const fetchSavedJobs = useCallback(async () => {
+    setSavedLoading(true)
+    try {
+      const res = await fetch('/api/hybrid-jobs/bookmarks')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const json = await res.json()
+      setSavedJobs(json?.data || [])
+    } catch (err) {
+      console.error('Failed to fetch saved jobs:', err)
+      setSavedJobs([])
+    } finally {
+      setSavedLoading(false)
+    }
+  }, [])
+
+  // Load saved jobs when tab changes
+  useEffect(() => {
+    if (activeTab === 'saved') {
+      fetchSavedJobs()
+    }
+  }, [activeTab, fetchSavedJobs])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Header */}
@@ -164,6 +198,58 @@ export default function FirmeContentSimplified() {
           <p className="text-blue-100 text-lg mb-6">
             Pronađi poslove na Balkanu sa radom iz kancelarije ili hibridnim modelom
           </p>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            <button
+              onClick={() => setActiveTab('explore')}
+              className={cn(
+                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
+                activeTab === 'explore'
+                  ? "bg-white text-blue-600 shadow-lg"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              )}
+            >
+              <Sparkles className="w-4 h-4" />
+              Pretraga
+            </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={cn(
+                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
+                activeTab === 'saved'
+                  ? "bg-white text-blue-600 shadow-lg"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              )}
+            >
+              <Bookmark className="w-4 h-4" />
+              Sačuvano
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={cn(
+                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
+                activeTab === 'stats'
+                  ? "bg-white text-blue-600 shadow-lg"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              )}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Statistika
+            </button>
+            <button
+              onClick={() => setActiveTab('sources')}
+              className={cn(
+                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
+                activeTab === 'sources'
+                  ? "bg-white text-blue-600 shadow-lg"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              )}
+            >
+              <LinkIcon className="w-4 h-4" />
+              Izvori
+            </button>
+          </div>
 
           {/* Search Bar */}
           <div className="flex gap-2 max-w-3xl">
@@ -346,105 +432,273 @@ export default function FirmeContentSimplified() {
         )}
       </AnimatePresence>
 
-      {/* Jobs Grid */}
+      {/* Content Area */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600">Učitavanje poslova...</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-red-900 mb-1">Greška pri učitavanju</h3>
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {!loading && !error && jobs.length === 0 && (
-          <div className="bg-gray-50 rounded-xl p-12 text-center">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Nema rezultata
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Pokušaj da promeniš filtere ili pretragu
-            </p>
-            <button
-              onClick={handleClearFilters}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Obriši filtere
-            </button>
-          </div>
-        )}
-
-        {!loading && jobs.length > 0 && (
+        {/* EXPLORE TAB - Jobs Grid */}
+        {activeTab === 'explore' && (
           <>
-            <div className="mb-6 text-sm text-gray-600">
-              Pronađeno <strong className="text-gray-900">{total}</strong> poslova
-              {filters.search && ` za "${filters.search}"`}
-            </div>
+            {loading && (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="ml-3 text-gray-600">Učitavanje poslova...</span>
+              </div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {jobs.map((job) => (
-                <HybridJobCard key={job.id} job={job} searchTerm={filters.search || ''} />
-              ))}
-            </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-900 mb-1">Greška pri učitavanju</h3>
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              </div>
+            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
+            {!loading && !error && jobs.length === 0 && (
+              <div className="bg-gray-50 rounded-xl p-12 text-center">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Nema rezultata
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Pokušaj da promeniš filtere ili pretragu
+                </p>
                 <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  onClick={handleClearFilters}
+                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let pageNum: number
-                  if (totalPages <= 7) {
-                    pageNum = i + 1
-                  } else if (currentPage <= 4) {
-                    pageNum = i + 1
-                  } else if (currentPage >= totalPages - 3) {
-                    pageNum = totalPages - 6 + i
-                  } else {
-                    pageNum = currentPage - 3 + i
-                  }
-
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => goToPage(pageNum)}
-                      className={cn(
-                        "w-10 h-10 rounded-lg font-medium transition-colors",
-                        pageNum === currentPage
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 hover:bg-gray-50"
-                      )}
-                    >
-                      {pageNum}
-                    </button>
-                  )
-                })}
-
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  <ChevronRight className="w-5 h-5" />
+                  Obriši filtere
                 </button>
               </div>
             )}
+
+            {!loading && jobs.length > 0 && (
+              <>
+                <div className="mb-6 text-sm text-gray-600">
+                  Pronađeno <strong className="text-gray-900">{total}</strong> poslova
+                  {filters.search && ` za "${filters.search}"`}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {jobs.map((job) => (
+                    <HybridJobCard key={job.id} job={job} searchTerm={filters.search || ''} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                      let pageNum: number
+                      if (totalPages <= 7) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 4) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 3) {
+                        pageNum = totalPages - 6 + i
+                      } else {
+                        pageNum = currentPage - 3 + i
+                      }
+
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => goToPage(pageNum)}
+                          className={cn(
+                            "w-10 h-10 rounded-lg font-medium transition-colors",
+                            pageNum === currentPage
+                              ? "bg-blue-600 text-white"
+                              : "border border-gray-300 hover:bg-gray-50"
+                          )}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </>
+        )}
+
+        {/* SAVED TAB */}
+        {activeTab === 'saved' && (
+          <div>
+            {savedLoading && (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="ml-3 text-gray-600">Učitavanje sačuvanih...</span>
+              </div>
+            )}
+
+            {!savedLoading && savedJobs.length === 0 && (
+              <div className="bg-gray-50 rounded-xl p-12 text-center">
+                <Bookmark className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Nema sačuvanih poslova
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Klikni na ⭐ na kartici posla da sačuvaš za kasnije
+                </p>
+                <button
+                  onClick={() => setActiveTab('explore')}
+                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Pregledaj poslove
+                </button>
+              </div>
+            )}
+
+            {!savedLoading && savedJobs.length > 0 && (
+              <>
+                <div className="mb-6 text-sm text-gray-600">
+                  <strong className="text-gray-900">{savedJobs.length}</strong> sačuvanih poslova
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {savedJobs.map((job) => (
+                    <HybridJobCard key={job.id} job={job} searchTerm="" />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* STATS TAB */}
+        {activeTab === 'stats' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-blue-600" />
+                Statistika tržišta
+              </h2>
+
+              {summary && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+                    <div className="text-sm text-blue-600 font-medium mb-2">Ukupno aktivnih pozicija</div>
+                    <div className="text-4xl font-bold text-blue-700">{summary.totalHybrid}</div>
+                    <div className="text-xs text-blue-600 mt-2">Hibridni i onsite poslovi</div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
+                    <div className="text-sm text-orange-600 font-medium mb-2 flex items-center gap-1">
+                      <TrendingUp className="w-4 h-4" />
+                      Novo danas
+                    </div>
+                    <div className="text-4xl font-bold text-orange-700">{summary.newToday}</div>
+                    <div className="text-xs text-orange-600 mt-2">Sveži oglasi</div>
+                  </div>
+                </div>
+              )}
+
+              {summary?.sources && summary.sources.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Po izvorima</h3>
+                  <div className="space-y-2">
+                    {summary.sources.map((source) => (
+                      <div key={source.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium text-gray-700">{source.name}</span>
+                        <span className="text-lg font-bold text-blue-600">{source.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-8 text-white">
+              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-6 h-6" />
+                Pratite tržište
+              </h3>
+              <p className="text-blue-100 mb-4">
+                Baza se ažurira dnevno sa najnovijim oglasima iz vodećih platformi na Balkanu.
+              </p>
+              <div className="flex gap-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>Automatsko ažuriranje</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Validacija podataka</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SOURCES TAB */}
+        {activeTab === 'sources' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <LinkIcon className="w-6 h-6 text-blue-600" />
+                Izvori podataka
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Prikupljamo oglase sa najpoznatijih platformi za poslove na Balkanu
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { name: 'MJob.rs', url: 'https://mjob.rs', country: '🇷🇸', desc: 'Vodeca platforma u Srbiji' },
+                  { name: 'Poslovi.infostud.com', url: 'https://poslovi.infostud.com', country: '🇷🇸', desc: 'Infostud oglasnik' },
+                  { name: 'MojPosao.net', url: 'https://mojposao.net', country: '🇭🇷', desc: 'Najveći portal u Hrvatskoj' },
+                  { name: 'Posao.ba', url: 'https://posao.ba', country: '🇧🇦', desc: 'Vodeci portal u BiH' },
+                  { name: 'Jobs.hr', url: 'https://jobs.hr', country: '🇭🇷', desc: 'Hrvatski IT portal' },
+                  { name: 'Kariera.mk', url: 'https://kariera.mk', country: '🇲🇰', desc: 'Makedonska platforma' },
+                ].map((source) => (
+                  <a
+                    key={source.name}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{source.country}</span>
+                      <div>
+                        <div className="font-semibold text-gray-900 group-hover:text-blue-600">
+                          {source.name}
+                        </div>
+                        <div className="text-sm text-gray-500">{source.desc}</div>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                  </a>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <strong>Napomena:</strong> Podaci se ažuriraju automatski. Neki izvori mogu imati odloženo ažuriranje.
+                    Uvek proverite originalni oglas za najnovije informacije.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -44,6 +44,8 @@ export function HybridJobCard({ job, searchTerm }: HybridJobCardProps) {
     const checkBookmark = async () => {
       try {
         const supabase = getSupabaseClientBrowser()
+        if (!supabase) return
+        
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
@@ -69,6 +71,8 @@ export function HybridJobCard({ job, searchTerm }: HybridJobCardProps) {
     setBookmarkLoading(true)
     try {
       const supabase = getSupabaseClientBrowser()
+      if (!supabase) return
+      
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         // Show login prompt or redirect
@@ -172,10 +176,10 @@ export function HybridJobCard({ job, searchTerm }: HybridJobCardProps) {
           )}
         </div>
 
-        {searchTerm && (job as any).headline ? (
+        {searchTerm && 'headline' in job && typeof job.headline === 'string' ? (
           <p
             className="text-sm text-gray-700 line-clamp-3 leading-relaxed [&_mark]:bg-yellow-200/70 [&_mark]:rounded [&_mark]:px-0.5"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml((job as any).headline || '') }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.headline || '') }}
           />
         ) : job.description && (
           <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
@@ -231,21 +235,5 @@ export function HybridJobCard({ job, searchTerm }: HybridJobCardProps) {
         </footer>
       </div>
     </motion.article>
-  )
-}
-
-function AuthlessHint({ jobId }: { jobId: string }) {
-  return (
-    <div className="mt-2 rounded-md bg-blue-50 p-3 text-center">
-      <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
-        <LogIn className="w-4 h-4" />
-        <span>
-          <a href="/nalog" className="font-medium underline hover:no-underline">
-            Uloguj se
-          </a>{' '}
-          da sačuvaš oglas
-        </span>
-      </div>
-    </div>
   )
 }

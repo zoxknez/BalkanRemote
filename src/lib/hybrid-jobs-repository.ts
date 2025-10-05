@@ -418,7 +418,10 @@ export class HybridJobsRepository {
       throw new Error(`Failed to get distinct values: ${error.message}`);
     }
 
-    const uniqueValues = [...new Set(data?.map(item => (item as any)[column]).filter(Boolean))];
+    const uniqueValues = [...new Set(data?.map(item => {
+      const record = item as Record<string, unknown>;
+      return record[column];
+    }).filter(Boolean) as string[])];
     return uniqueValues.sort();
   }
 }

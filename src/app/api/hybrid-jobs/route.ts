@@ -89,6 +89,10 @@ export async function GET(request: NextRequest) {
           totalHybrid: count || 0
         }
       }
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120'
+      }
     });
 
   } catch (error) {

@@ -25,7 +25,8 @@
     "ingest:verify": "tsx scripts/verify-ingest.ts",
     "ingest:prod": "tsx scripts/run-prod-ingest.ts",
     "jobs:copy": "tsx scripts/copy-scraped-jobs.ts",
-    "scrape:hybrid": "tsx scripts/run-hybrid-scraper.ts"
+    "scrape:hybrid": "tsx scripts/run-hybrid-scraper.ts",
+    "sync:hybrid-jobs": "tsx scripts/sync-hybrid-jobs.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -46,6 +47,8 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/og": "^0.8.5",
     "@vercel/speed-insights": "^1.2.0",
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.22",

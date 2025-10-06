@@ -229,20 +229,35 @@ Možemo dodati nakon testiranja scrapers-a.
 
 ## Implemented Scrapers
 
-### ✅ Hybrid/Onsite Jobs (Balkan)
+### ✅ Hybrid/Onsite Jobs (Balkan) - 5 scrapers
 - ✅ **Infostud** (Srbija) - https://www.poslovi.infostud.com
 - ✅ **Halo Oglasi** (Srbija) - https://www.halooglasi.rs
 - ✅ **MojPosao** (Hrvatska) - https://www.mojposao.net
 - ✅ **Posao.ba** (BiH) - https://www.posao.ba
 - ✅ **MojeDelo** (Slovenija) - https://www.mojedelo.com
 
-### ✅ Remote Jobs (Global)
+### ✅ Remote Jobs (Global) - 8 scrapers
 - ✅ **RemoteOK** - https://remoteok.com
 - ✅ **WeWorkRemotely** - https://weworkremotely.com
 - ✅ **Remotive** - https://remotive.io
 - ✅ **JustRemote** - https://justremote.co
+- ✅ **Remote.co** - https://remote.co
+- ✅ **Working Nomads** - https://www.workingnomads.com
+- ✅ **Remote.io** - https://remote.io
+- ✅ **Himalayas** - https://himalayas.app
 
-**Total: 9 scrapers** covering all major Balkan job boards + top global remote job sites!
+**Total: 13 scrapers** covering all major Balkan job boards + top 8 global remote job sites!
+
+## Expected Daily Output
+
+With default settings:
+- **Hybrid/Onsite**: 5 scrapers × 100 jobs = **~500 jobs/day** ✅
+- **Remote**: 8 scrapers × 200 jobs = **~1,600 jobs/day** ✅
+- **TOTAL**: **~2,100 jobs/day** 🎯
+
+Limits can be adjusted in `.env`:
+- `MAX_JOBS_PER_SOURCE_REMOTE=200` (for remote scrapers)
+- `MAX_JOBS_PER_SOURCE_HYBRID=100` (for hybrid scrapers)
 
 ## TODO
 

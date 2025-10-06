@@ -19,6 +19,10 @@ from scrapers.remoteok import scrape_remoteok
 from scrapers.weworkremotely import scrape_weworkremotely
 from scrapers.remotive import scrape_remotive
 from scrapers.justremote import scrape_justremote
+from scrapers.remoteco import scrape_remoteco
+from scrapers.workingnomads import scrape_workingnomads
+from scrapers.remoteio import scrape_remoteio
+from scrapers.himalayas import scrape_himalayas
 
 from utils.database import Database
 from utils.logger import Logger
@@ -37,10 +41,12 @@ async def main():
     start_time = datetime.now()
     
     # Get config from env
-    max_jobs = int(os.getenv("MAX_JOBS_PER_SOURCE", "50"))
+    max_jobs_remote = int(os.getenv("MAX_JOBS_PER_SOURCE_REMOTE", "200"))
+    max_jobs_hybrid = int(os.getenv("MAX_JOBS_PER_SOURCE_HYBRID", "100"))
     dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
     
-    logger.info(f"Max jobs per source: {max_jobs}")
+    logger.info(f"Max remote jobs per source: {max_jobs_remote}")
+    logger.info(f"Max hybrid jobs per source: {max_jobs_hybrid}")
     logger.info(f"Dry run mode: {dry_run}")
     logger.info("")
     
@@ -62,7 +68,7 @@ async def main():
     # Infostud (Srbija)
     try:
         logger.info("🇷🇸 Scraping Infostud...")
-        infostud_jobs = await scrape_infostud(max_jobs)
+        infostud_jobs = await scrape_infostud(max_jobs_hybrid)
         all_jobs['hybrid'].extend(infostud_jobs)
         logger.success(
             f"Infostud: {len(infostud_jobs)} jobs scraped"
@@ -75,7 +81,7 @@ async def main():
     # Halo Oglasi (Srbija)
     try:
         logger.info("🇷🇸 Scraping Halo Oglasi...")
-        halo_jobs = await scrape_halooglasi(max_jobs)
+        halo_jobs = await scrape_halooglasi(max_jobs_hybrid)
         all_jobs['hybrid'].extend(halo_jobs)
         logger.success(f"Halo Oglasi: {len(halo_jobs)} jobs scraped")
     except Exception as e:
@@ -86,7 +92,7 @@ async def main():
     # MojPosao (Hrvatska)
     try:
         logger.info("🇭🇷 Scraping MojPosao...")
-        mojposao_jobs = await scrape_mojposao(max_jobs)
+        mojposao_jobs = await scrape_mojposao(max_jobs_hybrid)
         all_jobs['hybrid'].extend(mojposao_jobs)
         logger.success(f"MojPosao: {len(mojposao_jobs)} jobs scraped")
     except Exception as e:
@@ -97,7 +103,7 @@ async def main():
     # Posao.ba (BiH)
     try:
         logger.info("🇧🇦 Scraping Posao.ba...")
-        posaoba_jobs = await scrape_posaoba(max_jobs)
+        posaoba_jobs = await scrape_posaoba(max_jobs_hybrid)
         all_jobs['hybrid'].extend(posaoba_jobs)
         logger.success(f"Posao.ba: {len(posaoba_jobs)} jobs scraped")
     except Exception as e:
@@ -108,7 +114,7 @@ async def main():
     # MojeDelo (Slovenija)
     try:
         logger.info("🇸🇮 Scraping MojeDelo...")
-        mojedelo_jobs = await scrape_mojedelo(max_jobs)
+        mojedelo_jobs = await scrape_mojedelo(max_jobs_hybrid)
         all_jobs['hybrid'].extend(mojedelo_jobs)
         logger.success(f"MojeDelo: {len(mojedelo_jobs)} jobs scraped")
     except Exception as e:
@@ -126,7 +132,7 @@ async def main():
     # RemoteOK
     try:
         logger.info("🌐 Scraping RemoteOK...")
-        remoteok_jobs = await scrape_remoteok(max_jobs)
+        remoteok_jobs = await scrape_remoteok(max_jobs_remote)
         all_jobs['remote'].extend(remoteok_jobs)
         logger.success(
             f"RemoteOK: {len(remoteok_jobs)} jobs scraped"
@@ -139,7 +145,7 @@ async def main():
     # WeWorkRemotely
     try:
         logger.info("🌐 Scraping WeWorkRemotely...")
-        wwr_jobs = await scrape_weworkremotely(max_jobs)
+        wwr_jobs = await scrape_weworkremotely(max_jobs_remote)
         all_jobs['remote'].extend(wwr_jobs)
         logger.success(f"WeWorkRemotely: {len(wwr_jobs)} jobs scraped")
     except Exception as e:
@@ -150,7 +156,7 @@ async def main():
     # Remotive
     try:
         logger.info("🌐 Scraping Remotive...")
-        remotive_jobs = await scrape_remotive(max_jobs)
+        remotive_jobs = await scrape_remotive(max_jobs_remote)
         all_jobs['remote'].extend(remotive_jobs)
         logger.success(f"Remotive: {len(remotive_jobs)} jobs scraped")
     except Exception as e:
@@ -161,11 +167,55 @@ async def main():
     # JustRemote
     try:
         logger.info("🌐 Scraping JustRemote...")
-        justremote_jobs = await scrape_justremote(max_jobs)
+        justremote_jobs = await scrape_justremote(max_jobs_remote)
         all_jobs['remote'].extend(justremote_jobs)
         logger.success(f"JustRemote: {len(justremote_jobs)} jobs scraped")
     except Exception as e:
         logger.error("JustRemote scraper failed", e)
+    
+    logger.info("")
+    
+    # Remote.co
+    try:
+        logger.info("🌐 Scraping Remote.co...")
+        remoteco_jobs = await scrape_remoteco(max_jobs_remote)
+        all_jobs['remote'].extend(remoteco_jobs)
+        logger.success(f"Remote.co: {len(remoteco_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Remote.co scraper failed", e)
+    
+    logger.info("")
+    
+    # Working Nomads
+    try:
+        logger.info("🌐 Scraping Working Nomads...")
+        wn_jobs = await scrape_workingnomads(max_jobs_remote)
+        all_jobs['remote'].extend(wn_jobs)
+        logger.success(f"Working Nomads: {len(wn_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Working Nomads scraper failed", e)
+    
+    logger.info("")
+    
+    # Remote.io
+    try:
+        logger.info("🌐 Scraping Remote.io...")
+        remoteio_jobs = await scrape_remoteio(max_jobs_remote)
+        all_jobs['remote'].extend(remoteio_jobs)
+        logger.success(f"Remote.io: {len(remoteio_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Remote.io scraper failed", e)
+    
+    logger.info("")
+    
+    # Himalayas
+    try:
+        logger.info("🌐 Scraping Himalayas...")
+        himalayas_jobs = await scrape_himalayas(max_jobs_remote)
+        all_jobs['remote'].extend(himalayas_jobs)
+        logger.success(f"Himalayas: {len(himalayas_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Himalayas scraper failed", e)
     
     logger.info("")
     

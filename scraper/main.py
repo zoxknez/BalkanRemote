@@ -7,15 +7,18 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Import scrapers
+# Import scrapers - HYBRID/ONSITE (Balkan)
 from scrapers.infostud import scrape_infostud
+from scrapers.halooglasi import scrape_halooglasi
+from scrapers.mojposao import scrape_mojposao
+from scrapers.posaoba import scrape_posaoba
+from scrapers.mojedelo import scrape_mojedelo
+
+# Import scrapers - REMOTE (Global)
 from scrapers.remoteok import scrape_remoteok
-# TODO: Add more scrapers:
-# from scrapers.halooglasi import scrape_halooglasi
-# from scrapers.mojposao import scrape_mojposao
-# from scrapers.posaoba import scrape_posaoba
-# from scrapers.mojedelo import scrape_mojedelo
-# from scrapers.weworkremotely import scrape_weworkremotely
+from scrapers.weworkremotely import scrape_weworkremotely
+from scrapers.remotive import scrape_remotive
+from scrapers.justremote import scrape_justremote
 
 from utils.database import Database
 from utils.logger import Logger
@@ -69,11 +72,49 @@ async def main():
     
     logger.info("")
     
-    # TODO: Add more hybrid scrapers
     # Halo Oglasi (Srbija)
+    try:
+        logger.info("🇷🇸 Scraping Halo Oglasi...")
+        halo_jobs = await scrape_halooglasi(max_jobs)
+        all_jobs['hybrid'].extend(halo_jobs)
+        logger.success(f"Halo Oglasi: {len(halo_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Halo Oglasi scraper failed", e)
+    
+    logger.info("")
+    
     # MojPosao (Hrvatska)
+    try:
+        logger.info("🇭🇷 Scraping MojPosao...")
+        mojposao_jobs = await scrape_mojposao(max_jobs)
+        all_jobs['hybrid'].extend(mojposao_jobs)
+        logger.success(f"MojPosao: {len(mojposao_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("MojPosao scraper failed", e)
+    
+    logger.info("")
+    
     # Posao.ba (BiH)
+    try:
+        logger.info("🇧🇦 Scraping Posao.ba...")
+        posaoba_jobs = await scrape_posaoba(max_jobs)
+        all_jobs['hybrid'].extend(posaoba_jobs)
+        logger.success(f"Posao.ba: {len(posaoba_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Posao.ba scraper failed", e)
+    
+    logger.info("")
+    
     # MojeDelo (Slovenija)
+    try:
+        logger.info("🇸🇮 Scraping MojeDelo...")
+        mojedelo_jobs = await scrape_mojedelo(max_jobs)
+        all_jobs['hybrid'].extend(mojedelo_jobs)
+        logger.success(f"MojeDelo: {len(mojedelo_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("MojeDelo scraper failed", e)
+    
+    logger.info("")
     
     # ==========================================
     # REMOTE SCRAPERS (jobs table)
@@ -95,11 +136,38 @@ async def main():
     
     logger.info("")
     
-    # TODO: Add more remote scrapers
     # WeWorkRemotely
-    # RemoteWoman
+    try:
+        logger.info("🌐 Scraping WeWorkRemotely...")
+        wwr_jobs = await scrape_weworkremotely(max_jobs)
+        all_jobs['remote'].extend(wwr_jobs)
+        logger.success(f"WeWorkRemotely: {len(wwr_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("WeWorkRemotely scraper failed", e)
+    
+    logger.info("")
+    
     # Remotive
-    # Remotehub
+    try:
+        logger.info("🌐 Scraping Remotive...")
+        remotive_jobs = await scrape_remotive(max_jobs)
+        all_jobs['remote'].extend(remotive_jobs)
+        logger.success(f"Remotive: {len(remotive_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("Remotive scraper failed", e)
+    
+    logger.info("")
+    
+    # JustRemote
+    try:
+        logger.info("🌐 Scraping JustRemote...")
+        justremote_jobs = await scrape_justremote(max_jobs)
+        all_jobs['remote'].extend(justremote_jobs)
+        logger.success(f"JustRemote: {len(justremote_jobs)} jobs scraped")
+    except Exception as e:
+        logger.error("JustRemote scraper failed", e)
+    
+    logger.info("")
     
     # ==========================================
     # DATABASE UPSERT

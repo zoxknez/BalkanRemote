@@ -227,21 +227,30 @@ Pokreni svaki dan ručno ili sa cron job-om:
 
 Možemo dodati nakon testiranja scrapers-a.
 
+## Implemented Scrapers
+
+### ✅ Hybrid/Onsite Jobs (Balkan)
+- ✅ **Infostud** (Srbija) - https://www.poslovi.infostud.com
+- ✅ **Halo Oglasi** (Srbija) - https://www.halooglasi.rs
+- ✅ **MojPosao** (Hrvatska) - https://www.mojposao.net
+- ✅ **Posao.ba** (BiH) - https://www.posao.ba
+- ✅ **MojeDelo** (Slovenija) - https://www.mojedelo.com
+
+### ✅ Remote Jobs (Global)
+- ✅ **RemoteOK** - https://remoteok.com
+- ✅ **WeWorkRemotely** - https://weworkremotely.com
+- ✅ **Remotive** - https://remotive.io
+- ✅ **JustRemote** - https://justremote.co
+
+**Total: 9 scrapers** covering all major Balkan job boards + top global remote job sites!
+
 ## TODO
 
-- [ ] Implementirati scrapers za sve izvore:
-  - [ ] Halo Oglasi (RS)
-  - [ ] MojPosao (HR)
-  - [ ] Posao.ba (BA)
-  - [ ] MojeDelo (SI)
-  - [ ] WeWorkRemotely
-  - [ ] RemoteWoman
-  - [ ] Remotive
-  - [ ] Remotehub
 - [ ] Dodati date filtering (samo oglasi iz zadnjih 24h)
 - [ ] Poboljšati quality scoring
 - [ ] Dodati error recovery i retry logic
 - [ ] Unit tests
+- [ ] Dodati više remote izvora (Remote.co, FlexJobs, Remote.com, itd.)
 
 ## Notes
 

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
     const country = searchParams.get('country');
-    const workType = searchParams.get('workType');
+    const workTypes = searchParams.getAll('workType'); // Support multiple workType params
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const orderBy = searchParams.get('order') || 'posted_date';
@@ -34,8 +34,9 @@ export async function GET(request: NextRequest) {
       query = query.eq('country_code', country.toUpperCase());
     }
 
-    if (workType) {
-      query = query.eq('work_type', workType);
+    // Work type filter - support multiple values
+    if (workTypes.length > 0) {
+      query = query.in('work_type', workTypes);
     } else {
       // Default: show only hybrid and onsite (NOT fully remote)
       query = query.in('work_type', ['hybrid', 'onsite', 'flexible']);

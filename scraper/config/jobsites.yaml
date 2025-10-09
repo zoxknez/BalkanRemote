@@ -143,6 +143,159 @@ sources:
     hints:
       note: "Jobicy Junior tag - 11+ junior-specific jobs"
 
+  # ===== ATS ENDPOINTS (Greenhouse, Lever, Workable, Recruitee) =====
+
+  - id: greenhouse_gitlab
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/gitlab/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'GitLab'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "GitLab Greenhouse board - fully remote company"
+
+  - id: greenhouse_automattic
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/automatticjobs/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Automattic'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Automattic (WordPress.com) - fully remote, junior-friendly support roles"
+
+  - id: greenhouse_canonical
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/canonical/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Canonical'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Canonical (Ubuntu) - many remote roles tagged #LI-Remote"
+
+  - id: lever_1password
+    enabled: false
+    kind: api
+    url: https://api.lever.co/v0/postings/1password
+    params:
+      mode: "json"
+    mapping:
+      list_path: "$"
+      fields:
+        external_id: "id"
+        title: "text"
+        company: "'1Password'"
+        url: "hostedUrl"
+        posted_at: "createdAt"
+        description: "descriptionPlain"
+        location: "categories.location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "1Password Lever API - global remote company"
+
+  - id: workable_doist
+    enabled: false
+    kind: api
+    url: https://apply.workable.com/api/v1/widget/accounts/doist/jobs
+    auth: none
+    mapping:
+      list_path: "results"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Doist'"
+        url: "url"
+        posted_at: "published_on"
+        description: "description"
+        location: "location.city"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Doist (Todoist, Twist) - remote-first company"
+
+  - id: workable_toggl
+    enabled: false
+    kind: api
+    url: https://apply.workable.com/api/v1/widget/accounts/toggl-track-plan/jobs
+    auth: none
+    mapping:
+      list_path: "results"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Toggl'"
+        url: "url"
+        posted_at: "published_on"
+        description: "description"
+        location: "location.city"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Toggl Track/Plan - remote-first, support & QA roles"
+
+  - id: recruitee_wallarm
+    enabled: true
+    kind: api
+    url: https://wallarm.recruitee.com/api/offers/
+    auth: none
+    mapping:
+      list_path: "offers"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Wallarm'"
+        url: "careers_url"
+        posted_at: "created_at"
+        description: "description"
+        location: "location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Wallarm Recruitee API - cybersecurity company"
+
   - id: himalayas_api
     enabled: false
     kind: api
@@ -473,7 +626,7 @@ sources:
       filter_note: "Paginacija ide u koracima od 30: page=0, 30, 60, 90..."
 
   - id: startuj
-    enabled: true
+    enabled: false
     kind: html
     start_url: https://www.startuj.com/posao?rad-od-kuce=1
     html:

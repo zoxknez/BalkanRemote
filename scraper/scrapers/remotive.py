@@ -1,7 +1,7 @@
 """
 Remotive.io scraper - Remote jobs
 """
-from crawlee.playwright_crawler import (
+from crawlee_playwright import (
     PlaywrightCrawler,
     PlaywrightCrawlingContext
 )

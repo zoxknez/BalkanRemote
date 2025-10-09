@@ -1,0 +1,16 @@
+{
+  "unique_key": "https://www.poslovi.infostud.com/poslovi",
+  "url": "https://www.poslovi.infostud.com/poslovi",
+  "method": "GET",
+  "headers": {},
+  "payload": null,
+  "user_data": {
+    "__crawlee": {
+      "state": 5
+    }
+  },
+  "retry_count": 0,
+  "no_retry": false,
+  "loaded_url": "https://poslovi.infostud.com/poslovi",
+  "handled_at": "2025-10-06 13:22:06.246485+00:00"
+}

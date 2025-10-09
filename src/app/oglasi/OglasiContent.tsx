@@ -343,10 +343,10 @@ export default function OglasiContent() {
               </div>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100 drop-shadow">
-              Poslovi & Remote Oglasi
+              Remote & Hybrid Poslovi
             </h1>
             <p className="text-center text-blue-50/90 text-lg max-w-3xl mx-auto">
-              Kurirani agregator EU timezone / remote friendly pozicija. Ažuriranje svakog jutra.
+              Kurirani agregator remote i hibridnih pozicija pogodnih za EU vremensku zonu. Ažuriranje svakog jutra.
             </p>
 
             <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto" aria-live="polite">

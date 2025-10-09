@@ -1,0 +1,249 @@
+version: 1
+
+defaults:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  timeout_sec: 30
+  max_pages: 5
+  respect_robots: true
+  rate_limit_per_host: 0.7
+
+sources:
+  # ===== GLOBAL REMOTE BOARDS (API/RSS) =====
+  
+  - id: remoteok
+    enabled: true
+    kind: api
+    url: https://remoteok.com/api
+    auth: none
+    mapping:
+      list_path: "$"
+      fields:
+        external_id: "id"
+        title: "position"
+        company: "company"
+        url: "url"
+        posted_at: "date"
+        tags: "tags"
+        description: "description"
+        location: "location"
+        salary: "salary"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: weworkremotely
+    enabled: true
+    kind: rss
+    url: https://weworkremotely.com/categories/remote-programming-jobs.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: remotive
+    enabled: true
+    kind: api
+    url: https://remotive.com/api/remote-jobs
+    params:
+      search: ""
+      category: "software-dev"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "company_name"
+        url: "url"
+        posted_at: "publication_date"
+        salary: "salary"
+        tags: "tags"
+        description: "description"
+        location: "candidate_required_location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: justremote
+    enabled: false
+    kind: rss
+    url: https://justremote.co/remote-developer-jobs.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: nodesk
+    enabled: false
+    kind: rss
+    url: https://nodesk.co/remote-jobs/rss/
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: himalayas
+    enabled: false
+    kind: rss
+    url: https://himalayas.app/jobs.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: remoteco
+    enabled: false
+    kind: html
+    start_url: https://remote.co/remote-jobs/developer/
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: ".job"
+        title: ".job_title a"
+        company: ".company"
+        url: ".job_title a"
+        posted_at: ".date"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  - id: workingnomads
+    enabled: false
+    kind: rss
+    url: https://www.workingnomads.com/api/exposed_jobs/
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+
+  # ===== BALKAN: SRBIJA =====
+  
+  - id: infostud
+    enabled: false
+    kind: html
+    start_url: https://poslovi.infostud.com/oglasi-za-posao?tipposla=6
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: "article.job-ad, .job-list-item"
+        title: "h2 a, .job-title"
+        company: ".company-name, [data-company]"
+        location: ".job-location, .location"
+        url: "a[href*='/oglas/']"
+        posted_at: "time, .date"
+    derive:
+      remote_type: "HYBRID"
+      region: "BALKAN"
+      country_code: "RS"
+    hints:
+      filter_note: "tipposla=6 je remote/hibrid filter"
+
+  - id: helloworld
+    enabled: false
+    kind: html
+    start_url: https://helloworld.rs/poslovi?remote=true
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: ".job-card"
+        title: ".job-title"
+        company: ".company-name"
+        location: ".location"
+        url: "a"
+    derive:
+      remote_type: "REMOTE"
+      region: "BALKAN"
+      country_code: "RS"
+
+  - id: startuj
+    enabled: false
+    kind: html
+    start_url: https://www.startuj.com/posao?rad-od-kuce=1
+    html:
+      prefer_jsonld: true
+      selectors: {}
+    derive:
+      remote_type: "REMOTE"
+      region: "BALKAN"
+      country_code: "RS"
+
+  # ===== BALKAN: HRVATSKA =====
+  
+  - id: mojposao
+    enabled: false
+    kind: html
+    start_url: https://www.moj-posao.net/Pretraga-Poslova/?remote=1
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: ".job-item, article"
+        title: ".job-title, h3"
+        company: ".company-name"
+        location: ".location"
+        url: "a"
+    derive:
+      remote_type: "HYBRID"
+      region: "BALKAN"
+      country_code: "HR"
+
+  - id: posaohr
+    enabled: false
+    kind: html
+    start_url: https://www.posao.hr/poslovi/?remote=1
+    html:
+      prefer_jsonld: true
+      selectors: {}
+    derive:
+      remote_type: "REMOTE"
+      region: "BALKAN"
+      country_code: "HR"
+
+  # ===== BALKAN: BOSNA I HERCEGOVINA =====
+  
+  - id: posaoba
+    enabled: false
+    kind: html
+    start_url: https://www.posao.ba/oglasi
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: ".job-item"
+        title: ".job-title, h3"
+        company: ".employer-name"
+        location: ".location"
+        url: "a"
+    derive:
+      remote_type: "HYBRID"
+      region: "BALKAN"
+      country_code: "BA"
+
+  # ===== BALKAN: SLOVENIJA =====
+  
+  - id: mojedelo
+    enabled: false
+    kind: html
+    start_url: https://www.mojedelo.com/prosta-delovna-mesta
+    html:
+      prefer_jsonld: true
+      selectors:
+        item: ".job-list-item"
+        title: ".job-title a"
+        company: ".company-name"
+        location: ".job-location"
+        url: "a"
+    derive:
+      remote_type: "HYBRID"
+      region: "BALKAN"
+      country_code: "SI"
+
+  # ===== DODATNI EU IZVORI =====
+  
+  - id: eurojobsit
+    enabled: false
+    kind: rss
+    url: https://www.eurojobsit.com/en/remote-it-jobs.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "EU"
+
+  - id: eutechjobs
+    enabled: false
+    kind: rss
+    url: https://eutechjobs.com/feed
+    derive:
+      remote_type: "REMOTE"
+      region: "EU"

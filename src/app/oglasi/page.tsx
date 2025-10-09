@@ -7,8 +7,8 @@ import { buildStructuredJobPostings } from '@/lib/job-schema'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Remote IT Poslovi - 900+ Oglasa | Balkan Remote',
-  description: 'Najbolji remote IT poslovi iz 43+ izvora ažurno svaki dan. JavaScript, Python, React, Node.js i više. Filtriraj po iskustvu, kompaniji, plati. EU vremenska zona.',
+  title: 'Remote & Hybrid IT Poslovi - 900+ Oglasa | Balkan Remote',
+  description: 'Najbolji remote i hibridni IT poslovi iz 43+ izvora ažurno svaki dan. JavaScript, Python, React, Node.js i više. Filtriraj po iskustvu, kompaniji, plati. EU vremenska zona.',
   keywords: [
     'remote IT poslovi', 'remote developer jobs', 'JavaScript poslovi', 'Python remote',
     'React developer', 'Node.js remote', 'remote programer', 'IT oglasi',
@@ -20,8 +20,8 @@ export const metadata = {
     canonical: '/oglasi'
   },
   openGraph: {
-    title: 'Remote IT Poslovi - 900+ Aktuelnih Oglasa',
-    description: 'Kuriran izbor najboljih remote IT pozicija za EU vremensku zonu. Ažuriranje svaki dan iz 43+ izvora.',
+    title: 'Remote & Hybrid IT Poslovi - 900+ Aktuelnih Oglasa',
+    description: 'Kuriran izbor najboljih remote i hibridnih IT pozicija za EU vremensku zonu. Ažuriranje svaki dan iz 43+ izvora.',
     url: '/oglasi',
     type: 'website',
     images: [
@@ -36,8 +36,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Remote IT Poslovi - 900+ Oglasa',
-    description: 'Najnoviji remote IT oglasi za EU vremensku zonu. Filtriraj po tehnologiji, iskustvu, plati.',
+    title: 'Remote & Hybrid IT Poslovi - 900+ Oglasa',
+    description: 'Najnoviji remote i hibridni IT oglasi za EU vremensku zonu. Filtriraj po tehnologiji, iskustvu, plati.',
     images: ['/og-jobs.png']
   },
   robots: {

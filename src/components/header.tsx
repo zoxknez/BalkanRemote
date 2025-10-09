@@ -46,9 +46,9 @@ export function Header() {
   const navigation: NavItem[] = [
     { name: "Početna", short: "Početna", href: "/", icon: Home },
     { name: "Saveti", href: "/saveti", icon: Zap },
-    { name: "Poslovi", href: "/poslovi", icon: Briefcase },
-    { name: "Oglasi", href: "/oglasi", icon: Newspaper },
-    { name: "Firme/Hybrid", short: "Firme", href: "/firme", icon: Building2 },
+  { name: "Poslovi", href: "/poslovi", icon: Briefcase },
+  { name: "Remote/Hybrid", short: "Remote", href: "/oglasi", icon: Newspaper },
+  { name: "OnSite", short: "OnSite", href: "/firme", icon: Building2 },
     { name: "Sačuvano", short: "Sačuvano", href: "/oglasi/bookmarks", match: "/bookmarks", icon: Bookmark },
     { name: "Poreski vodič", short: "Poreski", href: "/poreski-vodic", icon: FileText },
     { name: "Kompanije", href: "/kompanije", icon: Building2 },

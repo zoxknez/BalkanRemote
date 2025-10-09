@@ -1,7 +1,7 @@
 """
 MojPosao.net scraper (Hrvatska) - Hybrid/Onsite jobs
 """
-from crawlee.playwright_crawler import (
+from crawlee_playwright import (
     PlaywrightCrawler,
     PlaywrightCrawlingContext
 )

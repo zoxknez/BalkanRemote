@@ -1,7 +1,7 @@
 """
 Infostud.com scraper (Srbija) - Hybrid/Onsite jobs
 """
-from crawlee.playwright_crawler import PlaywrightCrawler, PlaywrightCrawlingContext
+from crawlee.crawlers import PlaywrightCrawler, PlaywrightCrawlingContext
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from utils.logger import Logger

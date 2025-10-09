@@ -1,7 +1,7 @@
 """
 MojeDelo.com scraper (Slovenija) - Hybrid/Onsite jobs
 """
-from crawlee.playwright_crawler import (
+from crawlee_playwright import (
     PlaywrightCrawler,
     PlaywrightCrawlingContext
 )

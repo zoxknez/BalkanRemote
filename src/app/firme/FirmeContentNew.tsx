@@ -192,11 +192,11 @@ export default function FirmeContentSimplified() {
           <div className="flex items-center gap-3 mb-3">
             <Building2 className="w-10 h-10" />
             <h1 className="text-4xl md:text-5xl font-bold">
-              Hibridni & Lokalni Poslovi
+              OnSite & Hibridni Poslovi
             </h1>
           </div>
           <p className="text-blue-100 text-lg mb-6">
-            Pronađi poslove na Balkanu sa radom iz kancelarije ili hibridnim modelom
+            Pronađi poslove na Balkanu sa radom iz kancelarije ili kombinovanim hibridnim modelom
           </p>
 
           {/* Tab Navigation */}
@@ -595,7 +595,7 @@ export default function FirmeContentSimplified() {
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
                     <div className="text-sm text-blue-600 font-medium mb-2">Ukupno aktivnih pozicija</div>
                     <div className="text-4xl font-bold text-blue-700">{summary.totalHybrid}</div>
-                    <div className="text-xs text-blue-600 mt-2">Hibridni i onsite poslovi</div>
+                    <div className="text-xs text-blue-600 mt-2">OnSite i hibridni poslovi</div>
                   </div>
 
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">

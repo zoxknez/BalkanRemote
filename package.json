@@ -26,7 +26,8 @@
     "ingest:prod": "tsx scripts/run-prod-ingest.ts",
     "jobs:copy": "tsx scripts/copy-scraped-jobs.ts",
     "scrape:hybrid": "tsx scripts/run-hybrid-scraper.ts",
-    "sync:hybrid-jobs": "tsx scripts/sync-hybrid-jobs.ts"
+    "sync:hybrid-jobs": "tsx scripts/sync-hybrid-jobs.ts",
+    "db:reset-jobs": "tsx scripts/clear-job-data.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

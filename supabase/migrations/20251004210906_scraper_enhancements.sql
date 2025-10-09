@@ -1,13 +1,20 @@
 -- Enhanced scraper improvements and optimizations
 
 -- Update job_scraped_listings with better constraints and indexes
-alter table public.job_scraped_listings 
-  add constraint if not exists job_scraped_salary_check 
-  check (salary_min is null or salary_max is null or salary_min <= salary_max);
-
-alter table public.job_scraped_listings 
-  add constraint if not exists job_scraped_currency_check 
-  check (currency in ('USD', 'EUR', 'RSD', 'GBP', 'CHF', 'CAD', 'AUD'));
+do $$ 
+begin
+  if not exists (select 1 from pg_constraint where conname = 'job_scraped_salary_check') then
+    alter table public.job_scraped_listings 
+      add constraint job_scraped_salary_check 
+      check (salary_min is null or salary_max is null or salary_min <= salary_max);
+  end if;
+  
+  if not exists (select 1 from pg_constraint where conname = 'job_scraped_currency_check') then
+    alter table public.job_scraped_listings 
+      add constraint job_scraped_currency_check 
+      check (currency in ('USD', 'EUR', 'RSD', 'GBP', 'CHF', 'CHF', 'CAD', 'AUD'));
+  end if;
+end $$;
 
 -- Add missing columns if they don't exist
 alter table public.job_scraped_listings 
@@ -18,7 +25,8 @@ create index if not exists idx_job_scraped_compound_date_remote on public.job_sc
 create index if not exists idx_job_scraped_compound_type_exp on public.job_scraped_listings(type, experience_level) where type is not null and experience_level is not null;
 create index if not exists idx_job_scraped_salary on public.job_scraped_listings(salary_max desc) where salary_max is not null;
 create index if not exists idx_job_scraped_featured on public.job_scraped_listings(featured, posted_at desc) where featured = true;
-create index if not exists idx_job_scraped_deadline on public.job_scraped_listings(deadline) where deadline is not null and deadline > now();
+-- Removed deadline index with now() - not immutable
+-- create index if not exists idx_job_scraped_deadline on public.job_scraped_listings(deadline) where deadline is not null and deadline > now();
 
 -- Full-text search for scraped listings
 create index if not exists idx_job_scraped_search on public.job_scraped_listings using gin(search_vector) where search_vector is not null;

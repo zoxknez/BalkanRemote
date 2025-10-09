@@ -38,11 +38,11 @@ create index if not exists job_portal_facet_combo_idx
   on public.job_portal_listings(type, category, experience_level, is_remote, posted_at desc)
   where type is not null and category is not null and experience_level is not null;
 
--- Partial index for recent active jobs only
-create index if not exists job_portal_recent_active_idx 
-  on public.job_portal_listings(posted_at desc, id)
-  where posted_at >= current_date - interval '30 days'
-  and (deadline is null or deadline > now());
+-- Partial index for recent active jobs only (removed - requires immutable expression)
+-- Use filtered queries in application layer instead
+-- create index if not exists job_portal_recent_active_idx 
+--   on public.job_portal_listings(posted_at desc, id)
+--   where posted_at >= '2025-01-01';
 
 -- Function to cleanup old job listings
 create or replace function public.cleanup_old_job_listings()

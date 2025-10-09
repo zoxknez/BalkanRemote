@@ -58,7 +58,7 @@ export const jobFeedSources: JobFeedSource[] = [
     category: 'software-engineering',
     tags: ['nofluffjobs'],
     region: 'cee',
-    active: true,
+    active: false, // 2025-10: feed vraća neispravan XML (Unexpected close tag)
     maxItems: 30,
   },
   {
@@ -69,7 +69,7 @@ export const jobFeedSources: JobFeedSource[] = [
     category: 'marketing',
     tags: ['dailyremote'],
     region: 'global',
-    active: true,
+    active: false, // 2025-10: endpoint vraća HTTP 404
     maxItems: 30,
   },
   {
@@ -91,7 +91,7 @@ export const jobFeedSources: JobFeedSource[] = [
     category: 'software-engineering',
     tags: ['workingnomads'],
     region: 'global',
-    active: true,
+    active: false, // 2025-10: endpoint vraća HTTP 404
     maxItems: 30,
   },
   // Additional categories and sources for breadth
@@ -114,7 +114,7 @@ export const jobFeedSources: JobFeedSource[] = [
     category: 'marketing',
     tags: ['weworkremotely'],
     region: 'global',
-    active: true,
+    active: false, // 2025-10: endpoint vraća trajni HTTP 301 na HTML stranicu
     maxItems: 30,
   },
   {
@@ -169,7 +169,7 @@ export const jobFeedSources: JobFeedSource[] = [
     category: 'software-engineering',
     tags: ['dailyremote'],
     region: 'global',
-    active: true,
+    active: false, // 2025-10: endpoint vraća HTTP 404
     maxItems: 30,
   },
   // Balkan/CEE placeholders (set active=false until verified RSS endpoints)

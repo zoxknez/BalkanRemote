@@ -1,7 +1,7 @@
 """
 RemoteOK.com scraper - Remote jobs
 """
-from crawlee.playwright_crawler import PlaywrightCrawler, PlaywrightCrawlingContext
+from crawlee.crawlers import PlaywrightCrawler, PlaywrightCrawlingContext
 from datetime import datetime
 from typing import List, Dict, Any
 from utils.logger import Logger

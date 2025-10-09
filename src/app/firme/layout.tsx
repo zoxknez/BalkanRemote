@@ -3,14 +3,14 @@ import { buildOgImageUrl } from '@/lib/site'
 import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'Firme/Hybrid - Svi poslovi | Balkan Remote',
-  description: 'Agregator najnovijih onsite i hybrid poslova iz lokalnih firmi na Balkanu. Sve kategorije - IT, marketing, finansije, HR, zdravstvo i više.',
+  title: 'OnSite - Svi poslovi | Balkan Remote',
+  description: 'Agregator najnovijih onsite i hibridnih poslova iz lokalnih firmi na Balkanu. Sve kategorije - IT, marketing, finansije, HR, zdravstvo i više.',
   robots: { index: true, follow: true },
   openGraph: {
-    title: 'Firme/Hybrid - Svi poslovi | Balkan Remote',
-    description: 'Poslednji onsite i hybrid poslovi iz lokalnih firmi na Balkanu. Sve kategorije dostupne.',
+    title: 'OnSite - Svi poslovi | Balkan Remote',
+    description: 'Poslednji onsite i hibridni poslovi iz lokalnih firmi na Balkanu. Sve kategorije dostupne.',
     url: '/firme',
-    images: [{ url: buildOgImageUrl('Firme/Hybrid - Svi poslovi', 'Balkan Remote'), width: 1200, height: 630 }],
+    images: [{ url: buildOgImageUrl('OnSite - Svi poslovi', 'Balkan Remote'), width: 1200, height: 630 }],
   },
 }
 

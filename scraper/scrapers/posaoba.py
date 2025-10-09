@@ -1,7 +1,7 @@
 """
 Posao.ba scraper (Bosna i Hercegovina) - Hybrid/Onsite jobs
 """
-from crawlee.playwright_crawler import (
+from crawlee_playwright import (
     PlaywrightCrawler,
     PlaywrightCrawlingContext
 )

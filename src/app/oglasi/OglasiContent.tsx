@@ -399,6 +399,44 @@ export default function OglasiContent() {
                 )
               })}
             </div>
+
+            {/* Junior/Entry-Level Focus CTA */}
+            {tab === 'explore' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: 0.3 }}
+                className="mt-6 flex justify-center"
+              >
+                <button
+                  onClick={() => {
+                    const isJuniorActive = (filters.experience || []).includes('junior') || (filters.experience || []).includes('entry')
+                    if (isJuniorActive) {
+                      // Remove junior/entry filters
+                      const next = (filters.experience || []).filter(e => e !== 'junior' && e !== 'entry')
+                      updateFilters({ experience: next.length ? next : undefined, offset: 0 })
+                    } else {
+                      // Add junior & entry filters
+                      const current = filters.experience || []
+                      const next = Array.from(new Set([...current, 'junior', 'entry']))
+                      updateFilters({ experience: next, offset: 0 })
+                    }
+                  }}
+                  className={cn(
+                    'group inline-flex items-center gap-2.5 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200',
+                    ((filters.experience || []).includes('junior') || (filters.experience || []).includes('entry'))
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 ring-2 ring-white/50'
+                      : 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-105 ring-2 ring-white/50 animate-pulse hover:animate-none'
+                  )}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {((filters.experience || []).includes('junior') || (filters.experience || []).includes('entry'))
+                    ? 'Junior fokus aktivan ✓'
+                    : '🎯 Junior/Entry-Level fokus'
+                  }
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </div>

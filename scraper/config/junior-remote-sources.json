@@ -1,0 +1,250 @@
+{
+  "version": "1.0",
+  "updated": "2025-01-09",
+  "description": "Bot-friendly sources for junior/entry-level remote positions",
+  "providers": [
+    {
+      "id": "remoteok",
+      "type": "api",
+      "endpoint": "https://remoteok.io/api",
+      "method": "GET",
+      "pagination": null,
+      "rate_limit_per_min": 10,
+      "attribution_required": true,
+      "junior_filter": "(?i)\\b(junior|entry[-\\s]?level|graduate|trainee|intern(ship)?)\\b",
+      "remote_filter": "(?i)\\b(remote|anywhere|worldwide)\\b",
+      "fields_map": {
+        "id": "id",
+        "title": "position",
+        "company": "company",
+        "location": "location",
+        "tags": "tags",
+        "url": "url",
+        "posted_at": "date"
+      }
+    },
+    {
+      "id": "remotive",
+      "type": "api",
+      "endpoint": "https://remotive.com/api/remote-jobs?search=junior",
+      "method": "GET",
+      "pagination": {
+        "strategy": "offset_or_none"
+      },
+      "rate_limit_per_min": 20,
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "company_name",
+        "location": "candidate_required_location",
+        "url": "url",
+        "posted_at": "publication_date",
+        "desc": "description"
+      }
+    },
+    {
+      "id": "himalayas",
+      "type": "api",
+      "endpoint": "https://himalayas.app/api/jobs?limit=20",
+      "method": "GET",
+      "pagination": {
+        "strategy": "cursor",
+        "param": "cursor"
+      },
+      "rate_limit_per_min": 10,
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "company.name",
+        "location": "location",
+        "url": "url",
+        "posted_at": "publishedAt",
+        "desc": "content"
+      }
+    },
+    {
+      "id": "jobicy",
+      "type": "api",
+      "endpoint": "https://jobicy.com/api/v2/remote-jobs",
+      "method": "GET",
+      "pagination": null,
+      "rate_limit_per_min": 10,
+      "fields_map": {
+        "id": "id",
+        "title": "jobTitle",
+        "company": "companyName",
+        "location": "jobGeo",
+        "url": "url",
+        "posted_at": "pubDate",
+        "desc": "jobDescription"
+      }
+    },
+    {
+      "id": "wwr_rss",
+      "type": "rss",
+      "endpoint": "https://weworkremotely.com/remote-job-rss-feed",
+      "method": "GET",
+      "rate_limit_per_min": 6,
+      "note": "Ne zaobilaziti WWR apply flow (vidi guidelines).",
+      "fields_map": {
+        "title": "item.title",
+        "url": "item.link",
+        "posted_at": "item.pubDate",
+        "desc": "item.description"
+      }
+    },
+    {
+      "id": "nodesk_entry",
+      "type": "html",
+      "endpoint": "https://nodesk.co/remote-jobs/entry-level/",
+      "list_selector": "a.job-card",
+      "rate_limit_per_min": 6,
+      "fields_map": {
+        "title": "a .job-card__title",
+        "company": "a .job-card__company",
+        "url": "a@href",
+        "posted_at": ".job-card__date"
+      }
+    },
+    {
+      "id": "working_nomads",
+      "type": "html",
+      "endpoint": "https://www.workingnomads.com/jobs",
+      "list_selector": "a.listitem",
+      "rate_limit_per_min": 6,
+      "fields_map": {
+        "title": ".title",
+        "company": ".company",
+        "url": "@href",
+        "posted_at": ".date"
+      }
+    },
+    {
+      "id": "skipthedrive_entry",
+      "type": "html",
+      "endpoint": "https://www.skipthedrive.com/job-category/remote-entry-level-jobs/",
+      "list_selector": "article.job",
+      "fields_map": {
+        "title": "h2 a",
+        "company": ".company",
+        "url": "h2 a@href",
+        "posted_at": ".date"
+      }
+    },
+    {
+      "id": "support_driven",
+      "type": "html",
+      "endpoint": "https://jobs.supportdriven.com/",
+      "list_selector": "a.job-listing",
+      "fields_map": {
+        "title": ".job-title",
+        "company": ".company",
+        "url": "@href",
+        "posted_at": ".date"
+      }
+    },
+    {
+      "id": "remote_co_entry",
+      "type": "html",
+      "endpoint": "https://remote.co/remote-jobs/entry-level",
+      "list_selector": "div.card a.card__title",
+      "fields_map": {
+        "title": ".",
+        "url": "@href"
+      }
+    }
+  ],
+  "ats_patterns": {
+    "greenhouse": {
+      "pattern": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true",
+      "slugs": [],
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "offices[0].name",
+        "location": "location.name",
+        "url": "absolute_url",
+        "posted_at": "updated_at",
+        "desc": "content"
+      }
+    },
+    "lever": {
+      "pattern": "https://api.lever.co/v0/postings/{slug}",
+      "slugs": [],
+      "fields_map": {
+        "id": "id",
+        "title": "text",
+        "company": "company",
+        "location": "categories.location",
+        "url": "hostedUrl",
+        "posted_at": "createdAt",
+        "desc": "descriptionPlain"
+      }
+    },
+    "workable": {
+      "pattern": "https://apply.workable.com/api/v1/widget/accounts/{slug}",
+      "slugs": [],
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "company",
+        "location": "location.city",
+        "url": "application_url",
+        "posted_at": "published",
+        "desc": "description"
+      }
+    },
+    "recruitee": {
+      "pattern": "https://{slug}.recruitee.com/api/offers",
+      "slugs": [],
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "company",
+        "location": "location",
+        "url": "careers_url",
+        "posted_at": "updated_at",
+        "desc": "description"
+      }
+    },
+    "ashby": {
+      "pattern": "https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true",
+      "slugs": [],
+      "fields_map": {
+        "id": "id",
+        "title": "title",
+        "company": "organization.name",
+        "location": "location.text",
+        "url": "jobUrl",
+        "posted_at": "publishedAt",
+        "desc": "descriptionHtml"
+      }
+    }
+  },
+  "post_filters": {
+    "must_match": "(?i)\\b(junior|entry[-\\s]?level|graduate|trainee|intern(ship)?|assistant)\\b",
+    "must_not": "(?i)\\b(senior|sr\\.?|staff|principal|lead|manager|head of|director)\\b",
+    "remote_hint": "(?i)\\b(remote|anywhere|worldwide|work from home|WFH)\\b",
+    "timezone_prefer": "(?i)\\b(EMEA|EU|Europe|CET|UTC[\\+\\-]\\d)\\b"
+  },
+  "normalization": {
+    "title_cleanup": true,
+    "html_to_text_desc": true,
+    "location_standardize": true,
+    "company_domain_from_url": true
+  },
+  "dedupe": {
+    "keys": [
+      "canonical_url",
+      "company_norm",
+      "title_norm",
+      "location_norm"
+    ],
+    "fallback_hash_fields": [
+      "company_norm",
+      "title_norm",
+      "substr(desc,0,200)"
+    ],
+    "cross_source_window_days": 45
+  }
+}

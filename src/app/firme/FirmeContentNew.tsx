@@ -22,7 +22,8 @@ import {
   BarChart3,
   Link as LinkIcon,
   ExternalLink,
-  TrendingUp
+  TrendingUp,
+  Flame
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { HybridJob } from '@/hooks/useHybridJobs'
@@ -60,6 +61,7 @@ export default function FirmeContentSimplified() {
   const [activeTab, setActiveTab] = useState<TabType>('explore')
   const [savedJobs, setSavedJobs] = useState<HybridJob[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
+  const [bookmarkCount, setBookmarkCount] = useState<number | null>(null)
 
   const {
     jobs,
@@ -169,12 +171,20 @@ export default function FirmeContentSimplified() {
       if (!res.ok) throw new Error('Failed to fetch')
       const json = await res.json()
       setSavedJobs(json?.data || [])
+      setBookmarkCount(json?.data?.length ?? 0)
     } catch (err) {
       console.error('Failed to fetch saved jobs:', err)
       setSavedJobs([])
+      setBookmarkCount(0)
     } finally {
       setSavedLoading(false)
     }
+  }, [])
+
+  // Initial bookmark count
+  useEffect(() => {
+    // TODO: Create /api/hybrid-jobs/bookmarks endpoint when bookmarking feature is added
+    setBookmarkCount(0)
   }, [])
 
   // Load saved jobs when tab changes
@@ -187,116 +197,82 @@ export default function FirmeContentSimplified() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <Building2 className="w-10 h-10" />
-            <h1 className="text-4xl md:text-5xl font-bold">
-              OnSite & Hibridni Poslovi
-            </h1>
-          </div>
-          <p className="text-blue-100 text-lg mb-6">
-            Pronađi poslove na Balkanu sa radom iz kancelarije ili kombinovanim hibridnim modelom
-          </p>
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.3),transparent_60%)]" />
+        <div className="max-w-7xl mx-auto px-4 py-14 relative">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-2xl bg-white/10 border border-white/20">
+                <Building2 className="w-12 h-12" />
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-indigo-100 drop-shadow">
+                OnSite & Hibridni Poslovi
+              </h1>
+              <span className="hidden md:inline-flex text-sm font-medium px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white items-center gap-2">
+                🌍 Balkan
+              </span>
+            </div>
+            <p className="text-center text-blue-50/90 text-lg max-w-3xl mx-auto mb-8">
+              Kurirani agregator OnSite i hibridnih pozicija sa vodećih balkanskih platformi. Ažuriranje svakog dana.
+            </p>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            <button
-              onClick={() => setActiveTab('explore')}
-              className={cn(
-                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
-                activeTab === 'explore'
-                  ? "bg-white text-blue-600 shadow-lg"
-                  : "bg-white/10 text-white hover:bg-white/20"
-              )}
-            >
-              <Sparkles className="w-4 h-4" />
-              Pretraga
-            </button>
-            <button
-              onClick={() => setActiveTab('saved')}
-              className={cn(
-                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
-                activeTab === 'saved'
-                  ? "bg-white text-blue-600 shadow-lg"
-                  : "bg-white/10 text-white hover:bg-white/20"
-              )}
-            >
-              <Bookmark className="w-4 h-4" />
-              Sačuvano
-            </button>
-            <button
-              onClick={() => setActiveTab('stats')}
-              className={cn(
-                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
-                activeTab === 'stats'
-                  ? "bg-white text-blue-600 shadow-lg"
-                  : "bg-white/10 text-white hover:bg-white/20"
-              )}
-            >
-              <BarChart3 className="w-4 h-4" />
-              Statistika
-            </button>
-            <button
-              onClick={() => setActiveTab('sources')}
-              className={cn(
-                "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
-                activeTab === 'sources'
-                  ? "bg-white text-blue-600 shadow-lg"
-                  : "bg-white/10 text-white hover:bg-white/20"
-              )}
-            >
-              <LinkIcon className="w-4 h-4" />
-              Izvori
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="flex gap-2 max-w-3xl">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Pretraži po poziciji, kompaniji..."
-                className="w-full pl-12 pr-4 py-4 rounded-xl border-0 text-gray-900 text-lg shadow-lg focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors shadow-lg"
-            >
-              Traži
-            </button>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-4 bg-blue-500/20 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-blue-500/30 transition-colors relative"
-            >
-              <Filter className="w-5 h-5" />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 text-blue-900 text-xs font-bold rounded-full flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+          <div className="mt-10 flex flex-wrap justify-center gap-3 text-xs" role="tablist" aria-label="Firme sekcije">
+            {(['explore', 'saved', 'stats', 'sources'] as const).map(t => {
+              const label = t === 'explore' ? 'Pretraga' : (t === 'saved' ? 'Sačuvano' : (t === 'stats' ? 'Statistika' : 'Izvori'))
+              const selected = activeTab === t
+              return (
+                <button
+                  key={t}
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`panel-${t}`}
+                  id={`tab-${t}`}
+                  onClick={() => setActiveTab(t)}
+                  className={cn(
+                    'px-5 py-2 rounded-full border backdrop-blur-sm transition font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50',
+                    selected ? 'bg-white text-blue-700 border-white shadow' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                  )}
+                >
+                  {t === 'explore' && <Sparkles className="w-4 h-4" />}
+                  {t === 'saved' && <Bookmark className="w-4 h-4" />}
+                  {t === 'stats' && <BarChart3 className="w-4 h-4" />}
+                  {t === 'sources' && <LinkIcon className="w-4 h-4" />}
+                  {label}
+                  {t === 'explore' && activeFilterCount > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center text-[10px] bg-blue-600 text-white rounded-full h-5 px-2">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
 
           {/* Stats */}
-          {summary && (
-            <div className="mt-6 flex gap-4 text-sm">
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                <strong>{summary.totalHybrid}</strong> aktivnih pozicija
-              </div>
-              {summary.newToday > 0 && (
-                <div className="bg-yellow-400/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  🔥 <strong>{summary.newToday}</strong> novih danas
-                </div>
-              )}
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto" aria-live="polite">
+            <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
+              <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Ukupno</span>
+              <span className="text-2xl font-semibold flex items-center gap-2">
+                <Building2 className="w-5 h-5" /> {total}
+              </span>
             </div>
-          )}
+            <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
+              <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Novo 24h</span>
+              <span className="text-2xl font-semibold flex items-center gap-2">
+                <Flame className="w-5 h-5" /> {summary?.newToday ?? 0}
+              </span>
+            </div>
+            <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex flex-col">
+              <span className="text-[11px] uppercase tracking-wide text-blue-100/80">Sačuvano</span>
+              <span className="text-2xl font-semibold flex items-center gap-2">
+                <Bookmark className="w-5 h-5" /> {bookmarkCount ?? 0}
+              </span>
+            </div>
+          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -437,6 +413,42 @@ export default function FirmeContentSimplified() {
         {/* EXPLORE TAB - Jobs Grid */}
         {activeTab === 'explore' && (
           <>
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="flex flex-col md:flex-row gap-3 md:items-center p-3 md:p-4 rounded-2xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm">
+                <div className="relative flex-1 min-w-[240px]">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    placeholder="Pretraži po poziciji, kompaniji..."
+                    className="w-full h-11 md:h-12 rounded-xl border border-gray-300 bg-white pl-12 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
+                  />
+                </div>
+                <button
+                  onClick={handleSearch}
+                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <Search className="w-4 h-4" />
+                  Traži
+                </button>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap relative"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filteri
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
             {loading && (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -660,30 +672,54 @@ export default function FirmeContentSimplified() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { name: 'MJob.rs', url: 'https://mjob.rs', country: '🇷🇸', desc: 'Vodeca platforma u Srbiji' },
-                  { name: 'Poslovi.infostud.com', url: 'https://poslovi.infostud.com', country: '🇷🇸', desc: 'Infostud oglasnik' },
-                  { name: 'MojPosao.net', url: 'https://mojposao.net', country: '🇭🇷', desc: 'Najveći portal u Hrvatskoj' },
-                  { name: 'Posao.ba', url: 'https://posao.ba', country: '🇧🇦', desc: 'Vodeci portal u BiH' },
-                  { name: 'Jobs.hr', url: 'https://jobs.hr', country: '🇭🇷', desc: 'Hrvatski IT portal' },
-                  { name: 'Kariera.mk', url: 'https://kariera.mk', country: '🇲🇰', desc: 'Makedonska platforma' },
+                  { name: 'HelloWorld.rs', url: 'https://www.helloworld.rs/oglasi-za-posao', country: '🇷🇸', desc: 'Vodeća IT platforma u Srbiji', jobs: 300 },
+                  { name: 'Poslovi.infostud.com', url: 'https://poslovi.infostud.com', country: '🇷🇸', desc: 'Infostud oglasnik', jobs: 30 },
+                  { name: 'Posao.hr', url: 'https://www.posao.hr', country: '🇭🇷', desc: 'Hrvatski oglasnik poslova', jobs: 25 },
+                  { name: 'MojPosao.net', url: 'https://mojposao.net', country: '��', desc: 'Najveći portal u Hrvatskoj', jobs: 0, disabled: true },
+                  { name: 'Posao.ba', url: 'https://posao.ba', country: '��', desc: 'Vodeći portal u BiH', jobs: 0, disabled: true },
+                  { name: 'Kariera.mk', url: 'https://kariera.mk', country: '🇲🇰', desc: 'Makedonska platforma', jobs: 0, disabled: true },
                 ].map((source) => (
                   <a
                     key={source.name}
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                    className={cn(
+                      "flex items-center justify-between p-4 border-2 rounded-lg transition-all group",
+                      source.disabled
+                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                        : "border-gray-200 hover:border-blue-400 hover:bg-blue-50"
+                    )}
+                    onClick={(e) => { if (source.disabled) e.preventDefault() }}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{source.country}</span>
                       <div>
-                        <div className="font-semibold text-gray-900 group-hover:text-blue-600">
+                        <div className={cn(
+                          "font-semibold",
+                          source.disabled 
+                            ? "text-gray-500" 
+                            : "text-gray-900 group-hover:text-blue-600"
+                        )}>
                           {source.name}
+                          {source.disabled && <span className="ml-2 text-xs text-gray-400">(uskoro)</span>}
                         </div>
                         <div className="text-sm text-gray-500">{source.desc}</div>
                       </div>
                     </div>
-                    <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                    <div className="flex items-center gap-3">
+                      {source.jobs > 0 && (
+                        <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                          {source.jobs}
+                        </div>
+                      )}
+                      <ExternalLink className={cn(
+                        "w-5 h-5",
+                        source.disabled
+                          ? "text-gray-300"
+                          : "text-gray-400 group-hover:text-blue-600"
+                      )} />
+                    </div>
                   </a>
                 ))}
               </div>

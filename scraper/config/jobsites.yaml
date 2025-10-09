@@ -39,8 +39,18 @@ sources:
       remote_type: "REMOTE"
       region: "GLOBAL"
 
-  - id: remotive
+  - id: weworkremotely_all
     enabled: true
+    kind: rss
+    url: https://weworkremotely.com/remote-jobs.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Main WWR RSS - all categories including junior-friendly positions (85+ jobs)"
+
+  - id: remotive
+    enabled: false
     kind: api
     url: https://remotive.com/api/remote-jobs
     params:
@@ -62,6 +72,99 @@ sources:
       remote_type: "REMOTE"
       region: "GLOBAL"
 
+  - id: remotive_junior
+    enabled: false
+    kind: api
+    url: https://remotive.com/api/remote-jobs
+    params:
+      search: "junior"
+      category: "software-dev"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "company_name"
+        url: "url"
+        posted_at: "publication_date"
+        salary: "salary"
+        tags: "tags"
+        description: "description"
+        location: "candidate_required_location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      seniority: "JUNIOR"
+    hints:
+      note: "Remotive API sa junior search filter - rate limit 20/min"
+
+  - id: jobicy
+    enabled: true
+    kind: api
+    url: https://jobicy.com/api/v2/remote-jobs
+    params:
+      count: "100"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "jobTitle"
+        company: "companyName"
+        url: "url"
+        posted_at: "pubDate"
+        description: "jobDescription"
+        location: "jobGeo"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Jobicy Public API - 100 jobs per request, rate limit 10/min"
+
+  - id: jobicy_junior
+    enabled: true
+    kind: api
+    url: https://jobicy.com/api/v2/remote-jobs
+    params:
+      tag: "junior"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "jobTitle"
+        company: "companyName"
+        url: "url"
+        posted_at: "pubDate"
+        description: "jobDescription"
+        location: "jobGeo"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      seniority: "JUNIOR"
+    hints:
+      note: "Jobicy Junior tag - 11+ junior-specific jobs"
+
+  - id: himalayas_api
+    enabled: false
+    kind: api
+    url: https://himalayas.app/api/jobs
+    params:
+      limit: "20"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "company.name"
+        url: "url"
+        posted_at: "publishedAt"
+        description: "content"
+        location: "location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "403 Forbidden - requires authentication or API key"
+
   - id: justremote
     enabled: false
     kind: rss
@@ -69,6 +172,8 @@ sources:
     derive:
       remote_type: "REMOTE"
       region: "GLOBAL"
+    hints:
+      note: "Returns HTML instead of RSS"
 
   - id: nodesk
     enabled: false
@@ -77,6 +182,8 @@ sources:
     derive:
       remote_type: "REMOTE"
       region: "GLOBAL"
+    hints:
+      note: "404 - RSS feed ne postoji"
 
   - id: himalayas
     enabled: false
@@ -85,6 +192,8 @@ sources:
     derive:
       remote_type: "REMOTE"
       region: "GLOBAL"
+    hints:
+      note: "403 Forbidden"
 
   - id: remoteco
     enabled: false
@@ -110,61 +219,275 @@ sources:
       remote_type: "REMOTE"
       region: "GLOBAL"
 
-  # ===== BALKAN: SRBIJA =====
+  # ===== JUNIOR/ENTRY-LEVEL FOCUSED SOURCES =====
   
-  - id: infostud
-    enabled: false
+  - id: nodesk_entry
+    enabled: true
     kind: html
-    start_url: https://poslovi.infostud.com/oglasi-za-posao?tipposla=6
+    start_url: https://nodesk.co/remote-jobs/entry-level/
     html:
-      prefer_jsonld: true
+      prefer_jsonld: false
       selectors:
-        item: "article.job-ad, .job-list-item"
-        title: "h2 a, .job-title"
-        company: ".company-name, [data-company]"
-        location: ".job-location, .location"
-        url: "a[href*='/oglas/']"
-        posted_at: "time, .date"
+        item: "a.job-card"
+        title: ".job-card__title, h3"
+        company: ".job-card__company, .company"
+        url: ""
+        posted_at: ".job-card__date, .date"
     derive:
-      remote_type: "HYBRID"
-      region: "BALKAN"
-      country_code: "RS"
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      seniority: "ENTRY"
     hints:
-      filter_note: "tipposla=6 je remote/hibrid filter"
+      note: "NoDesk Entry-Level page - bot-friendly HTML, rate limit 6/min"
 
-  - id: helloworld
+  - id: skipthedrive_entry
+    enabled: true
+    kind: html
+    start_url: https://www.skipthedrive.com/job-category/remote-entry-level-jobs/
+    html:
+      prefer_jsonld: false
+      pagination:
+        type: path
+        pattern: "page/{page}/"
+        start: 2
+        max_pages: 5
+      selectors:
+        item: "article.job, .job-listing"
+        title: "h2 a, .job-title"
+        company: ".company, .company-name"
+        url: "h2 a"
+        posted_at: ".date, time"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      seniority: "ENTRY"
+    hints:
+      note: "SkipTheDrive Entry-Level category - CS/Support/Marketing junior roles"
+
+  - id: remote_co_entry
+    enabled: true
+    kind: html
+    start_url: https://remote.co/remote-jobs/entry-level/
+    html:
+      prefer_jsonld: false
+      selectors:
+        item: "div.card, .job"
+        title: "a.card__title, h3 a"
+        company: ".company"
+        url: "a.card__title, h3 a"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      seniority: "ENTRY"
+    hints:
+      note: "Remote.co Entry-Level filter - curated remote positions"
+
+  - id: working_nomads
+    enabled: true
+    kind: html
+    start_url: https://www.workingnomads.com/jobs
+    html:
+      prefer_jsonld: false
+      pagination:
+        type: query_param
+        param: page
+        start: 2
+        max_pages: 5
+      selectors:
+        item: "a.listitem, .job-item"
+        title: ".title, h3"
+        company: ".company"
+        url: ""
+        posted_at: ".date"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Working Nomads - global remote board, rate limit 6/min"
+
+  - id: support_driven
+    enabled: true
+    kind: html
+    start_url: https://jobs.supportdriven.com/
+    html:
+      prefer_jsonld: false
+      selectors:
+        item: "a.job-listing, .job"
+        title: ".job-title, h3"
+        company: ".company"
+        url: ""
+        posted_at: ".date"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+      category: "SUPPORT"
+    hints:
+      note: "Support Driven Jobs - excellent for Customer Support/Success juniors"
+
+  - id: himalayas_remote
+    enabled: false
+    kind: rss
+    url: https://himalayas.app/jobs/remote.rss
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "403 Forbidden"
+
+  - id: remoteleaf
     enabled: false
     kind: html
-    start_url: https://helloworld.rs/poslovi?remote=true
+    start_url: https://remoteleaf.com/jobs
     html:
-      prefer_jsonld: true
+      prefer_jsonld: false
+      selectors:
+        item: ".job-listing"
+        title: ".job-title"
+        company: ".company"
+        url: "a"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "404 Not Found"
+
+  - id: remoteworkhub
+    enabled: false
+    kind: html
+    start_url: https://www.remoteworkhub.com/jobs
+    html:
+      prefer_jsonld: false
       selectors:
         item: ".job-card"
         title: ".job-title"
         company: ".company-name"
-        location: ".location"
         url: "a"
     derive:
       remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Returns 0 jobs - requires JavaScript"
+
+  - id: remoteio
+    enabled: false
+    kind: html
+    start_url: https://www.remote.io/remote-jobs
+    html:
+      prefer_jsonld: false
+      selectors:
+        item: ".job"
+        title: "h3, .title"
+        company: ".company"
+        url: "a"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "403 Forbidden"
+
+  - id: turing_remote
+    enabled: false
+    kind: html
+    start_url: https://www.turing.com/jobs
+    html:
+      prefer_jsonld: false
+      selectors:
+        item: "[data-testid='job-card']"
+        title: "h3, [data-testid='job-title']"
+        company: "[data-testid='company-name']"
+        url: "a"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Returns 0 jobs - requires JavaScript"
+
+  - id: pangian
+    enabled: false
+    kind: html
+    start_url: https://pangian.com/job-travel-remote/
+    html:
+      prefer_jsonld: false
+      selectors:
+        item: ".job-list-item"
+        title: ".job-title"
+        company: ".company"
+        url: "a"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Returns 0 jobs - requires JavaScript"
+
+  # ===== BALKAN: SRBIJA =====
+  
+  - id: infostud
+    enabled: true
+    kind: nextjs
+    start_url: https://poslovi.infostud.com/beta/oglasi-za-posao?sort=online_view_date
+    nextjs:
+      apollo_state: true
+      job_key_prefix: "SearchJob:"
+      pagination:
+        type: query_param
+        param: page
+        start: 1
+        max_pages: 10
+      field_mapping:
+        title: title
+        company: companyName
+        location: location
+        url: url
+        posted_at: "onlineViewDate({\"format\":\"d.m.Y\"})"
+        expires_at: "expirationDate({\"format\":\"d.m.Y\"})"
+    derive:
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "RS"
+    hints:
+      filter_note: "Sortiran po online_view_date za najnovije oglase, 30 po stranici, max 10 stranica = 300 poslova"
+
+  - id: helloworld
+    enabled: false
+    kind: html
+    start_url: https://www.helloworld.rs/oglasi-za-posao
+    html:
+      prefer_jsonld: false
+      pagination:
+        type: query_param
+        param: page
+        start: 0
+        step: 30
+        max_pages: 10
+      selectors:
+        item: "div.pr-10"
+        title: "a.__ga4_job_title"
+        company: "h4"
+        location: ".location, .city"
+        url: "a.__ga4_job_title"
+    derive:
+      remote_type: "ONSITE"
+      region: "BALKAN"
+      country_code: "RS"
+    hints:
+      filter_note: "Paginacija ide u koracima od 30: page=0, 30, 60, 90..."
 
   - id: startuj
-    enabled: false
+    enabled: true
     kind: html
     start_url: https://www.startuj.com/posao?rad-od-kuce=1
     html:
       prefer_jsonld: true
       selectors: {}
     derive:
-      remote_type: "REMOTE"
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "RS"
 
   # ===== BALKAN: HRVATSKA =====
   
   - id: mojposao
-    enabled: false
+    enabled: true
     kind: html
     start_url: https://www.moj-posao.net/Pretraga-Poslova/?remote=1
     html:
@@ -176,59 +499,78 @@ sources:
         location: ".location"
         url: "a"
     derive:
-      remote_type: "HYBRID"
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "HR"
 
   - id: posaohr
-    enabled: false
+    enabled: true
     kind: html
-    start_url: https://www.posao.hr/poslovi/?remote=1
+    start_url: https://www.posao.hr/poslovi/objavljeno-prije/1/
     html:
-      prefer_jsonld: true
-      selectors: {}
+      prefer_jsonld: false
+      pagination:
+        type: path
+        pattern: stranica/{page}
+        start: 2
+        max_pages: 9
+      selectors:
+        item: "div.intro"
+        title: "a strong"
+        company: ".company-name"
+        location: "span.location_system"
+        url: "a"
     derive:
-      remote_type: "REMOTE"
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "HR"
+    hints:
+      pagination_note: "Prva stranica je base URL, paginacija pocinje od /stranica/2 do /stranica/10 (9 dodatnih stranica)"
 
   # ===== BALKAN: BOSNA I HERCEGOVINA =====
   
   - id: posaoba
     enabled: false
     kind: html
-    start_url: https://www.posao.ba/oglasi
+    start_url: https://www.poslovi.ba/jobs/lists
     html:
-      prefer_jsonld: true
+      prefer_jsonld: false
       selectors:
-        item: ".job-item"
-        title: ".job-title, h3"
-        company: ".employer-name"
-        location: ".location"
-        url: "a"
+        item: "div.item-blocks-condensed > div"
+        title: "a.item-block"
+        url: "a.item-block"
     derive:
-      remote_type: "HYBRID"
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "BA"
+    hints:
+      note: "REQUIRES JS: job listings loaded via JavaScript, not in static HTML"
 
   # ===== BALKAN: SLOVENIJA =====
   
   - id: mojedelo
-    enabled: false
+    enabled: true
     kind: html
-    start_url: https://www.mojedelo.com/prosta-delovna-mesta
+    start_url: https://www.mojedelo.com/iskanje-zaposlitve
     html:
-      prefer_jsonld: true
+      prefer_jsonld: false
+      pagination:
+        type: query_param
+        param: jobSearchPage
+        start: 2
+        max_pages: 9
       selectors:
-        item: ".job-list-item"
-        title: ".job-title a"
-        company: ".company-name"
-        location: ".job-location"
-        url: "a"
+        item: "a[href*='/oglas/']"
+        title: ""
+        company: ".company-name, .employer"
+        location: ".location, .city"
+        url: ""
     derive:
-      remote_type: "HYBRID"
+      remote_type: "ONSITE"
       region: "BALKAN"
       country_code: "SI"
+    hints:
+      note: "Linkovi su direktno <a> tagovi, title se čita iz linka, prva stranica je base URL"
 
   # ===== DODATNI EU IZVORI =====
   

@@ -107,6 +107,8 @@ class JobRunner:
                     raw_jobs = self.fetch_rss(source)
                 elif kind == 'html':
                     raw_jobs = self.fetch_html(source)
+                elif kind == 'nextjs':
+                    raw_jobs = self.fetch_nextjs(source)
                 else:
                     raise ValueError(f"Unknown source kind '{kind}'")
 
@@ -332,8 +334,8 @@ class JobRunner:
         return jobs
     
     def fetch_html(self, source: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Fetch jobs from HTML page (JSON-LD + CSS fallback)."""
-        url = source.get('start_url') or source.get('url', '')
+        """Fetch jobs from HTML page (JSON-LD + CSS fallback) with pagination support."""
+        base_url = source.get('start_url') or source.get('url', '')
         
         headers = {
             'User-Agent': self.defaults.get(
@@ -342,58 +344,196 @@ class JobRunner:
         }
         
         timeout = source.get('timeout', self.defaults.get('timeout', 30))
-        
-        resp = requests.get(url, headers=headers, timeout=timeout)
-        resp.raise_for_status()
-        
-        html = resp.text
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        jobs = []
-        
-        # Extract HTML config
         html_config = source.get('html', {})
-        prefer_jsonld = html_config.get('prefer_jsonld', False)
+        pagination_config = html_config.get('pagination', {})
         
-        # Try JSON-LD first if preferred
-        if prefer_jsonld:
-            jsonld_jobs = self.extract_jsonld(soup)
-            if jsonld_jobs:
-                return jsonld_jobs
+        all_jobs = []
         
-        # Fallback to CSS selectors
-        selectors = html_config.get('selectors', {})
-        if not selectors:
-            return []
-        
-        job_selector = selectors.get('job')
-        if not job_selector:
-            return []
-        
-        job_elements = soup.select(job_selector)
-        
-        for elem in job_elements:
-            job = {}
+        # Determine pages to scrape
+        if pagination_config:
+            page_type = pagination_config.get('type', 'query_param')
+            param = pagination_config.get('param', 'page')
+            pattern = pagination_config.get('pattern', '')
+            start = pagination_config.get('start', 1)
+            max_pages = pagination_config.get('max_pages', 1)
+            step = pagination_config.get('step', 1)
             
-            # Extract each field using selectors
-            for field, selector in selectors.items():
-                if field == 'job':
-                    continue
+            # Generate page numbers with step
+            if step != 1:
+                pages = [start + (i * step) for i in range(max_pages)]
+            else:
+                pages = range(start, start + max_pages)
+            
+            # For path pagination or when start > 1, prepend None for base URL
+            if page_type == 'path' or (page_type == 'query_param' and start > 1):
+                pages = [None] + list(pages)
+        else:
+            pages = [None]  # Single page, no pagination
+        
+        for page_num in pages:
+            # Build URL with pagination
+            if page_num is None:
+                url = base_url
+            elif page_num == start and step != 1:
+                # For step-based pagination starting at 0, skip param on first page
+                url = base_url
+            elif pagination_config and pagination_config.get('type') == 'path':
+                # Path-based pagination (e.g., /stranica/2)
+                url = base_url + pattern.replace('{page}', str(page_num))
+            else:
+                # Query param pagination
+                sep = '&' if '?' in base_url else '?'
+                url = f"{base_url}{sep}{param}={page_num}"
+            
+            try:
+                resp = requests.get(url, headers=headers, timeout=timeout)
+                resp.raise_for_status()
                 
-                try:
-                    found = elem.select_one(selector)
-                    if found:
-                        if field == 'url':
-                            job[field] = found.get('href', '')
-                        else:
-                            job[field] = sanitize_html(found.get_text())
-                except Exception:
-                    pass
-            
-            if job.get('title'):
-                jobs.append(job)
+                html = resp.text
+                soup = BeautifulSoup(html, 'html.parser')
+                
+                # Extract HTML config
+                prefer_jsonld = html_config.get('prefer_jsonld', False)
+                
+                # Try JSON-LD first if preferred
+                if prefer_jsonld:
+                    jsonld_jobs = self.extract_jsonld(soup)
+                    if jsonld_jobs:
+                        all_jobs.extend(jsonld_jobs)
+                        continue
+                
+                # Fallback to CSS selectors
+                selectors = html_config.get('selectors', {})
+                if not selectors:
+                    break
+                
+                item_selector = selectors.get('item')
+                if not item_selector:
+                    break
+                
+                job_elements = soup.select(item_selector)
+                
+                # Stop pagination if no jobs found
+                if not job_elements:
+                    break
+                
+                for elem in job_elements:
+                    job = {}
+                    
+                    # Extract each field using selectors
+                    for field, selector in selectors.items():
+                        if field == 'item':
+                            continue
+                        
+                        try:
+                            found = elem.select_one(selector)
+                            if found:
+                                if field == 'url':
+                                    job[field] = found.get('href', '')
+                                else:
+                                    job[field] = sanitize_html(found.get_text())
+                        except Exception:
+                            pass
+                    
+                    if job.get('title'):
+                        all_jobs.append(job)
+                
+                # Small delay between pages
+                if page_num is not None and len(pages) > 1:
+                    time.sleep(0.5)
+                    
+            except Exception as e:
+                # Stop pagination on error
+                if page_num is not None and page_num > start:
+                    break
+                raise e
         
-        return jobs
+        return all_jobs
+    
+    def fetch_nextjs(self, source: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Fetch jobs from Next.js pages with __NEXT_DATA__ and Apollo State."""
+        base_url = source.get('start_url') or source.get('url', '')
+        
+        headers = {
+            'User-Agent': self.defaults.get(
+                'user_agent', 'RemoteBalkan/1.0'
+            )
+        }
+        
+        timeout = source.get('timeout', self.defaults.get('timeout', 30))
+        nextjs_config = source.get('nextjs', {})
+        pagination_config = nextjs_config.get('pagination', {})
+        
+        all_jobs = []
+        
+        # Determine pages to scrape
+        if pagination_config:
+            param = pagination_config.get('param', 'page')
+            start = pagination_config.get('start', 1)
+            max_pages = pagination_config.get('max_pages', 1)
+            
+            # Special handling: if start=1, prepend None (base URL without page param)
+            if start == 1:
+                pages = [None] + list(range(2, start + max_pages))
+            else:
+                pages = list(range(start, start + max_pages))
+        else:
+            pages = [None]
+        
+        for page_num in pages:
+            # Build URL with pagination
+            if page_num is None:
+                url = base_url
+            else:
+                sep = '&' if '?' in base_url else '?'
+                url = f"{base_url}{sep}{param}={page_num}"
+            
+            try:
+                resp = requests.get(url, headers=headers, timeout=timeout)
+                resp.raise_for_status()
+                
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                
+                # Find __NEXT_DATA__ script
+                next_data_script = soup.find('script', id='__NEXT_DATA__')
+                if not next_data_script:
+                    break
+                
+                data = json.loads(next_data_script.string)
+                
+                # Extract jobs from Apollo State if configured
+                if nextjs_config.get('apollo_state'):
+                    apollo = data.get('props', {}).get('pageProps', {}).get('__APOLLO_STATE__', {})
+                    job_prefix = nextjs_config.get('job_key_prefix', 'SearchJob:')
+                    field_mapping = nextjs_config.get('field_mapping', {})
+                    
+                    page_jobs = []
+                    for key, value in apollo.items():
+                        if key.startswith(job_prefix):
+                            # Map fields
+                            job = {}
+                            for target_field, source_field in field_mapping.items():
+                                if source_field in value:
+                                    job[target_field] = value[source_field]
+                            
+                            if job.get('title'):
+                                page_jobs.append(job)
+                    
+                    if not page_jobs:
+                        break
+                    
+                    all_jobs.extend(page_jobs)
+                
+                # Small delay between pages
+                if page_num is not None and len(pages) > 1:
+                    time.sleep(0.5)
+                    
+            except Exception as e:
+                if page_num is not None and page_num > start:
+                    break
+                raise e
+        
+        return all_jobs
     
     def extract_jsonld(self, soup: BeautifulSoup) -> List[Dict[str, Any]]:
         """Extract JobPosting from JSON-LD structured data."""

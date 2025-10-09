@@ -296,6 +296,201 @@ sources:
     hints:
       note: "Wallarm Recruitee API - cybersecurity company"
 
+  - id: greenhouse_remotecom
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/remotecom/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Remote.com'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Remote.com (EOR company) - many ops/support roles by region"
+
+  - id: greenhouse_mozilla
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/mozilla/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Mozilla'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Mozilla (Firefox) - remote-first company"
+
+  - id: greenhouse_bitgo
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/bitgo/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'BitGo'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "BitGo - crypto custody platform"
+
+  - id: greenhouse_mercury
+    enabled: true
+    kind: api
+    url: https://boards-api.greenhouse.io/v1/boards/mercury/jobs
+    params:
+      content: "true"
+    mapping:
+      list_path: "jobs"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Mercury'"
+        url: "absolute_url"
+        posted_at: "updated_at"
+        description: "content"
+        location: "location.name"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Mercury - banking for startups"
+
+  - id: lever_welocalize
+    enabled: true
+    kind: api
+    url: https://api.lever.co/v0/postings/welocalize
+    params:
+      mode: "json"
+    mapping:
+      list_path: "$"
+      fields:
+        external_id: "id"
+        title: "text"
+        company: "'Welocalize'"
+        url: "hostedUrl"
+        posted_at: "createdAt"
+        description: "descriptionPlain"
+        location: "categories.location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Welocalize - global language/testing, entry-level friendly"
+
+  - id: lever_ro
+    enabled: true
+    kind: api
+    url: https://api.lever.co/v0/postings/ro
+    params:
+      mode: "json"
+    mapping:
+      list_path: "$"
+      fields:
+        external_id: "id"
+        title: "text"
+        company: "'Ro Health'"
+        url: "hostedUrl"
+        posted_at: "createdAt"
+        description: "descriptionPlain"
+        location: "categories.location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Ro - telehealth company"
+
+  - id: workable_awesomemotive
+    enabled: false
+    kind: api
+    url: https://apply.workable.com/api/v1/widget/accounts/awesomemotive/jobs
+    auth: none
+    mapping:
+      list_path: "results"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Awesome Motive'"
+        url: "url"
+        posted_at: "published_on"
+        description: "description"
+        location: "location.city"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Awesome Motive (WPBeginner, OptinMonster) - remote WordPress company"
+
+  - id: recruitee_tiugo
+    enabled: true
+    kind: api
+    url: https://tiugotech.recruitee.com/api/offers/
+    auth: none
+    mapping:
+      list_path: "offers"
+      fields:
+        external_id: "id"
+        title: "title"
+        company: "'Tiugo Technologies'"
+        url: "careers_url"
+        posted_at: "created_at"
+        description: "description"
+        location: "location"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Tiugo Technologies - tech company"
+
+  - id: smartrecruiters_nokia
+    enabled: false
+    kind: api
+    url: https://api.smartrecruiters.com/v1/companies/nokia/postings
+    auth: none
+    mapping:
+      list_path: "content"
+      fields:
+        external_id: "id"
+        title: "name"
+        company: "'Nokia'"
+        url: "ref"
+        posted_at: "releasedDate"
+        description: "jobAd.sections.companyDescription"
+        location: "location.city"
+    derive:
+      remote_type: "REMOTE"
+      region: "GLOBAL"
+    hints:
+      note: "Nokia - large global company with remote positions"
+
   - id: himalayas_api
     enabled: false
     kind: api

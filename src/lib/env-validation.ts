@@ -46,8 +46,8 @@ export function validateEnv(): { success: boolean; errors?: string[] } {
     const parsed = envSchema.safeParse(process.env);
     
     if (!parsed.success) {
-      const errors = parsed.error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
+      const errors = parsed.error.issues.map((err) => 
+        `${(err.path as Array<string | number>).join('.')}: ${err.message}`
       );
       
       logger.error('[env-validation] Environment validation failed', { errors });
@@ -59,8 +59,8 @@ export function validateEnv(): { success: boolean; errors?: string[] } {
       }
       
       // In development, provide clear error messages
-      console.error('\n❌ Environment Validation Failed:\n');
-      errors.forEach(err => console.error(`  - ${err}`));
+      console.error('\n[ERROR] Environment Validation Failed:\n');
+      errors.forEach((err) => console.error(`  - ${err}`));
       console.error('\nPlease check your .env.local file\n');
       
       return { success: false, errors };

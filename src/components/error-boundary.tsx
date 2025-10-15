@@ -3,10 +3,14 @@
 import { Component, ReactNode } from 'react';
 import { logger } from '@/lib/logger';
 
+interface ErrorInfo {
+  componentStack: string;
+}
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: any) => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -24,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('[ErrorBoundary] Caught error', { error, errorInfo });
     this.props.onError?.(error, errorInfo);
   }

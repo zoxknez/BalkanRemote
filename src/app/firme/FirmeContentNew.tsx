@@ -25,8 +25,6 @@ import {
   ExternalLink,
   TrendingUp,
   Flame,
-  Clock,
-  Users,
   Target
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -174,7 +172,7 @@ export default function FirmeContentSimplified() {
   }, [searchInput, fetchSuggestions])
 
   // Analytics tracking
-  const trackEvent = useCallback(async (event: string, data: any = {}) => {
+  const trackEvent = useCallback(async (event: string, data: Record<string, unknown> = {}) => {
     try {
       await fetch('/api/hybrid-jobs/analytics', {
         method: 'POST',
@@ -864,20 +862,25 @@ export default function FirmeContentSimplified() {
                   { name: 'Posao.ba', url: 'https://posao.ba', country: '��', desc: 'Vodeći portal u BiH', jobs: 0, disabled: true },
                   { name: 'Kariera.mk', url: 'https://kariera.mk', country: '🇲🇰', desc: 'Makedonska platforma', jobs: 0, disabled: true },
                 ].map((source) => (
-                  <a
-                    key={source.name}
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackEvent('source_click', { source: source.name, url: source.url })}
-                    className={cn(
-                      "flex items-center justify-between p-4 border-2 rounded-lg transition-all group",
-                      source.disabled
-                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                        : "border-gray-200 hover:border-blue-400 hover:bg-blue-50"
-                    )}
-                    onClick={(e) => { if (source.disabled) e.preventDefault() }}
-                  >
+                <a
+                  key={source.name}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    if (source.disabled) {
+                      e.preventDefault();
+                    } else {
+                      trackEvent('source_click', { source: source.name, url: source.url });
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center justify-between p-4 border-2 rounded-lg transition-all group",
+                    source.disabled
+                      ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                      : "border-gray-200 hover:border-blue-400 hover:bg-blue-50"
+                  )}
+                >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{source.country}</span>
                       <div>
@@ -934,17 +937,17 @@ export default function FirmeContentSimplified() {
               <div>
                 <h4 className="font-medium text-gray-700 mb-2">Current State:</h4>
                 <pre className="bg-white p-3 rounded border text-xs overflow-auto">
-                  {JSON.stringify({
-                    activeTab,
-                    searchInput,
-                    filters,
-                    suggestions: suggestions.slice(0, 3),
-                    showSuggestions,
-                    selectedSuggestionIndex,
-                    total,
-                    loading,
-                    error: error?.message
-                  }, null, 2)}
+                {JSON.stringify({
+                  activeTab,
+                  searchInput,
+                  filters,
+                  suggestions: suggestions.slice(0, 3),
+                  showSuggestions,
+                  selectedSuggestionIndex,
+                  total,
+                  loading,
+                  error: error || null
+                }, null, 2)}
                 </pre>
               </div>
               <div>

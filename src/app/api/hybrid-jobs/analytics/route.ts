@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Get analytics summary (for stats tab)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // In production, this would fetch from your analytics database
     // For now, return mock data

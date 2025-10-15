@@ -201,26 +201,28 @@ async function scrapeRemoteOK(): Promise<HybridJobInsert[]> {
     const jobs = data.slice(1) // Remove first element (metadata)
     
     return jobs
-      .filter((job: any) => job.position && job.company)
-      .map((job: any): HybridJobInsert => ({
+      .filter((job: Record<string, unknown>) => job.position && job.company)
+      .map((job: Record<string, unknown>): HybridJobInsert => ({
         source_name: 'RemoteOK',
-        source_url: 'https://remoteok.io',
-        title: job.position,
-        company: job.company,
-        location: job.location || 'Remote',
-        description: job.description || '',
-        url: job.url || `https://remoteok.io/remote-jobs/${job.id}`,
-        salary_min: job.salary_min || null,
-        salary_max: job.salary_max || null,
-        currency: job.currency || null,
-        work_type: job.remote ? 'remote' : 'hybrid',
-        experience_level: job.seniority || null,
-        posted_at: new Date(job.date).toISOString(),
-        tags: job.tags || [],
-        metadata: {
-          original_id: job.id,
-          original_data: job
-        }
+        source_website: 'https://remoteok.io',
+        title: job.position as string,
+        company_name: job.company as string,
+        location: (job.location as string | undefined) || 'Remote',
+        description: (job.description as string | undefined) || '',
+        application_url: (job.url as string | undefined) || `https://remoteok.io/remote-jobs/${job.id}`,
+        salary_min: (job.salary_min as number | undefined) || null,
+        salary_max: (job.salary_max as number | undefined) || null,
+        salary_currency: (job.currency as string | undefined) || 'EUR',
+        work_type: job.remote ? 'flexible' : 'hybrid',
+        experience_level: (job.seniority as string | undefined) || null,
+        posted_date: new Date((job.date as string | number)).toISOString(),
+        skills: (job.tags as string[] | undefined) || [],
+        technologies: (job.tags as string[] | undefined) || [],
+        external_id: `remoteok-${job.id}`,
+        country_code: null,
+        region: 'GLOBAL',
+        employment_type: 'full-time',
+        scraped_at: new Date().toISOString()
       }))
   } catch (error) {
     console.error('RemoteOK scraping error:', error)
@@ -241,26 +243,28 @@ async function scrapeRemotive(): Promise<HybridJobInsert[]> {
     const data = await response.json()
     
     return data.jobs
-      .filter((job: any) => job.title && job.company_name)
-      .map((job: any): HybridJobInsert => ({
+      .filter((job: Record<string, unknown>) => job.title && job.company_name)
+      .map((job: Record<string, unknown>): HybridJobInsert => ({
         source_name: 'Remotive',
-        source_url: 'https://remotive.io',
-        title: job.title,
-        company: job.company_name,
-        location: job.candidate_required_location || 'Remote',
-        description: job.description || '',
-        url: job.url || `https://remotive.io/remote-jobs/${job.id}`,
-        salary_min: job.salary_min || null,
-        salary_max: job.salary_max || null,
-        currency: job.currency || null,
-        work_type: 'remote',
-        experience_level: job.experience_level || null,
-        posted_at: new Date(job.publication_date).toISOString(),
-        tags: job.tags || [],
-        metadata: {
-          original_id: job.id,
-          original_data: job
-        }
+        source_website: 'https://remotive.io',
+        title: job.title as string,
+        company_name: job.company_name as string,
+        location: (job.candidate_required_location as string | undefined) || 'Remote',
+        description: (job.description as string | undefined) || '',
+        application_url: (job.url as string | undefined) || `https://remotive.io/remote-jobs/${job.id}`,
+        salary_min: (job.salary_min as number | undefined) || null,
+        salary_max: (job.salary_max as number | undefined) || null,
+        salary_currency: (job.currency as string | undefined) || 'EUR',
+        work_type: 'flexible',
+        experience_level: (job.experience_level as string | undefined) || null,
+        posted_date: new Date((job.publication_date as string | number)).toISOString(),
+        skills: (job.tags as string[] | undefined) || [],
+        technologies: (job.tags as string[] | undefined) || [],
+        external_id: `remotive-${job.id}`,
+        country_code: null,
+        region: 'GLOBAL',
+        employment_type: 'full-time',
+        scraped_at: new Date().toISOString()
       }))
   } catch (error) {
     console.error('Remotive scraping error:', error)
@@ -281,26 +285,28 @@ async function scrapeJobicy(): Promise<HybridJobInsert[]> {
     const data = await response.json()
     
     return data.jobs
-      .filter((job: any) => job.title && job.company)
-      .map((job: any): HybridJobInsert => ({
+      .filter((job: Record<string, unknown>) => job.title && job.company)
+      .map((job: Record<string, unknown>): HybridJobInsert => ({
         source_name: 'Jobicy',
-        source_url: 'https://jobicy.com',
-        title: job.title,
-        company: job.company,
-        location: job.location || 'Remote',
-        description: job.description || '',
-        url: job.url || `https://jobicy.com/job/${job.id}`,
-        salary_min: job.salary_min || null,
-        salary_max: job.salary_max || null,
-        currency: job.currency || null,
-        work_type: 'remote',
-        experience_level: job.experience_level || null,
-        posted_at: new Date(job.date).toISOString(),
-        tags: job.tags || [],
-        metadata: {
-          original_id: job.id,
-          original_data: job
-        }
+        source_website: 'https://jobicy.com',
+        title: job.title as string,
+        company_name: job.company as string,
+        location: (job.location as string | undefined) || 'Remote',
+        description: (job.description as string | undefined) || '',
+        application_url: (job.url as string | undefined) || `https://jobicy.com/job/${job.id}`,
+        salary_min: (job.salary_min as number | undefined) || null,
+        salary_max: (job.salary_max as number | undefined) || null,
+        salary_currency: (job.currency as string | undefined) || 'EUR',
+        work_type: 'flexible',
+        experience_level: (job.experience_level as string | undefined) || null,
+        posted_date: new Date((job.date as string | number)).toISOString(),
+        skills: (job.tags as string[] | undefined) || [],
+        technologies: (job.tags as string[] | undefined) || [],
+        external_id: `jobicy-${job.id}`,
+        country_code: null,
+        region: 'GLOBAL',
+        employment_type: 'full-time',
+        scraped_at: new Date().toISOString()
       }))
   } catch (error) {
     console.error('Jobicy scraping error:', error)

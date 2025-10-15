@@ -8,7 +8,7 @@ interface CacheEntry<T> {
 }
 
 class RedisCache {
-  private cache = new Map<string, CacheEntry<any>>()
+  private cache = new Map<string, CacheEntry<unknown>>()
   private defaultTTL = 300000 // 5 minutes
 
   set<T>(key: string, value: T, ttl: number = this.defaultTTL): void {
@@ -30,7 +30,7 @@ class RedisCache {
       return null
     }
     
-    return entry.value
+    return entry.value as T
   }
 
   del(key: string): boolean {
@@ -84,10 +84,10 @@ export const redisCache = new RedisCache()
 
 // Cache key generators
 export const cacheKeys = {
-  hybridJobs: (filters: any) => `hybrid-jobs:${JSON.stringify(filters)}`,
+  hybridJobs: (filters: Record<string, unknown>) => `hybrid-jobs:${JSON.stringify(filters)}`,
   hybridJobSuggestions: (query: string) => `hybrid-suggestions:${query}`,
   hybridJobStats: () => 'hybrid-stats',
-  portalJobs: (filters: any) => `portal-jobs:${JSON.stringify(filters)}`,
+  portalJobs: (filters: Record<string, unknown>) => `portal-jobs:${JSON.stringify(filters)}`,
   portalJobSuggestions: (query: string) => `portal-suggestions:${query}`,
   portalJobStats: () => 'portal-stats'
 }

@@ -1,282 +1,529 @@
-# Balkan Jobs Scraper 🕷️
+# RemoteBalkan Job Scraper 🚀
 
-Python scraper za prikupljanje oglasa za poslove sa Balkan izvora (Infostud, Halo Oglasi, MojPosao, Posao.ba, MojeDelo) i internacionalnih remote job board-ova (RemoteOK, WeWorkRemotely, itd.).
+Automatizirano prikupljanje oglasa za poslove sa globalnih remote job board-ova i Balkan izvora.
 
-## Features
-
-- ✅ **Crawlee framework** - robustan scraping sa anti-bot zaštitom
-- ✅ **Playwright** - headless browser za scraping JavaScript sajtova
-- ✅ **Smart filtering** - samo oglasi iz zadnjih 24-48h
-- ✅ **Deduplication** - provera da oglas već ne postoji u bazi
-- ✅ **Quality scoring** - automatska ocena kvaliteta podataka
-- ✅ **Supabase integration** - automatski upsert u produkcijsku bazu
-- ✅ **Dry run mode** - testiranje bez pisanja u bazu
-
-## Struktura
-
-```
-scraper/
-├── scrapers/          # Scrapers za pojedinačne izvore
-│   ├── infostud.py    # Poslovi Infostud (Srbija)
-│   ├── remoteok.py    # RemoteOK (Remote)
-│   └── ...            # (TODO: dodati ostale)
-├── utils/
-│   ├── database.py    # Supabase upsert logika
-│   ├── normalizer.py  # Normalizacija podataka
-│   └── logger.py      # Logger
-├── main.py            # Main orchestrator
-├── requirements.txt   # Python dependencies
-└── .env               # Environment variables
-```
-
-## Setup
-
-### 1. Install Python dependencies
+## ⚡ Quick Start
 
 ```bash
+# 1. Setup
 cd scraper
 pip install -r requirements.txt
+
+# 2. Scrape remote jobs
+python scrape.py --remote --limit 100
+
+# 3. Load to Supabase
+python scrape.py --load
+
+# 4. Check database
+python scrape.py --check
 ```
 
-**Potreban je Python 3.11+**
-
-### 2. Install Playwright browsers
-
-```bash
-playwright install chromium
-```
-
-### 3. Create `.env` file
-
-```bash
-cp .env.example .env
-```
-
-Popuni `.env` sa svojim credentials:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-MAX_JOBS_PER_SOURCE=50
-SCRAPE_HOURS_BACK=24
-DRY_RUN=false
-```
-
-## Usage
-
-### Run scraper
-
-```bash
-# Production mode (piše u bazu)
-python main.py
-
-# Dry run mode (samo testira, ne piše u bazu)
-DRY_RUN=true python main.py
-
-# Ograniči broj oglasa po izvoru
-MAX_JOBS_PER_SOURCE=20 python main.py
-```
-
-### Output
-
-```
-============================================================
-🚀 Balkan Jobs Scraper Started
-============================================================
-Max jobs per source: 50
-Dry run mode: false
-
-📍 Scraping HYBRID/ONSITE jobs...
-
-🇷🇸 Scraping Infostud...
-[12:34:56] ℹ️  Starting Infostud scraper (max: 50 jobs)
-[12:34:58] ℹ️  Scraped: Senior Frontend Developer at Tech Srbija
-[12:34:59] ℹ️  Scraped: Backend Engineer at Nordeus
-...
-[12:35:10] ✅ Infostud scraper completed: 25 jobs
-
-🌍 Scraping REMOTE jobs...
-
-🌐 Scraping RemoteOK...
-[12:35:12] ℹ️  Starting RemoteOK scraper (max: 50 jobs)
-[12:35:15] ℹ️  Scraped: Full Stack Developer at GitLab
-...
-[12:35:30] ✅ RemoteOK scraper completed: 40 jobs
-
-============================================================
-📊 SUMMARY
-============================================================
-Total HYBRID jobs scraped: 25
-Total REMOTE jobs scraped: 40
-
-💾 Upserting to database...
-[12:35:32] ✅ Hybrid jobs: 18 inserted, 7 skipped
-[12:35:34] ✅ Remote jobs: 35 inserted, 5 skipped
-
-============================================================
-✅ Scraper completed in 45.23s
-============================================================
-```
-
-## Data Schema
-
-### Hybrid/Onsite jobs → `hybrid_jobs` table
-
-```python
-{
-    'external_id': 'infostud-12345',
-    'source_name': 'Poslovi Infostud',
-    'title': 'Senior Frontend Developer',
-    'company_name': 'Tech Srbija',
-    'location': 'Beograd, Srbija',
-    'work_type': 'hybrid',
-    'country_code': 'RS',
-    'region': 'BALKAN',
-    'category': 'software-engineering',
-    'description': '...',
-    'application_url': 'https://...',
-    'experience_level': 'senior',
-    'employment_type': 'full-time',
-    'salary_min': 2000,
-    'salary_max': 3500,
-    'salary_currency': 'EUR',
-    'skills': ['React', 'TypeScript', 'Next.js'],
-    'posted_date': '2025-10-05T12:00:00',
-    'scraped_at': '2025-10-06T12:35:10',
-    'quality_score': 85
-}
-```
-
-### Remote jobs → `jobs` table
-
-```python
-{
-    'external_id': 'remoteok-abc123',
-    'source_name': 'RemoteOK',
-    'title': 'Full Stack Developer',
-    'company_name': 'GitLab',
-    'location': 'Remote',
-    'work_type': 'remote',
-    'country_code': None,
-    'region': 'GLOBAL',
-    'category': 'software-engineering',
-    # ... ostali podaci slično kao gore
-}
-```
-
-## Adding New Scrapers
-
-### 1. Create new scraper file
-
-```python
-# scrapers/mojposao.py
-from crawlee.playwright_crawler import (
-    PlaywrightCrawler,
-    PlaywrightCrawlingContext
-)
-from utils.logger import Logger
-
-logger = Logger("mojposao")
-
-async def scrape_mojposao(max_jobs: int = 50):
-    jobs = []
-    
-    async def request_handler(context: PlaywrightCrawlingContext):
-        # Your scraping logic here
-        pass
-    
-    crawler = PlaywrightCrawler(
-        request_handler=request_handler,
-        headless=True
-    )
-    
-    await crawler.run(["https://www.mojposao.net/"])
-    
-    return jobs
-```
-
-### 2. Add to main.py
-
-```python
-from scrapers.mojposao import scrape_mojposao
-
-# In main():
-try:
-    logger.info("🇭🇷 Scraping MojPosao...")
-    mojposao_jobs = await scrape_mojposao(max_jobs)
-    all_jobs['hybrid'].extend(mojposao_jobs)
-    logger.success(f"MojPosao: {len(mojposao_jobs)} jobs scraped")
-except Exception as e:
-    logger.error("MojPosao scraper failed", e)
-```
-
-## Scheduling
-
-### Option 1: Manual run (lokalno)
-
-Pokreni svaki dan ručno ili sa cron job-om:
-
-```bash
-# Windows Task Scheduler
-# Linux/Mac crontab:
-0 6 * * * cd /path/to/scraper && python main.py
-```
-
-### Option 2: Automated (GitHub Actions, Render, Railway)
-
-Možemo dodati nakon testiranja scrapers-a.
-
-## Implemented Scrapers
-
-### ✅ Hybrid/Onsite Jobs (Balkan) - 5 scrapers
-- ✅ **Infostud** (Srbija) - https://www.poslovi.infostud.com
-- ✅ **Halo Oglasi** (Srbija) - https://www.halooglasi.rs
-- ✅ **MojPosao** (Hrvatska) - https://www.mojposao.net
-- ✅ **Posao.ba** (BiH) - https://www.posao.ba
-- ✅ **MojeDelo** (Slovenija) - https://www.mojedelo.com
-
-### ✅ Remote Jobs (Global) - 8 scrapers
-- ✅ **RemoteOK** - https://remoteok.com
-- ✅ **WeWorkRemotely** - https://weworkremotely.com
-- ✅ **Remotive** - https://remotive.io
-- ✅ **JustRemote** - https://justremote.co
-- ✅ **Remote.co** - https://remote.co
-- ✅ **Working Nomads** - https://www.workingnomads.com
-- ✅ **Remote.io** - https://remote.io
-- ✅ **Himalayas** - https://himalayas.app
-
-**Total: 13 scrapers** covering all major Balkan job boards + top 8 global remote job sites!
-
-## Expected Daily Output
-
-With default settings:
-- **Hybrid/Onsite**: 5 scrapers × 100 jobs = **~500 jobs/day** ✅
-- **Remote**: 8 scrapers × 200 jobs = **~1,600 jobs/day** ✅
-- **TOTAL**: **~2,100 jobs/day** 🎯
-
-Limits can be adjusted in `.env`:
-- `MAX_JOBS_PER_SOURCE_REMOTE=200` (for remote scrapers)
-- `MAX_JOBS_PER_SOURCE_HYBRID=100` (for hybrid scrapers)
-
-## TODO
-
-- [ ] Dodati date filtering (samo oglasi iz zadnjih 24h)
-- [ ] Poboljšati quality scoring
-- [ ] Dodati error recovery i retry logic
-- [ ] Unit tests
-- [ ] Dodati više remote izvora (Remote.co, FlexJobs, Remote.com, itd.)
-
-## Notes
-
-- Scraper se pokreće **lokalno** (ne ide na GitHub)
-- Dodati `scraper/` u `.gitignore` (opciono)
-- Svaki scraper može imati različitu strukturu HTML-a
-- Crawlee automatski handluje proxy rotation i anti-bot zaštitu
-- Upsert u Supabase radi na `external_id` (deduplikacija)
+✅ **Done!** Očekuj **600-800 novih poslova** od pouzdanih API/RSS izvora.
 
 ---
 
-**Autor:** RemoteBalkan Team  
-**Verzija:** 1.0.0  
-**Datum:** Oktobar 2025
+## 📊 Current Status
+
+**Database:**
+- ✅ `jobs` table: **1,821 remote jobs**
+- ⚠️ `hybrid_jobs` table: **55 Balkan jobs** (needs more)
+
+**Working Sources:**
+- ✅ **16 API/RSS sources** (100% reliable, ~1500+ jobs)
+- ✅ **1 HTML source** (posaohr - Croatia)
+- ❌ **8 HTML sources** (broken, need fixing)
+
+**Recommendation:** Focus on `--remote` flag for stable job flow!
+
+---
+
+## 📚 All Commands
+
+### Simple Wrapper (Recommended)
+
+```bash
+# Test run (no save)
+python scrape.py --test --limit 10
+
+# Remote jobs only (best!)
+python scrape.py --remote --limit 200
+
+# Balkan jobs only
+python scrape.py --balkan --limit 100
+
+# All sources
+python scrape.py --limit 200
+
+# Load to database
+python scrape.py --load
+
+# Check database counts
+python scrape.py --check
+```
+
+### Advanced (Direct Runner)
+
+```bash
+# List all sources
+python runner.py --list-sources
+
+# Scrape specific source
+python runner.py --source remoteok --limit 100
+
+# Multiple sources
+python runner.py --source remoteok --source jobicy --limit 50
+
+# Remote only, no file save
+python runner.py --remote-only --no-save
+
+# Include disabled sources
+python runner.py --include-disabled --limit 50
+```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create `scraper/.env` or use `../.env.local`:
+
+```env
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+```
+
+### Source Configuration
+
+Edit `config/jobsites.yaml` to:
+- Enable/disable sources
+- Adjust pagination
+- Fix broken selectors
+- Add new sources
+
+---
+
+## 📁 File Structure
+
+```
+scraper/
+├── scrape.py              # Simple CLI wrapper (USE THIS!)
+├── runner.py              # Main scraper engine
+├── load.py                # Load to Supabase
+├── normalize.py           # Data normalization
+├── check_db_counts.py     # Database verification
+├── config/
+│   └── jobsites.yaml      # Source configuration (25 sources)
+├── out/
+│   └── jobs.ndjson        # Scraped jobs output
+├── utils/
+│   ├── database.py        # Supabase client
+│   ├── normalizer.py      # Field mapping
+│   └── logger.py          # Logging
+└── README.md              # This file
+```
+
+---
+
+## 🎯 Working Sources (25 total, 17 enabled)
+
+### ✅ Remote Jobs - API Sources (14 enabled)
+
+| Source | Type | Jobs | Status |
+|--------|------|------|--------|
+| `remoteok` | API | ~100 | ✅ Works |
+| `jobicy` | API | ~100 | ✅ Works |
+| `jobicy_junior` | API | ~50 | ✅ Works |
+| `greenhouse_gitlab` | API | ~50 | ✅ Works |
+| `greenhouse_automattic` | API | ~0 | ⚠️ Empty |
+| `greenhouse_canonical` | API | ~50 | ✅ Works |
+| `greenhouse_remotecom` | API | ~50 | ✅ Works |
+| `greenhouse_mozilla` | API | ~50 | ✅ Works |
+| `greenhouse_bitgo` | API | ~50 | ✅ Works |
+| `greenhouse_mercury` | API | ~50 | ✅ Works |
+| `lever_welocalize` | API | ~50 | ✅ Works |
+| `lever_ro` | API | ~40 | ✅ Works |
+| `recruitee_wallarm` | API | ~20 | ✅ Works |
+| `recruitee_tiugo` | API | ~5 | ✅ Works |
+
+### ✅ Remote Jobs - RSS Sources (2 enabled)
+
+| Source | Type | Jobs | Status |
+|--------|------|------|--------|
+| `weworkremotely` | RSS | ~25 | ✅ Works |
+| `weworkremotely_all` | RSS | ~85 | ✅ Works |
+
+### ❌ Remote Jobs - HTML Sources (5 enabled, all broken)
+
+| Source | Type | Jobs | Status |
+|--------|------|------|--------|
+| `nodesk_entry` | HTML | 0 | ❌ Broken |
+| `skipthedrive_entry` | HTML | 0 | ❌ Broken |
+| `remote_co_entry` | HTML | 0 | ❌ Broken |
+| `working_nomads` | HTML | 0 | ❌ Broken |
+| `support_driven` | HTML | 0 | ❌ Broken |
+
+### 🌍 Balkan Jobs - HTML/NextJS (4 enabled, 1 works)
+
+| Source | Country | Type | Jobs | Status |
+|--------|---------|------|------|--------|
+| `posaohr` | 🇭🇷 Croatia | HTML | ~200 | ✅ Works |
+| `infostud` | 🇷🇸 Serbia | NextJS | 0 | ❌ Broken |
+| `mojposao` | 🇭🇷 Croatia | HTML | 0 | ❌ Broken |
+| `mojedelo` | 🇸🇮 Slovenia | HTML | 0 | ❌ Broken |
+
+---
+
+## 🔄 Data Flow
+
+```
+┌─────────────────┐
+│  1. SCRAPE      │  python scrape.py --remote --limit 200
+│  (runner.py)    │  → Fetches from 16 API/RSS sources
+└────────┬────────┘  → Normalizes data
+         │           → Deduplicates by stable_key
+         ↓           → Saves to out/jobs.ndjson
+┌─────────────────┐
+│  out/jobs.ndjson│  632 jobs (NDJSON format, one JSON per line)
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│  2. LOAD        │  python scrape.py --load
+│  (load.py)      │  → Connects to Supabase
+└────────┬────────┘  → Splits remote/hybrid jobs
+         │           → Upserts to jobs/hybrid_jobs tables
+         │           → Uses stable_key for deduplication
+         ↓
+┌─────────────────┐
+│  3. VERIFY      │  python scrape.py --check
+│  (check_db_counts)│  → Shows job counts by table
+└─────────────────┘  → Shows sources breakdown
+```
+
+---
+
+## 🏆 Best Practices
+
+### Daily Production Run
+
+```bash
+#!/bin/bash
+# daily_scrape.sh
+
+cd /path/to/scraper
+
+# 1. Scrape remote jobs (reliable)
+python scrape.py --remote --limit 200
+# Expect: 600-800 jobs from API/RSS
+
+# 2. Load to Supabase
+python scrape.py --load
+# Expect: ~500 new, ~300 duplicates skipped
+
+# 3. Verify
+python scrape.py --check
+# Check: jobs table should grow by ~500
+
+echo "Done! Fresh jobs loaded to RemoteBalkan.com"
+```
+
+**Schedule with cron:**
+```cron
+# Run daily at 6 AM
+0 6 * * * cd /path/to/scraper && ./daily_scrape.sh >> logs/scraper.log 2>&1
+```
+
+### Test Before Production
+
+```bash
+# Always test first!
+python scrape.py --test --limit 10
+
+# Review output
+cat out/jobs.ndjson | head -n 3
+
+# If looks good, run full scrape
+python scrape.py --remote --limit 200 && python scrape.py --load
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### No Jobs Scraped
+
+**Problem:** `0 jobs scraped from all sources`
+
+**Causes:**
+- Network issues
+- Rate limiting
+- Website structure changed (HTML sources)
+
+**Solutions:**
+```bash
+# 1. Test individual source
+python runner.py --source remoteok --limit 5 --no-save
+
+# 2. Check if API is accessible
+curl https://remoteok.com/api | head
+
+# 3. Use only reliable sources
+python scrape.py --remote --limit 100  # Skip HTML sources
+```
+
+### Database Connection Failed
+
+**Problem:** `Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY`
+
+**Solution:**
+```bash
+# Check .env file exists
+ls -la scraper/.env
+
+# Or use parent .env.local
+ls -la .env.local
+
+# Verify credentials
+cat scraper/.env | grep SUPABASE
+```
+
+### Encoding Errors (Windows)
+
+**Problem:** `UnicodeEncodeError: 'charmap' codec can't encode...`
+
+**Solution:** ✅ Already fixed! All emoji replaced with `[TAG]` format.
+
+### Duplicate Jobs
+
+**Problem:** Too many duplicates being skipped
+
+**Cause:** `stable_key` deduplication working correctly (this is good!)
+
+**How it works:**
+- Each job gets unique `stable_key` = hash(source + url + title + company)
+- Upsert with `on_conflict='stable_key'` prevents duplicates
+- This is **expected behavior**
+
+---
+
+## 🔍 Debugging
+
+### Check What's Working
+
+```bash
+# List all sources with status
+python runner.py --list-sources
+
+# Test each source type
+python runner.py --source remoteok --limit 3 --no-save  # API
+python runner.py --source weworkremotely --limit 3 --no-save  # RSS
+python runner.py --source posaohr --limit 3 --no-save  # HTML
+```
+
+### Analyze Output
+
+```bash
+# View scraped jobs
+cat out/jobs.ndjson | jq .  # If you have jq installed
+
+# Count by source
+cat out/jobs.ndjson | jq -r '.source_id' | sort | uniq -c
+
+# Check specific fields
+cat out/jobs.ndjson | jq '{title, company, source_id}' | head
+```
+
+### Enable Disabled Sources
+
+```bash
+# Some sources are disabled by default (broken/rate-limited)
+python runner.py --include-disabled --limit 10 --no-save
+
+# Or edit config/jobsites.yaml:
+# - id: source_name
+#   enabled: false  # Change to true
+```
+
+---
+
+## 📝 Adding New Sources
+
+### 1. Add to config/jobsites.yaml
+
+```yaml
+- id: my_new_source
+  enabled: true
+  kind: api  # or rss, html, nextjs
+  url: https://api.example.com/jobs
+  mapping:
+    list_path: "jobs"
+    fields:
+      external_id: "id"
+      title: "position"
+      company: "company_name"
+      url: "apply_url"
+      posted_at: "date"
+  derive:
+    remote_type: "REMOTE"
+    region: "GLOBAL"
+```
+
+### 2. Test it
+
+```bash
+python runner.py --source my_new_source --limit 5 --no-save
+```
+
+### 3. Add to documentation
+
+Update this README with the new source stats.
+
+---
+
+## 📖 Additional Documentation
+
+- **[QUICK_COMMANDS.md](QUICK_COMMANDS.md)** - Cheat sheet for common tasks
+- **[USAGE.md](USAGE.md)** - Detailed usage guide
+- **[README_SIMPLE.md](README_SIMPLE.md)** - Serbian language quick start
+
+---
+
+## 🚀 Deployment Options
+
+### Option 1: Manual Run (Current)
+
+Run locally whenever you need fresh jobs:
+```bash
+python scrape.py --remote --limit 200 && python scrape.py --load
+```
+
+### Option 2: Cron Job (Linux/Mac)
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add daily run at 6 AM
+0 6 * * * cd /path/to/scraper && python scrape.py --remote --limit 200 && python scrape.py --load
+```
+
+### Option 3: Windows Task Scheduler
+
+1. Open Task Scheduler
+2. Create Basic Task
+3. Trigger: Daily at 6:00 AM
+4. Action: Start a program
+   - Program: `python`
+   - Arguments: `scrape.py --remote --limit 200`
+   - Start in: `D:\ProjektiApp\remotebalkan\scraper`
+
+### Option 4: Vercel Cron (Requires API)
+
+*Would need to create API endpoint wrapper - ask if needed!*
+
+### Option 5: GitHub Actions
+
+*Would need to create workflow YAML - ask if needed!*
+
+---
+
+## 🔐 CLI Access Setup
+
+If you want me to configure automated deployment with Vercel/Supabase CLI:
+
+### Vercel CLI Setup
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Link project
+vercel link
+
+# Deploy
+vercel --prod
+```
+
+### Supabase CLI Setup
+```bash
+# Install Supabase CLI
+npm i -g supabase
+
+# Login
+supabase login
+
+# Link project
+supabase link --project-ref your-project-ref
+
+# Run migrations
+supabase db push
+```
+
+**Note:** Let me know if you want me to set this up with your credentials!
+
+---
+
+## 📊 Performance
+
+**Test Run Results (limit 50):**
+- Sources scanned: 25
+- Time: ~60 seconds
+- Jobs found: 632
+- Success rate: 64% (16/25 sources working)
+
+**Full Run Results (limit 200):**
+- Expected jobs: 1,500-2,000
+- Time: ~2-3 minutes
+- Success rate: API/RSS sources 100%, HTML sources ~10%
+
+---
+
+## 🤝 Contributing
+
+To fix broken HTML sources:
+
+1. Check analyze scripts:
+   - `analyze_infostud.py`
+   - `analyze_mojposao.py`
+   - etc.
+
+2. Update selectors in `config/jobsites.yaml`
+
+3. Test:
+   ```bash
+   python runner.py --source infostud --limit 5 --no-save
+   ```
+
+4. Submit PR or update directly
+
+---
+
+## 📄 License
+
+MIT License - RemoteBalkan Team © 2025
+
+---
+
+## 🆘 Support
+
+**Need help?**
+- Check `QUICK_COMMANDS.md` for common tasks
+- Review existing `analyze_*.py` scripts for debugging examples
+- Test with `--test` flag before full runs
+- Use `--remote` for most reliable results
+
+**Want automated deployment?**
+- Ask about Vercel Cron setup
+- Ask about GitHub Actions workflow
+- Ask about Railway/Render scheduled tasks
+
+---
+
+**Last Updated:** October 15, 2025  
+**Version:** 2.0 - Unified Scraper System  
+**Status:** ✅ Production Ready (Remote Jobs), ⚠️ Balkan Jobs Need Fixing

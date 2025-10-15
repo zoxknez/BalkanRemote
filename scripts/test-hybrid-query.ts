@@ -35,6 +35,7 @@ async function testQueries() {
     .limit(10)
   
   console.log('Quality check:')
+  if (qualityError) console.error('Error:', qualityError)
   qualityData?.forEach(job => {
     console.log(`- ${job.title}: quality=${job.quality_score}, posted=${job.posted_date}, expires=${job.expires_at}`)
   })

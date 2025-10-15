@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { ErrorBoundary } from "@/components/error-boundary";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -123,9 +124,11 @@ export default function RootLayout({
           })}
         </Script>
         <Header />
-        <main className="min-h-screen" id="main-content">
-          {children}
-        </main>
+        <ErrorBoundary>
+          <main className="min-h-screen" id="main-content">
+            {children}
+          </main>
+        </ErrorBoundary>
         {analyticsEnabled && <Analytics />}
         {speedInsightsEnabled && <SpeedInsights />}
         <Footer />

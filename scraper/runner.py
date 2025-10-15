@@ -1,8 +1,11 @@
+# ruff: noqa: E501
 """
 Config-driven job scraper runner.
 Supports API, RSS, and HTML (with JSON-LD + CSS fallback).
 """
+import argparse
 import json
+import sys
 import time
 from time import perf_counter
 from pathlib import Path
@@ -75,14 +78,13 @@ class JobRunner:
             selected_sources.append(source)
 
         if not selected_sources:
-            print("⚠️  No sources selected. Nothing to do.")
+            print("[WARN] No sources selected. Nothing to do.")
             self.jobs = []
             self.source_stats = []
             return []
 
         print(
-            "\n🚀 Starting scraper run with "
-            f"{len(selected_sources)} sources\n"
+            f"\n[SCRAPER] Starting run with {len(selected_sources)} sources\n"
         )
 
         self.jobs = []
@@ -100,7 +102,7 @@ class JobRunner:
             error_message: Optional[str] = None
 
             try:
-                print(f"📡 [{source_id}] Fetching ({kind})...")
+                print(f"[FETCH] [{source_id}] Fetching ({kind})...")
                 if kind == 'api':
                     raw_jobs = self.fetch_api(source)
                 elif kind == 'rss':
@@ -115,7 +117,7 @@ class JobRunner:
                 if limit_per_source is not None:
                     raw_jobs = raw_jobs[:limit_per_source]
 
-                print(f"✅ [{source_id}] Retrieved {len(raw_jobs)} records")
+                print(f"[OK] [{source_id}] Retrieved {len(raw_jobs)} records")
 
                 remote_type_source = source.get('derive', {}).get(
                     'remote_type', 'UNKNOWN'
@@ -163,7 +165,7 @@ class JobRunner:
                 self.errors.append(
                     {'source': source_id, 'error': error_message}
                 )
-                print(f"❌ [{source_id}] Error: {error_message}")
+                print(f"[ERROR] [{source_id}] Error: {error_message}")
 
             duration = perf_counter() - start_time
             self.source_stats.append({
@@ -179,7 +181,7 @@ class JobRunner:
 
         total_jobs = len(self.jobs)
 
-        print("\n📋 Source summary:")
+        print("\n[SUMMARY] Source summary:")
         header = (
             f"{'Source':<15} {'Kind':<6} {'Raw':>5} {'Saved':>6} "
             f"{'Dupes':>6} {'Time(s)':>8} Status"
@@ -208,7 +210,7 @@ class JobRunner:
             1 for job in self.jobs if job.get('remote_type') == 'ONSITE'
         )
 
-        print(f"\n✅ Total unique jobs collected: {total_jobs}")
+        print(f"\n[TOTAL] Total unique jobs collected: {total_jobs}")
         print(f"   Remote: {remote_count}")
         print(f"   Hybrid: {hybrid_count}")
         print(f"   Onsite: {onsite_count}\n")
@@ -222,7 +224,7 @@ class JobRunner:
         with output_path.open('w', encoding='utf-8') as handle:
             for job in self.jobs:
                 handle.write(json.dumps(job, ensure_ascii=False) + '\n')
-        print(f"💾 Saved to {output_path}")
+        print(f"[SAVED] Saved to {output_path}")
         return output_path
 
     def summary(self) -> Dict[str, Any]:
@@ -591,7 +593,7 @@ class JobRunner:
                     jobs.append(job)
             
             except Exception as e:
-                print(f"  ⚠️  Failed to parse JSON-LD: {e}")
+                print(f"  [WARN] Failed to parse JSON-LD: {e}")
         
         return jobs
     
@@ -618,24 +620,102 @@ class JobRunner:
         return ''
 
 
-def main():
-    runner = JobRunner()
-    jobs = runner.run()
-    
-    # Print stats
+def build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Config-driven job scraper for RemoteBalkan"
+    )
+    parser.add_argument(
+        '--config',
+        default='config/jobsites.yaml',
+        help='Path to jobsites configuration file (default: %(default)s)',
+    )
+    parser.add_argument(
+        '-s',
+        '--source',
+        dest='sources',
+        action='append',
+        help='Run only the specified source (can be provided multiple times)',
+    )
+    parser.add_argument(
+        '--limit',
+        type=int,
+        dest='limit_per_source',
+        help='Limit number of jobs kept per source',
+    )
+    parser.add_argument(
+        '--include-disabled',
+        action='store_true',
+        help='Include sources marked as disabled in the config',
+    )
+    parser.add_argument(
+        '--remote-only',
+        action='store_true',
+        help='Collect only remote jobs (skip hybrid/onsite transforms)',
+    )
+    parser.add_argument(
+        '--hybrid-only',
+        action='store_true',
+        help='Collect only hybrid/onsite jobs (skip remote transforms)',
+    )
+    parser.add_argument(
+        '--list-sources',
+        action='store_true',
+        help='List available sources and exit',
+    )
+    parser.add_argument(
+        '--no-save',
+        action='store_true',
+        help="Skip writing the NDJSON output file after the run",
+    )
+    return parser
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = build_arg_parser()
+    args = parser.parse_args(argv)
+
+    runner = JobRunner(config_path=args.config)
+
+    if args.list_sources:
+        sources = runner.list_sources()
+        for src in sources:
+            status = 'ENABLED' if src['enabled'] else 'DISABLED'
+            print(
+                f"{src['id']:<20} {status:<8} {src['kind']:<8} "
+                f"{src['remote_type']:<8} {src['region']:<8} {src['url']}"
+            )
+        return 0
+
+    if args.remote_only and args.hybrid_only:
+        parser.error('Use only one of --remote-only or --hybrid-only')
+
+    include_remote = not args.hybrid_only
+    include_hybrid = not args.remote_only
+
+    jobs = runner.run(
+        only_sources=args.sources,
+        skip_disabled=not args.include_disabled,
+        limit_per_source=args.limit_per_source,
+        include_remote=include_remote,
+        include_hybrid=include_hybrid,
+    )
+
     remote = sum(1 for j in jobs if j.get('remote_type') == 'REMOTE')
     hybrid = sum(1 for j in jobs if j.get('remote_type') == 'HYBRID')
     onsite = sum(1 for j in jobs if j.get('remote_type') == 'ONSITE')
-    
-    print("\n📊 Stats:")
+
+    print("\n[STATS]:")
     print(f"   Remote: {remote}")
     print(f"   Hybrid: {hybrid}")
     print(f"   Onsite: {onsite}")
     print(f"   Total:  {len(jobs)}")
 
-    output_path = runner.save_ndjson()
-    print(f"   NDJSON: {output_path}\n")
+    if not args.no_save:
+        output_path = runner.save_ndjson()
+        print(f"   NDJSON: {output_path}\n")
+
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

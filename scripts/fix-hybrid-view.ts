@@ -54,7 +54,7 @@ GRANT SELECT ON public.hybrid_jobs_public TO anon, authenticated;
 async function fixView() {
   console.log('Fixing hybrid_jobs_public view...')
   
-  const { data, error } = await supabase.rpc('exec_sql', { sql: fixViewSQL })
+  const { error } = await supabase.rpc('exec_sql', { sql: fixViewSQL })
   
   if (error) {
     console.error('Error:', error)

@@ -1,0 +1,75 @@
+CLEANUP LOG - October 15, 2025
+================================
+
+FILES DELETED (60 total):
+
+Debug/Test Scripts (47):
+- analyze_*.py (10 files)
+- test_*.py (18 files)
+- debug_*.py (2 files)
+- deep_*.py (2 files)
+- download_*.py (1 file)
+- extract_*.py (4 files)
+- find_*.py (5 files)
+- final_*.py (1 file)
+- verify_*.py (1 file)
+- check_*.py (3 files - kept check_db_counts.py)
+
+Output Debug Files (9):
+- out/helloworld_full.html
+- out/infostud_full.html
+- out/infostud_next_data.json
+- out/infostud_raw_full.html
+- out/infostud_raw.html
+- out/mojedelo_full.html
+- out/posaohr_full.html
+- out/posaohr_page2.html
+- out/posloviba_full.html
+
+Old System (4):
+- main.py (old Crawlee system)
+- scrapers/ folder (14 old scraper files)
+- QUICKSTART.md (duplicate)
+- config/junior-remote-sources.json (old config)
+
+Root Level (3):
+- JUNIOR_IMPLEMENTATION_SUMMARY.md
+- FIXES_SUMMARY.md
+- OGLASI_ANALYSIS.md
+
+FILES KEPT (19):
+
+Core Scripts (6):
+- scrape.py
+- runner.py
+- load.py
+- normalize.py
+- check_db_counts.py
+- requirements.txt
+
+Config (1 folder):
+- config/jobsites.yaml
+
+Utils (1 folder, 4 files):
+- utils/__init__.py
+- utils/database.py
+- utils/logger.py
+- utils/normalizer.py
+
+Documentation (9):
+- START_HERE.md
+- README.md
+- README_SIMPLE.md
+- QUICK_COMMANDS.md
+- USAGE.md
+- CLI_SETUP.md
+- SUMMARY.md
+- CLEANED_SUMMARY.md
+- FINAL_STRUCTURE.md
+
+RESULT:
+- Before: ~70 files
+- After: 19 files
+- Deleted: 60 files + 1 folder
+- Status: Clean & Production Ready ✓
+

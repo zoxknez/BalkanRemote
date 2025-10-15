@@ -186,20 +186,159 @@ async function upsertHybridJobs(jobs: HybridJobInsert[]) {
   return data
 }
 
+// Real scraper implementation
+async function scrapeRemoteOK(): Promise<HybridJobInsert[]> {
+  try {
+    const response = await fetch('https://remoteok.io/api', {
+      headers: { 'User-Agent': 'BalkanRemote/1.0' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`RemoteOK API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const jobs = data.slice(1) // Remove first element (metadata)
+    
+    return jobs
+      .filter((job: any) => job.position && job.company)
+      .map((job: any): HybridJobInsert => ({
+        source_name: 'RemoteOK',
+        source_url: 'https://remoteok.io',
+        title: job.position,
+        company: job.company,
+        location: job.location || 'Remote',
+        description: job.description || '',
+        url: job.url || `https://remoteok.io/remote-jobs/${job.id}`,
+        salary_min: job.salary_min || null,
+        salary_max: job.salary_max || null,
+        currency: job.currency || null,
+        work_type: job.remote ? 'remote' : 'hybrid',
+        experience_level: job.seniority || null,
+        posted_at: new Date(job.date).toISOString(),
+        tags: job.tags || [],
+        metadata: {
+          original_id: job.id,
+          original_data: job
+        }
+      }))
+  } catch (error) {
+    console.error('RemoteOK scraping error:', error)
+    return []
+  }
+}
+
+async function scrapeRemotive(): Promise<HybridJobInsert[]> {
+  try {
+    const response = await fetch('https://remotive.io/api/remote-jobs', {
+      headers: { 'User-Agent': 'BalkanRemote/1.0' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Remotive API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    return data.jobs
+      .filter((job: any) => job.title && job.company_name)
+      .map((job: any): HybridJobInsert => ({
+        source_name: 'Remotive',
+        source_url: 'https://remotive.io',
+        title: job.title,
+        company: job.company_name,
+        location: job.candidate_required_location || 'Remote',
+        description: job.description || '',
+        url: job.url || `https://remotive.io/remote-jobs/${job.id}`,
+        salary_min: job.salary_min || null,
+        salary_max: job.salary_max || null,
+        currency: job.currency || null,
+        work_type: 'remote',
+        experience_level: job.experience_level || null,
+        posted_at: new Date(job.publication_date).toISOString(),
+        tags: job.tags || [],
+        metadata: {
+          original_id: job.id,
+          original_data: job
+        }
+      }))
+  } catch (error) {
+    console.error('Remotive scraping error:', error)
+    return []
+  }
+}
+
+async function scrapeJobicy(): Promise<HybridJobInsert[]> {
+  try {
+    const response = await fetch('https://jobicy.com/api/v2/remote-jobs', {
+      headers: { 'User-Agent': 'BalkanRemote/1.0' }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Jobicy API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    return data.jobs
+      .filter((job: any) => job.title && job.company)
+      .map((job: any): HybridJobInsert => ({
+        source_name: 'Jobicy',
+        source_url: 'https://jobicy.com',
+        title: job.title,
+        company: job.company,
+        location: job.location || 'Remote',
+        description: job.description || '',
+        url: job.url || `https://jobicy.com/job/${job.id}`,
+        salary_min: job.salary_min || null,
+        salary_max: job.salary_max || null,
+        currency: job.currency || null,
+        work_type: 'remote',
+        experience_level: job.experience_level || null,
+        posted_at: new Date(job.date).toISOString(),
+        tags: job.tags || [],
+        metadata: {
+          original_id: job.id,
+          original_data: job
+        }
+      }))
+  } catch (error) {
+    console.error('Jobicy scraping error:', error)
+    return []
+  }
+}
+
 async function main() {
   const t0 = Date.now()
   console.log('[hybrid-scraper] Starting hybrid jobs scraping...')
   
   try {
-    // Za sada ubacujemo mock data
-    // U budućnosti ovde ide pravi scraper
-    console.log('[hybrid-scraper] Inserting mock hybrid jobs...')
-    const inserted = await upsertHybridJobs(MOCK_HYBRID_JOBS)
+    console.log('[hybrid-scraper] Scraping from multiple sources...')
+    
+    // Scrape from multiple sources in parallel
+    const [remoteOKJobs, remotiveJobs, jobicyJobs] = await Promise.all([
+      scrapeRemoteOK(),
+      scrapeRemotive(),
+      scrapeJobicy()
+    ])
+    
+    const allJobs = [...remoteOKJobs, ...remotiveJobs, ...jobicyJobs]
+    console.log(`[hybrid-scraper] Scraped ${allJobs.length} jobs total`)
+    console.log(`[hybrid-scraper] RemoteOK: ${remoteOKJobs.length}, Remotive: ${remotiveJobs.length}, Jobicy: ${jobicyJobs.length}`)
+    
+    if (allJobs.length === 0) {
+      console.log('[hybrid-scraper] No jobs found, falling back to mock data...')
+      const inserted = await upsertHybridJobs(MOCK_HYBRID_JOBS)
+      console.log(`[hybrid-scraper] Inserted ${inserted?.length || 0} mock jobs`)
+    } else {
+      console.log('[hybrid-scraper] Inserting real scraped jobs...')
+      const inserted = await upsertHybridJobs(allJobs)
+      console.log(`[hybrid-scraper] Inserted ${inserted?.length || 0} real jobs`)
+    }
     
     const dt = Date.now() - t0
     console.log(`[hybrid-scraper] Done in ${dt}ms`)
-    console.log(`[hybrid-scraper] Inserted ${inserted?.length || 0} jobs`)
-    console.log('[hybrid-scraper] Sources:', [...new Set(MOCK_HYBRID_JOBS.map(j => j.source_name))])
+    console.log('[hybrid-scraper] Sources:', [...new Set(allJobs.map(j => j.source_name))])
   } catch (err) {
     console.error('[hybrid-scraper] FAILED:', (err as Error)?.message || err)
     process.exitCode = 1

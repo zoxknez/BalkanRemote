@@ -56,7 +56,6 @@ async function main() {
 
   let page = 0
   let totalCopied = 0
-  let fetched = 0
 
   console.log('Starting copy job: job_scraped_listings')
   console.log(`since=${opts.since ?? 'ALL'} batch=${batchSize} dryRun=${opts.dryRun ? 'yes' : 'no'}`)
@@ -80,8 +79,7 @@ async function main() {
       console.error('Source fetch error:', error.message)
       process.exit(1)
     }
-    const rows = data ?? []
-    fetched = rows.length
+  const rows = data ?? []
     if (!rows.length) break
 
     console.log(`Fetched ${rows.length} rows [${start}-${end}]`)

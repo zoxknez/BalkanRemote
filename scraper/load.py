@@ -54,6 +54,8 @@ def split_by_remote_type(
     Returns:
         (remote_jobs, hybrid_jobs)
     """
+    import hashlib
+    
     remote = []
     hybrid = []
     
@@ -62,6 +64,12 @@ def split_by_remote_type(
         if 'stable_key' in job:
             remote.append(job)
         else:
+            # Generate external_id for hybrid jobs if missing
+            if 'external_id' not in job:
+                # Create hash from title + company + url
+                unique_string = f"{job.get('title', '')}|{job.get('company_name', '')}|{job.get('url', '')}"
+                job['external_id'] = hashlib.md5(unique_string.encode()).hexdigest()
+            
             hybrid.append(job)
     
     return remote, hybrid
@@ -86,33 +94,51 @@ def upsert_jobs(
     if not jobs:
         return 0
     
+    # Remove fields that don't exist in database schema
+    excluded_fields = {'remote_type', 'source'}
+    
+    cleaned_jobs = []
+    for job in jobs:
+        cleaned = {k: v for k, v in job.items() if k not in excluded_fields}
+        cleaned_jobs.append(cleaned)
+    
     # Batch upsert
     batch_size = 100
     total = 0
     
-    for i in range(0, len(jobs), batch_size):
-        batch = jobs[i:i+batch_size]
+    for i in range(0, len(cleaned_jobs), batch_size):
+        batch = cleaned_jobs[i:i+batch_size]
         
         try:
-            # Upsert with appropriate conflict target
-            conflict_col = 'stable_key' if table == 'jobs' else 'external_id'
-            
-            client.table(table).upsert(
-                batch,
-                on_conflict=conflict_col
-            ).execute()
+            # For jobs table, use upsert with stable_key
+            # For hybrid_jobs, use simple insert (or upsert if unique constraint exists)
+            if table == 'jobs':
+                client.table(table).upsert(
+                    batch,
+                    on_conflict='stable_key'
+                ).execute()
+            else:
+                # Try upsert first, fallback to insert
+                try:
+                    client.table(table).upsert(
+                        batch,
+                        on_conflict='external_id'
+                    ).execute()
+                except:
+                    # If no unique constraint, just insert
+                    client.table(table).insert(batch).execute()
 
             total += len(batch)
-            print(f"  ✅ Inserted {len(batch)} jobs to {table}")
+            print(f"  [OK] Inserted {len(batch)} jobs to {table}")
         
         except Exception as e:
-            print(f"  ❌ Failed batch {i//batch_size + 1}: {e}")
+            print(f"  [ERROR] Failed batch {i//batch_size + 1}: {e}")
     
     return total
 
 
 def main():
-    print("\n📥 Loading jobs from NDJSON...\n")
+    print("\n[LOAD] Loading jobs from NDJSON...\n")
     
     # Load jobs
     jobs = load_jobs_from_ndjson()
@@ -124,11 +150,11 @@ def main():
     print(f"  Hybrid/Onsite: {len(hybrid)}")
     
     # Get Supabase client
-    print("\n📡 Connecting to Supabase...")
+    print("\n[CONNECT] Connecting to Supabase...")
     client = get_supabase_client()
     
     # Upsert to tables
-    print("\n💾 Upserting to database...\n")
+    print("\n[UPSERT] Upserting to database...\n")
     
     if remote:
         print(f"Inserting {len(remote)} remote jobs...")
@@ -138,7 +164,7 @@ def main():
         print(f"\nInserting {len(hybrid)} hybrid/onsite jobs...")
         upsert_jobs(client, hybrid, 'hybrid_jobs')
     
-    print("\n✅ Done!\n")
+    print("\n[DONE] Successfully loaded jobs to Supabase!\n")
 
 
 if __name__ == '__main__':

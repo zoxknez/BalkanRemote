@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHybridJobs } from '@/hooks/useHybridJobs'
 import { HybridJobCard } from '@/components/hybrid-job-card'
+import { JobCardSkeletonGrid } from '@/components/job-card-skeleton'
 import {
   Search,
   Filter,
@@ -23,7 +24,10 @@ import {
   Link as LinkIcon,
   ExternalLink,
   TrendingUp,
-  Flame
+  Flame,
+  Clock,
+  Users,
+  Target
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { HybridJob } from '@/hooks/useHybridJobs'
@@ -62,6 +66,18 @@ export default function FirmeContentSimplified() {
   const [savedJobs, setSavedJobs] = useState<HybridJob[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null)
+  
+  // Autocomplete functionality
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  
+  // Debug mode
+  const [debugMode, setDebugMode] = useState(false)
 
   const {
     jobs,
@@ -107,9 +123,125 @@ export default function FirmeContentSimplified() {
     }
   }, [filters, router])
 
+  // Debug mode detection
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    setDebugMode(urlParams.get('debug') === '1')
+  }, [])
+
+  // Autocomplete suggestions
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    abortControllerRef.current = new AbortController()
+    setSuggestionsLoading(true)
+
+    try {
+      const response = await fetch(`/api/hybrid-jobs/suggest?q=${encodeURIComponent(query)}`, {
+        signal: abortControllerRef.current.signal
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSuggestions(data.suggestions || [])
+        setShowSuggestions(true)
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Suggestions fetch error:', error)
+      }
+    } finally {
+      setSuggestionsLoading(false)
+    }
+  }, [])
+
+  // Debounced search suggestions
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(searchInput)
+    }, 350)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchInput, fetchSuggestions])
+
+  // Analytics tracking
+  const trackEvent = useCallback(async (event: string, data: any = {}) => {
+    try {
+      await fetch('/api/hybrid-jobs/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, data })
+      })
+    } catch (error) {
+      console.error('Analytics tracking error:', error)
+    }
+  }, [])
+
   const handleSearch = useCallback(() => {
     updateFilters({ search: searchInput.trim() || null, offset: 0 })
-  }, [searchInput, updateFilters])
+    trackEvent('search_performed', { query: searchInput.trim() })
+  }, [searchInput, updateFilters, trackEvent])
+
+  // Keyboard navigation for suggestions
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1)
+        break
+      case 'Enter':
+        e.preventDefault()
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < suggestions.length) {
+          const selectedSuggestion = suggestions[selectedSuggestionIndex]
+          setSearchInput(selectedSuggestion)
+          setShowSuggestions(false)
+          updateFilters({ search: selectedSuggestion, offset: 0 })
+          trackEvent('search_performed', { query: selectedSuggestion })
+        } else {
+          handleSearch()
+        }
+        break
+      case 'Escape':
+        setShowSuggestions(false)
+        setSelectedSuggestionIndex(-1)
+        break
+    }
+  }, [showSuggestions, suggestions, selectedSuggestionIndex, handleSearch, updateFilters, trackEvent])
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false)
+        setSelectedSuggestionIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const toggleWorkType = useCallback((type: string) => {
     const current = filters.workType || []
@@ -118,11 +250,13 @@ export default function FirmeContentSimplified() {
       ? current.filter(t => t !== type)
       : [...current, type]
     updateFilters({ workType: next.length > 0 ? next : undefined, offset: 0 })
-  }, [filters.workType, updateFilters])
+    trackEvent('filter_used', { filter: 'workType', value: type, action: exists ? 'remove' : 'add' })
+  }, [filters.workType, updateFilters, trackEvent])
 
   const setCountry = useCallback((country: string | null) => {
     updateFilters({ country, offset: 0 })
-  }, [updateFilters])
+    trackEvent('filter_used', { filter: 'country', value: country, action: country ? 'add' : 'remove' })
+  }, [updateFilters, trackEvent])
 
   const toggleExperience = useCallback((exp: string) => {
     const current = filters.experience || []
@@ -131,7 +265,8 @@ export default function FirmeContentSimplified() {
       ? current.filter(e => e !== exp)
       : [...current, exp]
     updateFilters({ experience: next.length > 0 ? next : undefined, offset: 0 })
-  }, [filters.experience, updateFilters])
+    trackEvent('filter_used', { filter: 'experience', value: exp, action: exists ? 'remove' : 'add' })
+  }, [filters.experience, updateFilters, trackEvent])
 
   const activeFilterCount = useMemo(() => {
     let count = 0
@@ -160,8 +295,9 @@ export default function FirmeContentSimplified() {
   const goToPage = useCallback((page: number) => {
     if (page < 1 || page > totalPages) return
     updateFilters({ offset: (page - 1) * limit })
+    trackEvent('page_navigation', { page, totalPages })
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [totalPages, limit, updateFilters])
+  }, [totalPages, limit, updateFilters, trackEvent])
 
   // Fetch saved jobs
   const fetchSavedJobs = useCallback(async () => {
@@ -230,7 +366,13 @@ export default function FirmeContentSimplified() {
                   aria-selected={selected}
                   aria-controls={`panel-${t}`}
                   id={`tab-${t}`}
-                  onClick={() => setActiveTab(t)}
+                  onClick={() => {
+                    setActiveTab(t)
+                    trackEvent('tab_switched', { tab: t })
+                    if (t === 'saved') {
+                      fetchSavedJobs()
+                    }
+                  }}
                   className={cn(
                     'px-5 py-2 rounded-full border backdrop-blur-sm transition font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50',
                     selected ? 'bg-white text-blue-700 border-white shadow' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
@@ -419,13 +561,50 @@ export default function FirmeContentSimplified() {
                 <div className="relative flex-1 min-w-[240px]">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                      if (suggestions.length > 0) setShowSuggestions(true)
+                    }}
                     placeholder="Pretraži po poziciji, kompaniji..."
                     className="w-full h-11 md:h-12 rounded-xl border border-gray-300 bg-white pl-12 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400"
                   />
+                  
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && (suggestions.length > 0 || suggestionsLoading) && (
+                    <div
+                      ref={suggestionsRef}
+                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto"
+                    >
+                      {suggestionsLoading ? (
+                        <div className="p-3 text-center text-gray-500">
+                          <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                          <span className="text-sm">Učitavam predloge...</span>
+                        </div>
+                      ) : (
+                        suggestions.map((suggestion, index) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => {
+                              setSearchInput(suggestion)
+                              setShowSuggestions(false)
+                              updateFilters({ search: suggestion, offset: 0 })
+                              trackEvent('search_performed', { query: suggestion })
+                            }}
+                            className={cn(
+                              "w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors",
+                              index === selectedSuggestionIndex && "bg-blue-50 text-blue-700"
+                            )}
+                          >
+                            {suggestion}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={handleSearch}
@@ -450,9 +629,12 @@ export default function FirmeContentSimplified() {
             </div>
 
             {loading && (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">Učitavanje poslova...</span>
+              <div>
+                <div className="flex items-center justify-center py-8 mb-6">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  <span className="ml-2 text-gray-600">Učitavanje poslova...</span>
+                </div>
+                <JobCardSkeletonGrid count={6} />
               </div>
             )}
 
@@ -554,9 +736,12 @@ export default function FirmeContentSimplified() {
         {activeTab === 'saved' && (
           <div>
             {savedLoading && (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">Učitavanje sačuvanih...</span>
+              <div>
+                <div className="flex items-center justify-center py-8 mb-6">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  <span className="ml-2 text-gray-600">Učitavanje sačuvanih...</span>
+                </div>
+                <JobCardSkeletonGrid count={4} />
               </div>
             )}
 
@@ -684,6 +869,7 @@ export default function FirmeContentSimplified() {
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackEvent('source_click', { source: source.name, url: source.url })}
                     className={cn(
                       "flex items-center justify-between p-4 border-2 rounded-lg transition-all group",
                       source.disabled
@@ -733,6 +919,63 @@ export default function FirmeContentSimplified() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Debug Mode Panel */}
+        {debugMode && (
+          <div className="mt-8 p-4 bg-gray-100 rounded-xl border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Debug Mode
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <h4 className="font-medium text-gray-700 mb-2">Current State:</h4>
+                <pre className="bg-white p-3 rounded border text-xs overflow-auto">
+                  {JSON.stringify({
+                    activeTab,
+                    searchInput,
+                    filters,
+                    suggestions: suggestions.slice(0, 3),
+                    showSuggestions,
+                    selectedSuggestionIndex,
+                    total,
+                    loading,
+                    error: error?.message
+                  }, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-700 mb-2">Summary:</h4>
+                <pre className="bg-white p-3 rounded border text-xs overflow-auto">
+                  {JSON.stringify(summary, null, 2)}
+                </pre>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setDebugMode(false)}
+                className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+              >
+                Hide Debug
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Firme Debug State:', {
+                    activeTab,
+                    searchInput,
+                    filters,
+                    suggestions,
+                    summary,
+                    jobs: jobs.slice(0, 3)
+                  })
+                }}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                Log to Console
+              </button>
             </div>
           </div>
         )}
